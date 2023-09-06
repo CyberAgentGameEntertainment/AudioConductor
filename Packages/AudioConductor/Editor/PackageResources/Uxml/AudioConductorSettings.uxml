@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" tooltip="Concurrent play control type." />
+    <uie:IntegerField label="Throttle Limit" name="ThrottleLimit" is-delayed="true" tooltip="Limit of concurrent play." />
+    <ui:ListView focusable="true" reorderable="true" reorder-mode="Animated" show-border="true" show-add-remove-footer="true" show-foldout-header="true" header-title="Category" show-alternating-row-backgrounds="All" fixed-item-height="90" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 1px;" />
+</ui:UXML>

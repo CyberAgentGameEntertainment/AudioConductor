@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a2a166b4c2c548b991995a3cb1b2885, type: 3}
+  m_Name: SampleCueSheet
+  m_EditorClassIdentifier: 
+  cueSheet:
+    id: 55ce9240-98bc-4711-a9ab-92d8c4fdd40a
+    name: Sample
+    throttleType: 1
+    throttleLimit: 0
+    volume: 1
+    pitch: 1
+    pitchInvert: 0
+    cueList:
+    - id: a7c52c65-ea1f-49eb-91d0-e825795091c9
+      colorId: 
+      name: BGM
+      categoryId: 1
+      throttleType: 0
+      throttleLimit: 0
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      trackList:
+      - id: 41d41bfc-204b-49cb-ad06-aa4b31e0eb5b
+        colorId: 
+        name: BGM01
+        audioClip: {fileID: 8300000, guid: 60029b56780c64ac5b5fe7399cfe6ff8, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 2981408
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+      - id: b22825f7-ceda-464b-9f80-b2717f3b9502
+        colorId: 
+        name: BGM02
+        audioClip: {fileID: 8300000, guid: 7e5732debbb3a4e89a2a60b6c43d1986, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 1788899
+        loopStartSample: 1192619
+        isLoop: 1
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+    - id: 220eeb16-de78-4415-95f1-1097f721826d
+      colorId: 
+      name: SE
+      categoryId: 2
+      throttleType: 0
+      throttleLimit: 0
+      volume: 0.8
+      volumeRange: 0.2
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 1
+      trackList:
+      - id: 473026dc-75ef-4a00-99b6-7ee07e9dcd68
+        colorId: 
+        name: SE01
+        audioClip: {fileID: 8300000, guid: 2e70f07445c79449a80822dcb7aaacfb, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 18151
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+      - id: 548855cd-e05a-4841-9986-48a03af7b197
+        colorId: 
+        name: SE02
+        audioClip: {fileID: 8300000, guid: 032ed3a05bc6f49129f1c97e965574ea, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 29913
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+      - id: 74e167ef-3805-4bd4-9403-82691ffd94a6
+        colorId: 
+        name: SE03
+        audioClip: {fileID: 8300000, guid: 5f367dfb335014bd98f39b326180e6b4, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 74306
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+    - id: 92774b11-2e3b-4b9d-89bc-f12e3345e842
+      colorId: 
+      name: Voice
+      categoryId: 3
+      throttleType: 0
+      throttleLimit: 1
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      trackList:
+      - id: af6ea1b6-7349-4647-a5d2-c213410f8250
+        colorId: 
+        name: DummyVoice01
+        audioClip: {fileID: 8300000, guid: 180df7d5fb3ad429e9972084e2f4557a, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 148337
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+      - id: 875b1b71-c3b9-4860-a270-1d7d0961e24f
+        colorId: 
+        name: DummyVoice02
+        audioClip: {fileID: 8300000, guid: 1282ee45843c54945bc00c1d3a20b579, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 204829
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0

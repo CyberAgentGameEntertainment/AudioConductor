@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:TextField picking-mode="Ignore" label="Cue Name" name="Name" is-delayed="true" />
+    <AudioConductor.Editor.Core.Tools.Shared.ColorDefinePopupField label="Color" />
+    <AudioConductor.Editor.Foundation.PopupIntField label="Category" name="Category" />
+    <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" />
+    <uie:IntegerField label="Throttle Limit" name="ThrottleLimit" is-delayed="true" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume" value="1" high-value="1" name="Volume" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume Range" high-value="1" name="VolumeRange" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Pitch" high-value="3" value="1" low-value="0.01" name="Pitch" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Pitch Range" high-value="1" name="PitchRange" />
+    <ui:Toggle label="Pitch Invert" name="PitchInvert" style="margin-top: 3px;" />
+    <AudioConductor.Editor.Core.Tools.Shared.CuePlayTypeField focusable="true" />
+    <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial; margin-top: 3px; margin-bottom: 3px;" />
+    <ui:VisualElement style="flex-direction: row;">
+        <ui:Button display-tooltip-when-elided="true" name="Play" class="audio-play" style="width: 24px; height: 24px;" />
+        <ui:Button display-tooltip-when-elided="true" name="Stop" class="audio-stop" style="width: 24px; height: 24px;" />
+    </ui:VisualElement>
+</ui:UXML>

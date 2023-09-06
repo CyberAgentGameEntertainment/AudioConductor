@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:TextField picking-mode="Ignore" label="Id" value="filler text" name="Id" />
+    <ui:VisualElement style="flex-direction: row;">
+        <uie:ColorField value="RGBA(0.000, 1.000, 1.000, 1.000)" style="width: 40px;" />
+        <ui:TextField picking-mode="Ignore" value="filler text" name="Name" is-delayed="true" style="flex-grow: 1;" />
+    </ui:VisualElement>
+</ui:UXML>

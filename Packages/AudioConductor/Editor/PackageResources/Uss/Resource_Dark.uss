@@ -1,0 +1,39 @@
+.cue-sheet-parameter {
+    background-image: url("../Textures/Dark/Pane_CueSheetSettingIcon.png")
+}
+
+.cue-list-edit {
+    background-image: url("../Textures/Dark/Pane_CueSheetIcon.png");
+}
+
+.other-operation {
+    background-image: url("../Textures/Dark/Pane_OthersIcon.png");
+}
+
+.volume-columns {
+    background-image: url("../Textures/Dark/Column_VolumeIcon.png");
+}
+
+.play-info-columns {
+    background-image: url("../Textures/Dark/Column_PlayInfoIcon.png");
+}
+
+.throttle-columns {
+    background-image: url("../Textures/Dark/Column_ThrottleIcon.png");
+}
+
+.memo-columns {
+    background-image: url("../Textures/Dark/Column_MemoIcon.png");
+}
+
+.audio-play {
+    background-image: url("../Textures/Dark/PlayButton.png");
+}
+
+.audio-stop {
+    background-image: url("../Textures/Dark/StopButton.png");
+}
+
+.inspector {
+    background-image: url("../Textures/Dark/InspectorIcon.png");
+}

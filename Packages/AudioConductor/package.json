@@ -1,0 +1,17 @@
+{
+  "name": "jp.co.cyberagent.audioconductor",
+  "version": "1.0.0",
+  "displayName": "Audio Conductor",
+  "unity": "2021.3",
+  "license": "MIT",
+  "author": {
+    "name": "CyberAgent"
+  },
+  "samples": [
+    {
+      "displayName": "Sample",
+      "description": "",
+      "path": "Samples~/Sample"
+    }
+  ]
+}

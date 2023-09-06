@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:VisualElement name="Rox" style="flex-direction: row;">
+            <ui:TextField picking-mode="Ignore" label="CueSheet Name" value="filler text" name="Name" is-delayed="true" style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <uie:IntegerField label="Throttle Limit" name="ThrottleLimit" is-delayed="true" style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField name="Volume" label="Volume" value="1" high-value="1" is-delayed="true" style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField name="Pitch" label="Pitch" value="1" high-value="3" is-delayed="true" style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <ui:Toggle label="Pitch Invert" name="PitchInvert" style="flex-basis: 33.333%; padding-top: 2px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

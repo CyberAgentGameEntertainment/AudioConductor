@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <uie:Toolbar name="Toolbar" style="min-height: 25px;">
+        <uie:ToolbarToggle focusable="false" name="Volume" value="true" tooltip="Show/Hide &quot;Volume&quot; &amp; &quot;Volume Range&quot; columns" class="toggle volume-columns" style="width: 25px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+        <uie:ToolbarToggle focusable="false" name="PlayInfo" value="true" tooltip="Show/Hide &quot;Category&quot; &amp; &quot;Play Type&quot; columns" class="border-right toggle play-info-columns" style="width: 25px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+        <uie:ToolbarToggle focusable="false" name="Throttle" value="true" tooltip="Show/Hide &quot;Throttle Type&quot; &amp; &quot;Throttle Limit&quot; columns" class="border-right toggle throttle-columns" style="width: 25px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+        <uie:ToolbarToggle focusable="false" name="Memo" value="true" tooltip="Show/Hide &quot;Color&quot; column" class="border-right toggle memo-columns" style="width: 25px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+        <uie:ToolbarSearchField focusable="true" style="border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+        <uie:ToolbarSpacer style="flex-grow: 1;" />
+        <uie:ToolbarToggle focusable="false" name="Inspector" value="true" tooltip="Show/Hide inspector" class="inspector" style="width: 25px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; left: auto; right: -1px; margin-left: 0; margin-right: -1px;" />
+    </uie:Toolbar>
+    <AudioConductor.Editor.Core.Tools.Shared.TwoPaneSplitView fixed-pane-index="1" fixed-pane-initial-dimension="400">
+        <AudioConductor.Editor.Core.Tools.CueSheetEditor.Views.CueListView style="flex-grow: 1;" />
+        <AudioConductor.Editor.Core.Tools.CueSheetEditor.Views.InspectorView style="flex-grow: 1;" />
+    </AudioConductor.Editor.Core.Tools.Shared.TwoPaneSplitView>
+</ui:UXML>

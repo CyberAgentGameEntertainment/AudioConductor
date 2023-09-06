@@ -1,0 +1,22 @@
+{
+    "name": "AudioConductor.Tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c9bbfa2570df343ad81305168b068032"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

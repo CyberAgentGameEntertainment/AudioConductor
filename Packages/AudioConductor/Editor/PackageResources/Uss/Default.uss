@@ -1,0 +1,44 @@
+Button.select-pane {
+    min-height: 30px;
+    min-width: 30px;
+}
+
+Button.toggle {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Button.toggle.selected {
+    background-color: var(--unity-colors-button-background-pressed);
+}
+
+.border-element {
+    background-color: var(--unity-colors-app_toolbar_button-border_accent);
+}
+
+.border-left {
+    border-left-color: var(--unity-colors-app_toolbar_button-border_accent);
+    border-left-width: 1px;
+}
+
+.border-right {
+    border-right-color: var(--unity-colors-app_toolbar_button-border_accent);
+    border-right-width: 1px;
+}
+
+.border-top {
+    border-top-color: var(--unity-colors-app_toolbar_button-border_accent);
+    border-top-width: 1px;
+}
+
+.border-bottom {
+    border-bottom-color: var(--unity-colors-app_toolbar_button-border_accent);
+    border-bottom-width: 1px;
+}
+
+ToolbarToggle.toggle:checked {
+    background-color: var(--unity-colors-button-background-pressed);
+}
+
+GroupBox.background-color {
+    background-color: var(--unity-colors-box-background);
+}

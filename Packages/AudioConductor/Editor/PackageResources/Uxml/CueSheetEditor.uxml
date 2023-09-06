@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:GroupBox name="HorizontalGroup" style="flex-direction: row; flex-grow: 1; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;">
+        <ui:GroupBox name="TabContainer" class="border border-top border-bottom" style="flex-direction: column; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+            <ui:Button display-tooltip-when-elided="true" name="Parameter" tooltip="Edit CueSheet parameter" class="tab toggle cue-sheet-parameter select-pane" style="transition-property: all; transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+            <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial;" />
+            <ui:Button display-tooltip-when-elided="true" name="CueList" tabindex="1" tooltip="Edit Cue&amp;Track" class="tab toggle cue-list-edit select-pane" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+            <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial;" />
+            <ui:Button display-tooltip-when-elided="true" name="OtherOperation" tabindex="2" tooltip="Other operations" class="tab toggle other-operation select-pane" style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+            <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial;" />
+        </ui:GroupBox>
+        <ui:VisualElement name="Container" class="border-top border-left border-right border-bottom" style="flex-grow: 1;">
+            <AudioConductor.Editor.Core.Tools.CueSheetEditor.Views.CueSheetParameterPaneView style="flex-grow: 1;" />
+            <AudioConductor.Editor.Core.Tools.CueSheetEditor.Views.CueListEditorPaneView style="flex-grow: 1;" />
+            <AudioConductor.Editor.Core.Tools.CueSheetEditor.Views.OtherOperationPaneView style="flex-grow: 1;" />
+        </ui:VisualElement>
+    </ui:GroupBox>
+</ui:UXML>

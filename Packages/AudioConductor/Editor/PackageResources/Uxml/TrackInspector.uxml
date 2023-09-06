@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:TextField picking-mode="Ignore" label="Track Name" value="filler text" name="Name" is-delayed="true" />
+    <AudioConductor.Editor.Core.Tools.Shared.ColorDefinePopupField label="Color" />
+    <uie:ObjectField label="Audio Clip" allow-scene-objects="false" type="UnityEngine.AudioClip, UnityEngine.AudioModule" name="AudioClip" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume" value="1" high-value="1" name="Volume" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume Range" high-value="1" name="VolumeRange" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Pitch" high-value="3" value="1" low-value="0.01" name="Pitch" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Pitch Range" high-value="1" name="PitchRange" />
+    <ui:Toggle label="Pitch Invert" name="PitchInvert" style="margin-bottom: 3px; margin-top: 3px;" />
+    <uie:IntegerField label="Random Weight" name="RandomWeight" is-delayed="true" />
+    <uie:IntegerField label="Priority" name="Priority" is-delayed="true" />
+    <uie:FloatField label="Fade Time" value="0" name="FadeTime" is-delayed="true" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndIntegerField name="StartSample" label="Start Sample" is-delayed="true" />
+    <AudioConductor.Editor.Core.Tools.Shared.SliderAndIntegerField name="EndSample" label="End Sample" is-delayed="true" />
+    <ui:GroupBox text="Loop Settings" class="border-top border-left border-right border-bottom background-color" style="padding-left: 10px; padding-right: 10px; padding-top: 10px; margin-bottom: 6px;">
+        <ui:VisualElement style="margin-left: 6px; margin-right: 6px; margin-top: 6px; margin-bottom: 6px;">
+            <ui:Toggle label="Loop" name="Loop" />
+            <AudioConductor.Editor.Core.Tools.Shared.SliderAndIntegerField name="LoopStartSample" label="Loop Start Sample" is-delayed="true" />
+            <ui:Button text="Analyze Wav Chunk" display-tooltip-when-elided="true" name="Analyze" style="margin-top: 10px;" />
+        </ui:VisualElement>
+    </ui:GroupBox>
+    <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial; margin-top: 3px; margin-bottom: 3px;" />
+    <ui:VisualElement style="flex-direction: row;">
+        <ui:Button display-tooltip-when-elided="true" name="Play" class="audio-play" style="width: 24px; height: 24px;" />
+        <ui:Button display-tooltip-when-elided="true" name="Stop" class="audio-stop" style="width: 24px; height: 24px;" />
+    </ui:VisualElement>
+    <ui:IMGUIContainer focusable="false" name="Preview" />
+</ui:UXML>

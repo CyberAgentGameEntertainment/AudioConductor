@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <uie:IntegerField label="Id" name="Id" is-delayed="true" />
+    <ui:TextField picking-mode="Ignore" label="Name" name="Name" is-delayed="true" tooltip="Category name." />
+    <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" tooltip="Concurrent play control type." />
+    <uie:IntegerField label="Throttle Limit" name="ThrottleLimit" is-delayed="true" tooltip="Limit of concurrent play." />
+    <uie:ObjectField label="Audio Mixer Group" type="UnityEngine.Audio.AudioMixerGroup, UnityEngine.AudioModule" tooltip="Output AudioMixerGroup." />
+</ui:UXML>

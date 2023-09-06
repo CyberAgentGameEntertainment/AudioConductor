@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:GroupBox text="Data Operation" class="background-color" style="margin-left: 6px; margin-right: 6px; margin-top: 12px; margin-bottom: 2px; padding-left: 6px; padding-top: 10px; padding-bottom: 10px;">
+        <ui:VisualElement style="margin-top: 5px; margin-bottom: 5px;">
+            <ui:Button text="Export Csv" display-tooltip-when-elided="true" name="Export" style="max-width: 100px; margin-top: 3px; margin-bottom: 3px;" />
+            <ui:Button text="Import Csv" display-tooltip-when-elided="true" name="Import" style="max-width: 100px; margin-top: 3px; margin-bottom: 3px;" />
+        </ui:VisualElement>
+    </ui:GroupBox>
+</ui:UXML>
