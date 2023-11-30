@@ -173,7 +173,7 @@ AudioSourceに設定されるピッチはキューシート/キュー/トラッ�
 1. **Window > Package Manager** を選択
 2. **「+」ボタン > Add package from git URL** を選択
 3. 以下を入力してインストール
-    - https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor
+    - https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor
 
 <p align="center">
   <img src="./Images/install_01.png" alt="Package Manager">
