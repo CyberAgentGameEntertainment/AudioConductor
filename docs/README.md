@@ -169,7 +169,7 @@ For example, "Editing: red" and "Done: green" make edit status easier to underst
 1. Open the Package Manager from Window > Package Manager
 2. "+" button > Add package from git URL
 3. Enter the following
-    * https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor
+    * https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor
 
 <p align="center">
   <img src="./Images/install_01.png" alt="Package Manager">
