@@ -7,6 +7,7 @@ using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
 using UnityEditor;
 using UnityEngine.UIElements;
+using TabView = AudioConductor.Editor.Core.Tools.Shared.TabView;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
