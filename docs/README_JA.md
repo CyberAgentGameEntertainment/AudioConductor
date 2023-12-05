@@ -184,14 +184,14 @@ AudioSourceに設定されるピッチはキューシート/キュー/トラッ�
 ```json
 {
    "dependencies": {
-      "jp.co.cyberagent.audioconductor": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor"
+      "jp.co.cyberagent.audioconductor": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor"
    }
 }
 ```
 
 バージョンを指定したい場合には以下のように記述します（バージョンは適宜書き換えてください）。  
 
-* https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor#1.0.0
+* https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor#1.0.0
 
 バージョンを更新するには上述の手順でバージョンを書き換えてください。  
 バージョンを指定しない場合には、**Packages/package-lock.json** ファイルを開いて本ライブラリの箇所のハッシュを書き換えることで更新できます。  
@@ -200,7 +200,7 @@ AudioSourceに設定されるピッチはキューシート/キュー/トラッ�
 {
    "dependencies": {
       "jp.co.cyberagent.audioconductor": {
-         "version": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor",
+         "version": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor",
          "depth": 0,
          "source": "git",
          "dependencies": {},

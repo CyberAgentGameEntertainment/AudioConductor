@@ -180,14 +180,14 @@ Or, open Packages/manifest.json and add the following to the dependencies block.
 ```json
 {
     "dependencies": {
-      "jp.co.cyberagent.audioconductor": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor"
+      "jp.co.cyberagent.audioconductor": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor"
     }
 }
 ```
 
 If you want to set the target version, write as follows.  
 
-* https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor#1.0.0
+* https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor#1.0.0
 
 To update the version, rewrite the version as described above.  
 If you don't want to specify a version, you can also update the version by editing the hash of this library in the package-lock.json file.  
@@ -196,7 +196,7 @@ If you don't want to specify a version, you can also update the version by editi
 {
   "dependencies": {
       "jp.co.cyberagent.audioconductor": {
-      "version": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?/Packages/AudioConductor",
+      "version": "https://github.com/CyberAgentGameEntertainment/AudioConductor.git?path=/Packages/AudioConductor",
       "depth": 0,
       "source": "git",
       "dependencies": {},
