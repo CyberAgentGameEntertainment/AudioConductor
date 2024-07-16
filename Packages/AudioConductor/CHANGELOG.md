@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.1 - 2024/01/18
+## v1.0.1 - 2024/07/16
 
 - New Features 🚀
   - Feature to check if a cue has a track with a specified name.
