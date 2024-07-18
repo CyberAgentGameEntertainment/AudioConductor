@@ -66,6 +66,12 @@ namespace AudioConductor.Runtime.Core
             GetManager().DisposeCueState(_managerNumber);
         }
 
+        /// <inheritdoc />
+        public bool HasTrack(string name)
+        {
+            return GetManager().HasTrack(_managerNumber, name);
+        }
+
         public void Setup(CueSheetAsset sheetAsset, int cueIndex)
         {
             if (cueIndex < 0 || sheetAsset.cueSheet.cueList.Count <= cueIndex)

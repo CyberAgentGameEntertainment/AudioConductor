@@ -75,5 +75,12 @@ namespace AudioConductor.Runtime.Core
         ///     Sets the pitch of the playing track. (Value range -3.00 to 3.00 except 0)
         /// </summary>
         void SetPitch(float pitch);
+
+        /// <summary>
+        ///     Checks if the track exists.
+        /// </summary>
+        /// <param name="name">The track name.</param>
+        /// <returns>True if the track exists.</returns>
+        bool HasTrack(string name);
     }
 }

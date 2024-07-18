@@ -113,6 +113,12 @@ namespace AudioConductor.Runtime.Core
             _callback?.Invoke(ownerCueSheetAsset);
         }
 
+        public bool HasTrack(uint manageNumber, string name)
+        {
+            var state = GetState(manageNumber);
+            return state?.GetTrack(name) != null;
+        }
+
         private uint SetupCueSheet(CueSheetAsset sheetAsset)
         {
             foreach (var pair in _cueSheetAssets)
@@ -206,7 +212,7 @@ namespace AudioConductor.Runtime.Core
                 return null;
 
             var track = state.GetTrack(name);
-            return Play(manageNumber, state, track, isForceLoop);
+            return track == null ? null : Play(manageNumber, state, track, isForceLoop);
         }
 
         public TrackController Play(uint manageNumber, int id, bool isForceLoop)
@@ -216,7 +222,7 @@ namespace AudioConductor.Runtime.Core
                 return null;
 
             var track = state.GetTrack(id);
-            return Play(manageNumber, state, track, isForceLoop);
+            return track == null ? null : Play(manageNumber, state, track, isForceLoop);
         }
 
         public TrackController Play(uint manageNumber, bool isForceLoop)
