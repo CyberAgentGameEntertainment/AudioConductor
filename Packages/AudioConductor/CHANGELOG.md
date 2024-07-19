@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.2 - 2024/07/18
+
+- Fix Issues 
+  - Issue #7; fixes an audio end time discrepancy when repeating Pause and Resume multiple times.
+
 ## v1.0.1 - 2024/07/16
 
 - New Features 🚀

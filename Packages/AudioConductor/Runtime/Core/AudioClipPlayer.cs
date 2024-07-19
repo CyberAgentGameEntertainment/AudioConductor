@@ -340,7 +340,8 @@ namespace AudioConductor.Runtime.Core
 
         private void RescheduleEndTime(double pausedDuration)
         {
-            _source[_pausedIndex].SetScheduledEndTime(_scheduledEndTime + pausedDuration);
+            _scheduledEndTime += pausedDuration;
+            _source[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
             _nextEventTime += pausedDuration;
         }
 
