@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -9,6 +9,7 @@ using System.Linq;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
+using AudioConductor.Editor.Core.Tools.WaveChunkReader;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
 using AudioConductor.Runtime.Core.Models;
@@ -20,35 +21,35 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class TrackInspectorModel : ITrackInspectorModel
     {
-        private readonly string _tag;
+        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<AudioClip>> _audioClip;
+        private readonly ObservableProperty<MixedValue<string>> _color;
+        private readonly ObservableProperty<MixedValue<int>> _endSample;
+        private readonly ObservableProperty<MixedValue<float>> _fadeTime;
+        private readonly AutoIncrementHistory _history;
+        private readonly ObservableProperty<MixedValue<bool>> _isLoop;
+        private readonly HashSet<int> _itemIds;
 
         private readonly ItemTrack[] _items;
-        private readonly HashSet<int> _itemIds;
-        private readonly Track[] _target;
-        private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<int>> _loopStartSample;
 
         private readonly ObservableProperty<MixedValue<string>> _name;
-        private readonly ObservableProperty<MixedValue<string>> _color;
-        private readonly ObservableProperty<MixedValue<AudioClip>> _audioClip;
-        private readonly ObservableProperty<MixedValue<float>> _volume;
-        private readonly ObservableProperty<MixedValue<float>> _volumeRange;
         private readonly ObservableProperty<MixedValue<float>> _pitch;
-        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
         private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
-        private readonly ObservableProperty<MixedValue<int>> _startSample;
-        private readonly ObservableProperty<MixedValue<int>> _endSample;
-        private readonly ObservableProperty<MixedValue<int>> _loopStartSample;
-        private readonly ObservableProperty<MixedValue<bool>> _isLoop;
-        private readonly ObservableProperty<MixedValue<int>> _randomWeight;
+        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
         private readonly ObservableProperty<MixedValue<int>> _priority;
-        private readonly ObservableProperty<MixedValue<float>> _fadeTime;
+        private readonly ObservableProperty<MixedValue<int>> _randomWeight;
+        private readonly ObservableProperty<MixedValue<int>> _startSample;
+        private readonly string _tag;
+        private readonly Track[] _target;
 
         private readonly TrackPreviewModel _trackPreviewModel;
+        private readonly ObservableProperty<MixedValue<float>> _volume;
+        private readonly ObservableProperty<MixedValue<float>> _volumeRange;
 
         public TrackInspectorModel([NotNull] ItemTrack[] items,
-                                   [NotNull] AutoIncrementHistory history,
-                                   [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService)
         {
             Assert.IsTrue(items.Length > 0);
 
@@ -837,13 +838,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     {
                         waveChunkReader.Execute(track.audioClip);
                     }
-                    catch (Exception)
+                    catch (WaveParseException ex)
                     {
-                        Debug.LogWarning($"{track.name} hasn't Loop information.");
+                        Debug.LogWarning($"{track.name}: {ex.Message}");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"{track.name}: Failed to parse WAV file. {ex.Message}");
                         return;
                     }
 
-                    if (waveChunkReader.HasLoop() == false)
+                    if (!waveChunkReader.HasLoop())
                         return;
 
                     var loopInfoList = waveChunkReader.LoopInfoList;
@@ -878,7 +884,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             #endregion
         }
 
-        public bool Contains(int itemId) => _itemIds.Contains(itemId);
+        public bool Contains(int itemId)
+        {
+            return _itemIds.Contains(itemId);
+        }
 
         public void ChangeValue(CueListTreeView.ColumnType columnType, object value)
         {
@@ -902,6 +911,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         public TrackPreviewController PlayClip(int? sample)
-            => _trackPreviewModel?.Play(sample);
+        {
+            return _trackPreviewModel?.Play(sample);
+        }
     }
 }

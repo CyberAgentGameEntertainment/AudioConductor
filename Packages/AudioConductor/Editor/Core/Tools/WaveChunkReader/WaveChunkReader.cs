@@ -1,5 +1,5 @@
-﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// --------------------------------------------------------------
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -85,14 +85,17 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
         ///     Return true if the file has a loop information.
         /// </summary>
         /// <returns></returns>
-        public bool HasLoop() => LoopInfoList?.Count != 0;
+        public bool HasLoop()
+        {
+            return LoopInfoList?.Count != 0;
+        }
 
         /// <summary>
         ///     Read the wav file chunk.
         /// </summary>
         /// <param name="audioClip"></param>
         /// <exception cref="ArgumentNullException">If AudioClip is null</exception>
-        /// <exception cref="NotSupportedException">If file isn't a wav format.</exception>
+        /// <exception cref="WaveParseException">If file isn't a valid wav format.</exception>
         public void Execute(AudioClip audioClip)
         {
             if (audioClip == null)
@@ -106,14 +109,14 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
         ///     Read the wav file chunk.
         /// </summary>
         /// <param name="path"></param>
-        /// <exception cref="ArgumentNullException">If AudioClip is null</exception>
-        /// <exception cref="NotSupportedException">If file isn't a wav format.</exception>
+        /// <exception cref="ArgumentNullException">If path is null</exception>
+        /// <exception cref="WaveParseException">If file isn't a valid wav format.</exception>
         public void Execute(string path)
         {
             var extension = Path.GetExtension(path).ToLower();
 
             if (extension != ".wav")
-                throw new NotSupportedException("File isn't wav format.");
+                throw new WaveParseException($"File is not wav format: {Path.GetFileName(path)}");
 
             using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
             Execute(fileStream);
@@ -123,7 +126,7 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
         ///     Read the wave file chunk.
         /// </summary>
         /// <param name="stream"></param>
-        /// <exception cref="NotSupportedException">If file isn't a wav format.</exception>
+        /// <exception cref="WaveParseException">If file isn't a valid wav format.</exception>
         public void Execute(Stream stream)
         {
             using (var binary = new BinaryReader(stream, new UTF8Encoding(), true))
@@ -132,13 +135,24 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
                 var formType = binary.ReadChars(4);
 
                 if (chunkId != "RIFF" || string.Join("", formType) != "WAVE")
-                    throw new NotSupportedException();
+                    throw new WaveParseException("Not a valid RIFF/WAVE file.");
 
                 var formChunkSize = chunkSize;
+
+                // Validate formChunkSize against stream length.
+                // stream.Length - 8 = bytes after the RIFF id+size header (8 bytes).
+                if (stream.CanSeek && formChunkSize > stream.Length - 8)
+                    throw new WaveParseException(
+                        $"formChunkSize ({formChunkSize}) exceeds stream length ({stream.Length}).");
+
                 ReadSize = 12;
                 while (ReadSize < formChunkSize)
                 {
                     ReadSize += ReadChunkIdAndSize(binary, out chunkId, out chunkSize);
+
+                    // Guard against uint.MaxValue to prevent padding overflow.
+                    if (chunkSize == uint.MaxValue)
+                        throw new WaveParseException($"Chunk '{chunkId}' has invalid size (uint.MaxValue).");
 
                     var readSize = chunkId.ToUpper() switch
                     {
@@ -149,11 +163,18 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
                         "JUNK" => ReadJunkChunk(binary, chunkSize),
                         "INST" => ReadInstChunk(binary, chunkSize),
                         "RESU" => ReadResUChunk(binary, chunkSize),
-                        _      => ReadUnknownChunk(binary, chunkSize)
+                        _ => ReadUnknownChunk(binary, chunkSize)
                     };
 
                     _chunkInfoList.Add(new ChunkSummary(chunkId, readSize));
                     ReadSize += readSize;
+
+                    // Unified odd-byte padding: skip 1-byte padding when chunk size is odd.
+                    if ((chunkSize & 1) != 0 && ReadSize < formChunkSize)
+                    {
+                        binary.ReadByte();
+                        ReadSize++;
+                    }
                 }
             }
 
@@ -171,6 +192,11 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
 
         private uint ReadFormatChunk(BinaryReader binaryReader, uint chunkSize)
         {
+            const uint minFmtSize = 16;
+            if (chunkSize < minFmtSize)
+                throw new WaveParseException(
+                    $"FMT chunk size ({chunkSize}) is too small; expected at least {minFmtSize}.");
+
             var formatTag = binaryReader.ReadUInt16();
             var channels = binaryReader.ReadUInt16();
             var samplesPerSec = binaryReader.ReadUInt32();
@@ -193,6 +219,9 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
 
         private uint ReadDataChunk(BinaryReader binaryReader, uint chunkSize)
         {
+            if (SamplingBit == 0 || Channels == 0)
+                throw new WaveParseException("DATA chunk encountered before FMT chunk; cannot compute sample count.");
+
             var sampleNum = chunkSize / (SamplingBit / 8);
             var numSampleFrames = sampleNum / Channels;
 
@@ -278,9 +307,6 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
         {
             // References: https://www.daubnet.com/en/file-format-riff
 
-            // If the size is odd, a 1-byte padding present.
-            chunkSize += chunkSize & 1;
-
             binaryReader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
 
             return chunkSize;
@@ -288,9 +314,6 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
 
         private static uint ReadInstChunk(BinaryReader binaryReader, uint chunkSize)
         {
-            // If the size is odd, a 1-byte padding present.
-            chunkSize += chunkSize & 1;
-
             // Unknown details, skip it.
             binaryReader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
 
@@ -299,9 +322,6 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader
 
         private static uint ReadResUChunk(BinaryReader binaryReader, uint chunkSize)
         {
-            // If the size is odd, a 1-byte padding present.
-            chunkSize += chunkSize & 1;
-
             // Unknown details, skip it.
             binaryReader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
 
