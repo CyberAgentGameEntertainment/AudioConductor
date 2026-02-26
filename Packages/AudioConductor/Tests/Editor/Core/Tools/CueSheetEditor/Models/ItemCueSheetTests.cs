@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -98,6 +98,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
                 Assert.That(cueSheet.cueList[i], Is.EqualTo(((ItemCue)item.children[i]).RawData));
         }
 
+        [Test]
         public void InsertChild([Range(1, ChildCount - 1)] int index)
         {
             var cues = new List<Cue>();
