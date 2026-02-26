@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -27,8 +27,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 MoveCue(evt.oldIndex, evt.newIndex);
             else
                 MoveTrack(evt.oldIndex, (ItemCue)evt.oldParent,
-                          evt.newIndex, (ItemCue)evt.newParent,
-                          (ItemTrack)evt.target);
+                    evt.newIndex, (ItemCue)evt.newParent,
+                    (ItemTrack)evt.target);
         }
 
         public void AddCue(CueAddOperationRequestedEvent evt)
@@ -114,6 +114,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void MoveCue(int oldIndex, int newIndex)
         {
+            if (oldIndex < 0 || oldIndex >= _root.children.Count)
+                return;
+
+            if (newIndex < 0 || newIndex >= _root.children.Count)
+                return;
+
+            if (oldIndex == newIndex)
+                return;
+
             _history.Register($"Move Cue {Time.frameCount}", Redo, Undo);
 
             #region LocalMethods
@@ -137,6 +146,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void MoveTrack(int oldIndex, ItemCue oldParent, int newIndex, ItemCue newParent, ItemTrack target)
         {
+            if (oldIndex < 0 || oldIndex >= oldParent.children.Count)
+                return;
+
+            if (newIndex < 0 || newIndex > newParent.children.Count)
+                return;
+
+            if (oldParent == newParent && oldIndex == newIndex)
+                return;
+
             _history.Register($"Move Cue {Time.frameCount}", Redo, Undo);
 
             #region LocalMethods

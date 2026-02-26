@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -28,63 +28,66 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Utility.RandomString
         };
 
-        private static CueSheet CreateTestCueSheet() => new()
+        private static CueSheet CreateTestCueSheet()
         {
-            name = "TestCueSheet",
-            cueList = new List<Cue>
+            return new CueSheet
             {
-                new()
+                name = "TestCueSheet",
+                cueList = new List<Cue>
                 {
-                    name = "TestCue0",
-                    colorId = "Color1",
-                    trackList = new List<Track>
+                    new()
                     {
-                        new()
+                        name = "TestCue0",
+                        colorId = "Color1",
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackA",
-                            colorId = "Color1"
-                        },
-                        new()
-                        {
-                            name = "TestTrackB",
-                            colorId = "Color2"
+                            new()
+                            {
+                                name = "TestTrackA",
+                                colorId = "Color1"
+                            },
+                            new()
+                            {
+                                name = "TestTrackB",
+                                colorId = "Color2"
+                            }
                         }
-                    }
-                },
-                new()
-                {
-                    name = "TestCue1",
-                    trackList = new List<Track>
+                    },
+                    new()
                     {
-                        new()
+                        name = "TestCue1",
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackC"
-                        },
-                        new()
-                        {
-                            name = "TestTrackD",
-                            colorId = "Color3"
-                        },
-                        new()
-                        {
-                            name = "TestTrackE"
+                            new()
+                            {
+                                name = "TestTrackC"
+                            },
+                            new()
+                            {
+                                name = "TestTrackD",
+                                colorId = "Color3"
+                            },
+                            new()
+                            {
+                                name = "TestTrackE"
+                            }
                         }
-                    }
-                },
-                new()
-                {
-                    name = "TestCue2",
-                    colorId = "Color4",
-                    trackList = new List<Track>
+                    },
+                    new()
                     {
-                        new()
+                        name = "TestCue2",
+                        colorId = "Color4",
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackF"
+                            new()
+                            {
+                                name = "TestTrackF"
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
+        }
 
         [Test]
         public void Properties()
@@ -117,7 +120,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             expected.Insert(newIndex, target);
 
             model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex, null,
-                                                               (CueListItem)model.Root.children[targetIndex]));
+                (CueListItem)model.Root.children[targetIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(expected));
             for (var i = 0; i < cueSheet.cueList.Count; i++)
@@ -148,9 +151,10 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             expected.Remove(target);
             expected.Insert(newIndex, target);
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex, (CueListItem)model.Root.children[cueIndex],
-                                                               (CueListItem)model.Root.children[cueIndex]
-                                                                   .children[targetIndex]));
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex,
+                (CueListItem)model.Root.children[cueIndex],
+                (CueListItem)model.Root.children[cueIndex]
+                    .children[targetIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(beforeCueList));
             Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(expected));
@@ -182,9 +186,10 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             fromExpected.Remove(target);
             toExpected.Insert(newIndex, target);
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex, (CueListItem)model.Root.children[toCueIndex],
-                                                               (CueListItem)model.Root.children[fromCueIndex]
-                                                                   .children[targetIndex]));
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex,
+                (CueListItem)model.Root.children[toCueIndex],
+                (CueListItem)model.Root.children[fromCueIndex]
+                    .children[targetIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(beforeCueList));
             Assert.That(cueSheet.cueList[fromCueIndex].trackList, Is.EqualTo(fromExpected));
@@ -280,7 +285,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             expected.RemoveAt(trackIndex);
 
             model.RemoveItem(new ItemRemoveOperationRequestedEvent((ItemTrack)model.Root.children[cueIndex]
-                                                                       .children[trackIndex]));
+                .children[trackIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(beforeCueList));
             Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(expected));
@@ -304,7 +309,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList.ToList();
 
             model.DuplicateItem(new ItemDuplicateOperationRequestedEvent(insertIndex, null,
-                                                                         (ItemCue)model.Root.children[cueIndex]));
+                (ItemCue)model.Root.children[cueIndex]));
 
             Assert.That(cueSheet.cueList.Count, Is.EqualTo(initial.Count + 1));
             Assert.That(cueSheet.cueList[insertIndex].Id, !Is.EqualTo(initial[cueIndex].Id));
@@ -336,9 +341,9 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
 
             model.DuplicateItem(new ItemDuplicateOperationRequestedEvent(insertIndex,
-                                                                         (ItemCue)model.Root.children[cueIndex],
-                                                                         (ItemTrack)model.Root.children[cueIndex]
-                                                                             .children[trackIndex]));
+                (ItemCue)model.Root.children[cueIndex],
+                (ItemTrack)model.Root.children[cueIndex]
+                    .children[trackIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(beforeCueList));
             Assert.That(cueSheet.cueList[cueIndex].trackList.Count, Is.EqualTo(initial.Count + 1));
@@ -368,17 +373,17 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var toInitial = cueSheet.cueList[parentIndex].trackList.ToList();
 
             model.DuplicateItem(new ItemDuplicateOperationRequestedEvent(insertIndex,
-                                                                         (ItemCue)model.Root.children[parentIndex],
-                                                                         (ItemTrack)model.Root.children[cueIndex]
-                                                                             .children[trackIndex]));
+                (ItemCue)model.Root.children[parentIndex],
+                (ItemTrack)model.Root.children[cueIndex]
+                    .children[trackIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(beforeCueList));
             Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(fromInitial));
             Assert.That(cueSheet.cueList[parentIndex].trackList.Count, Is.EqualTo(toInitial.Count + 1));
             Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].Id,
-                        !Is.EqualTo(fromInitial[trackIndex].Id));
+                !Is.EqualTo(fromInitial[trackIndex].Id));
             Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].name,
-                        Is.EqualTo(fromInitial[trackIndex].name));
+                Is.EqualTo(fromInitial[trackIndex].name));
 
             history.Undo();
 
@@ -430,7 +435,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var parentInitial = cueSheet.cueList[parentIndex].trackList.ToList();
 
             model.AddAsset(new AssetAddOperationRequestedEvent(insertIndex, (ItemCue)model.Root.children[parentIndex],
-                                                               asset));
+                asset));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(initial));
             Assert.That(cueSheet.cueList[parentIndex].trackList.Count, Is.EqualTo(parentInitial.Count + 1));
@@ -545,7 +550,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].categoryId;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.Category, testValue,
-                                                          targetCue.id));
+                targetCue.id));
 
             Assert.That(cueSheet.cueList[cueIndex].categoryId, Is.EqualTo(testValue));
             foreach (var cue in cueSheet.cueList.Where(cue => cue != targetCue.RawData))
@@ -569,7 +574,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].throttleType;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.ThrottleType,
-                                                          ThrottleType.FirstComeFirstServed, targetCue.id));
+                ThrottleType.FirstComeFirstServed, targetCue.id));
 
             Assert.That(cueSheet.cueList[cueIndex].throttleType, Is.EqualTo(ThrottleType.FirstComeFirstServed));
             foreach (var cue in cueSheet.cueList.Where(cue => cue != targetCue.RawData))
@@ -582,7 +587,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Cue_ThrottleLimit(
-            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)] int testValue)
+            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)]
+            int testValue)
         {
             const int cueIndex = 0;
 
@@ -594,7 +600,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].throttleLimit;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.ThrottleLimit, testValue,
-                                                          targetCue.id));
+                targetCue.id));
 
             Assert.That(cueSheet.cueList[cueIndex].throttleLimit, Is.EqualTo(testValue));
             foreach (var cue in cueSheet.cueList.Where(cue => cue != targetCue.RawData))
@@ -607,7 +613,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Cue_Volume(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
         {
             const int cueIndex = 1;
 
@@ -631,7 +638,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Cue_VolumeRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
         {
             const int cueIndex = 2;
 
@@ -643,7 +651,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].volumeRange;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.VolumeRange, testValue,
-                                                          targetCue.id));
+                targetCue.id));
 
             Assert.That(cueSheet.cueList[cueIndex].volumeRange, Is.EqualTo(testValue));
             foreach (var cue in cueSheet.cueList.Where(cue => cue != targetCue.RawData))
@@ -667,7 +675,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = cueSheet.cueList[cueIndex].playType;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.PlayType, CuePlayType.Random,
-                                                          targetCue.id));
+                targetCue.id));
 
             Assert.That(cueSheet.cueList[cueIndex].playType, Is.EqualTo(CuePlayType.Random));
             foreach (var cue in cueSheet.cueList.Where(cue => cue != targetCue.RawData))
@@ -738,7 +746,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Track_Volume(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
         {
             const int cueIndex = 1;
             const int trackIndex = 1;
@@ -751,7 +760,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = targetTrack.Volume;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.Volume, testValue,
-                                                          targetTrack.id));
+                targetTrack.id));
 
             Assert.That(cueSheet.cueList[cueIndex].trackList[trackIndex].volume, Is.EqualTo(testValue));
             foreach (var cue in cueSheet.cueList)
@@ -768,7 +777,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Track_VolumeRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
         {
             const int cueIndex = 2;
             const int trackIndex = 0;
@@ -781,7 +791,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var initial = targetTrack.VolumeRange;
 
             model.ChangeValue(new ColumnValueChangedEvent(CueListTreeView.ColumnType.VolumeRange, testValue,
-                                                          targetTrack.id));
+                targetTrack.id));
 
             Assert.That(cueSheet.cueList[cueIndex].trackList[trackIndex].volumeRange, Is.EqualTo(testValue));
             foreach (var cue in cueSheet.cueList)
@@ -800,9 +810,9 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         public void ChangeValue_Track_Exception([Values] CueListTreeView.ColumnType columnType)
         {
             if (columnType is CueListTreeView.ColumnType.Name
-                              or CueListTreeView.ColumnType.Color
-                              or CueListTreeView.ColumnType.Volume
-                              or CueListTreeView.ColumnType.VolumeRange)
+                or CueListTreeView.ColumnType.Color
+                or CueListTreeView.ColumnType.Volume
+                or CueListTreeView.ColumnType.VolumeRange)
                 Assert.Pass();
 
             var history = new AutoIncrementHistory();
@@ -814,8 +824,137 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
                 model.ChangeValue(new ColumnValueChangedEvent(columnType, 0,
-                                                              targetTrack.id));
+                    targetTrack.id));
             });
+        }
+
+        [Test]
+        public void MoveItem_Cue_SameIndex_DoesNotRegisterHistory()
+        {
+            const int targetIndex = 1;
+
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList.ToList();
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, targetIndex, null,
+                (CueListItem)model.Root.children[targetIndex]));
+
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+        }
+
+        [Test]
+        public void MoveItem_Track_SameParent_SameIndex_DoesNotRegisterHistory()
+        {
+            const int cueIndex = 1;
+            const int targetIndex = 1;
+
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList[cueIndex].trackList.ToList();
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, targetIndex,
+                (CueListItem)model.Root.children[cueIndex],
+                (CueListItem)model.Root.children[cueIndex]
+                    .children[targetIndex]));
+
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
+        }
+
+        [Test]
+        public void MoveItem_Cue_OutOfRange_OldIndex_DoesNotRegisterHistory()
+        {
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList.ToList();
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(-1, 0, null,
+                (CueListItem)model.Root.children[0]));
+
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+        }
+
+        [Test]
+        public void MoveItem_Cue_OutOfRange_NewIndex_DoesNotRegisterHistory()
+        {
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList.ToList();
+            var outOfRangeIndex = cueSheet.cueList.Count;
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(0, outOfRangeIndex, null,
+                (CueListItem)model.Root.children[0]));
+
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList, Is.EqualTo(initial));
+        }
+
+        [Test]
+        public void MoveItem_Track_OutOfRange_OldIndex_DoesNotRegisterHistory()
+        {
+            const int cueIndex = 1;
+
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList[cueIndex].trackList.ToList();
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(-1, 0,
+                (CueListItem)model.Root.children[cueIndex],
+                (CueListItem)model.Root.children[cueIndex].children[0]));
+
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
+        }
+
+        [Test]
+        public void MoveItem_Track_OutOfRange_NewIndex_DoesNotRegisterHistory()
+        {
+            const int cueIndex = 1;
+
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+
+            var initial = cueSheet.cueList[cueIndex].trackList.ToList();
+            var outOfRangeIndex = cueSheet.cueList[cueIndex].trackList.Count + 1;
+
+            model.MoveItem(new ItemMoveOperationRequestedEvent(0, outOfRangeIndex,
+                (CueListItem)model.Root.children[cueIndex],
+                (CueListItem)model.Root.children[cueIndex].children[0]));
+
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
+
+            // Verify history was not registered: Undo should not change state
+            history.Undo();
+            Assert.That(cueSheet.cueList[cueIndex].trackList, Is.EqualTo(initial));
         }
     }
 }

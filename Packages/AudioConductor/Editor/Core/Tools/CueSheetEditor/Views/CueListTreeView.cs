@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -123,7 +123,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                         return AudioConductorGUI.ColorDefine.Popup(cellRect, item.ColorId);
                     case ColumnType.Category:
                         var categoryId = item.CategoryId;
-                        if (categoryId.HasValue == false)
+                        if (!categoryId.HasValue)
                             return null;
                         var oldCategoryIndex = CategoryListRepository.instance.ToIndex(categoryId.Value);
                         var values = CategoryListRepository.instance.CategoryNames;
@@ -142,7 +142,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     case ColumnType.Volume:
                         var volume = item.Volume;
                         return volume.HasValue
-                            ? EditorGUI.Slider(cellRect, volume.Value, ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max)
+                            ? EditorGUI.Slider(cellRect, volume.Value, ValueRangeConst.Volume.Min,
+                                ValueRangeConst.Volume.Max)
                             : null;
                     case ColumnType.VolumeRange:
                         var volumeRange = item.VolumeRange;
@@ -162,7 +163,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             #endregion
         }
 
-        protected override TreeViewItem BuildRoot() => _rootItem;
+        protected override TreeViewItem BuildRoot()
+        {
+            return _rootItem;
+        }
 
         protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
         {
@@ -171,19 +175,28 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             return rows;
         }
 
-        protected override bool CanRename(TreeViewItem item) => true;
+        protected override bool CanRename(TreeViewItem item)
+        {
+            return true;
+        }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
-            if (args.acceptedRename == false)
+            if (!args.acceptedRename)
                 return;
 
             OnColumnValueChanged?.Invoke(new ColumnValueChangedEvent(ColumnType.Name, args.newName, args.itemID));
         }
 
-        protected override bool CanMultiSelect(TreeViewItem item) => true;
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return true;
+        }
 
-        protected override bool CanBeParent(TreeViewItem item) => ((CueListItem)item).Type == ItemType.Cue;
+        protected override bool CanBeParent(TreeViewItem item)
+        {
+            return ((CueListItem)item).Type == ItemType.Cue;
+        }
 
         private CueListItem[] FindItemsInVisibleRows(IEnumerable<int> itemIds)
         {
@@ -195,8 +208,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 return Array.Empty<CueListItem>();
 
             return GetRows().Where(item => itemIdSet.Contains(item.id))
-                            .OfType<CueListItem>()
-                            .ToArray();
+                .OfType<CueListItem>()
+                .ToArray();
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
@@ -245,7 +258,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
-            if (string.IsNullOrEmpty(searchString) == false)
+            if (!string.IsNullOrEmpty(searchString))
                 return false;
 
             var items = FindItemsInVisibleRows(args.draggedItemIDs);
@@ -283,19 +296,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private DragAndDropVisualMode HandleDragAndDropPaths(DragAndDropArgs args)
         {
-            if (args.performDrop == false)
+            if (!args.performDrop)
                 return DragAndDropVisualMode.Copy;
-            
+
             var insertAtIndex = args.dragAndDropPosition == DragAndDropPosition.UponItem
-                                    ? args.parentItem.children.Count
-                                    : args.insertAtIndex;
+                ? args.parentItem.children.Count
+                : args.insertAtIndex;
 
             if (insertAtIndex < 0)
                 return DragAndDropVisualMode.Rejected;
 
             foreach (var path in DragAndDrop.paths)
             {
-                if (IsValidPath(path) == false)
+                if (!IsValidPath(path))
                     return DragAndDropVisualMode.Rejected;
 
                 if (AssetDatabase.GetMainAssetTypeAtPath(path) != typeof(AudioClip))
@@ -317,7 +330,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     return false;
 
                 path = path.Replace('\\', Path.DirectorySeparatorChar)
-                           .Replace(Application.dataPath, "Assets");
+                    .Replace(Application.dataPath, "Assets");
 
                 return path.StartsWith("Assets", StringComparison.OrdinalIgnoreCase);
             }
@@ -333,7 +346,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (genericData is not CueListItem[] draggedItems || draggedItems.Length == 0)
                 return DragAndDropVisualMode.None;
 
-            if (args.performDrop == false)
+            if (!args.performDrop)
                 return IsPressingAltKey ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Link;
 
             var type = draggedItems[0].Type;
@@ -352,27 +365,33 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             {
                 foreach (var item in draggedItems.Reverse())
                     OnItemDuplicateOperationRequested?.Invoke(new ItemDuplicateOperationRequestedEvent(insertAtIndex,
-                                                                  (CueListItem)args.parentItem, item));
+                        (CueListItem)args.parentItem, item));
                 return DragAndDropVisualMode.Copy;
             }
 
             foreach (var item in draggedItems.Reverse())
             {
                 var oldIndex = item.parent.children.IndexOf(item);
-                if (oldIndex < insertAtIndex)
+                if (item.parent == args.parentItem && oldIndex < insertAtIndex)
                     insertAtIndex--;
                 OnItemMoveOperationRequested?.Invoke(new ItemMoveOperationRequestedEvent(oldIndex,
-                                                      insertAtIndex,
-                                                         (CueListItem)args.parentItem,
-                                                         item));
+                    insertAtIndex,
+                    (CueListItem)args.parentItem,
+                    item));
             }
 
             return DragAndDropVisualMode.Move;
         }
 
-        protected override void ContextClickedItem(int id) => ContextClicked();
+        protected override void ContextClickedItem(int id)
+        {
+            ContextClicked();
+        }
 
-        protected override void ContextClicked() => ContextMenuRequested().ShowAsContext();
+        protected override void ContextClicked()
+        {
+            ContextMenuRequested().ShowAsContext();
+        }
 
         private GenericMenu ContextMenuRequested()
         {
@@ -433,7 +452,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (items.Length <= 0)
                 return;
 
-            if (items.All(item => item.Type == items[0].Type) == false)
+            if (!items.All(item => item.Type == items[0].Type))
                 return;
 
             foreach (var item in items)
@@ -441,7 +460,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 var parent = (CueListItem)item.parent;
                 var insertIndex = parent.children.Count;
                 OnItemDuplicateOperationRequested?.Invoke(new ItemDuplicateOperationRequestedEvent(insertIndex, parent,
-                                                              item));
+                    item));
             }
         }
 
@@ -467,7 +486,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 else
                     (tag, text) = (splits[0], splits[1]);
 
-                if (DoesItemMatchSearch((CueListItem)item, tag, text) == false)
+                if (!DoesItemMatchSearch((CueListItem)item, tag, text))
                     return false;
             }
 
