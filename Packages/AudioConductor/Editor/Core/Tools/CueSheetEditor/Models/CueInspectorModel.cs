@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -22,31 +22,31 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueInspectorModel : ICueInspectorModel
     {
-        private readonly string _tag;
+        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<int>> _categoryId;
+        private readonly ObservableProperty<MixedValue<string>> _color;
+        private readonly AutoIncrementHistory _history;
+        private readonly HashSet<int> _itemIds;
 
         private readonly ItemCue[] _items;
-        private readonly HashSet<int> _itemIds;
-        private readonly Cue[] _target;
-        private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
 
         private readonly ObservableProperty<MixedValue<string>> _name;
-        private readonly ObservableProperty<MixedValue<string>> _color;
-        private readonly ObservableProperty<MixedValue<int>> _categoryId;
-        private readonly ObservableProperty<MixedValue<ThrottleType>> _throttleType;
-        private readonly ObservableProperty<MixedValue<int>> _throttleLimit;
-        private readonly ObservableProperty<MixedValue<float>> _volume;
-        private readonly ObservableProperty<MixedValue<float>> _volumeRange;
         private readonly ObservableProperty<MixedValue<float>> _pitch;
-        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
         private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
+        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
         private readonly ObservableProperty<MixedValue<CuePlayType>> _playType;
+        private readonly string _tag;
+        private readonly Cue[] _target;
+        private readonly ObservableProperty<MixedValue<int>> _throttleLimit;
+        private readonly ObservableProperty<MixedValue<ThrottleType>> _throttleType;
 
         private readonly CuePreviewModel _trackPreviewModel;
+        private readonly ObservableProperty<MixedValue<float>> _volume;
+        private readonly ObservableProperty<MixedValue<float>> _volumeRange;
 
         public CueInspectorModel([NotNull] ItemCue[] items,
-                                 [NotNull] AutoIncrementHistory history,
-                                 [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService)
         {
             Assert.IsTrue(items.Length > 0);
 
@@ -274,6 +274,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             get => TypicalTarget.throttleLimit;
             set
             {
+                value = ValueRangeConst.ThrottleLimit.Clamp(value);
                 var old = _target.Select(cue => cue.throttleLimit).ToArray();
                 _history.Register($"{_tag} Set Cue {nameof(ThrottleLimit)} {value}", Redo, Undo);
 
@@ -558,7 +559,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #endregion
 
-        public bool Contains(int itemId) => _itemIds.Contains(itemId);
+        public bool Contains(int itemId)
+        {
+            return _itemIds.Contains(itemId);
+        }
 
         public void ChangeValue(CueListTreeView.ColumnType columnType, object value)
         {
@@ -594,9 +598,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         public ICueController PlayCue()
-            => _trackPreviewModel?.Play();
+        {
+            return _trackPreviewModel?.Play();
+        }
 
         public void StopCue()
-            => _trackPreviewModel?.Stop();
+        {
+            _trackPreviewModel?.Stop();
+        }
     }
 }

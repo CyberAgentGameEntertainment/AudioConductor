@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Linq;
@@ -27,22 +27,60 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Utility.RandomString
         };
 
-        private static string CreateDefaultName(int index) => $"defaultName-{index}";
-        private static string CreateDefaultColor(int index) => $"defaultColor-{index}";
-        private static int CreateDefaultCategoryId(int index) => index;
+        private static string CreateDefaultName(int index)
+        {
+            return $"defaultName-{index}";
+        }
 
-        private static ThrottleType CreateDefaultThrottleType(int index) =>
-            index % 2 == 0 ? ThrottleType.PriorityOrder : ThrottleType.FirstComeFirstServed;
+        private static string CreateDefaultColor(int index)
+        {
+            return $"defaultColor-{index}";
+        }
 
-        private static int CreateDefaultThrottleLimit(int index) => index * 2;
-        private static float CreateDefaultVolume(int index) => -index * 11.1f;
-        private static float CreateDefaultVolumeRange(int index) => index * 22.2f;
-        private static float CreateDefaultPitch(int index) => -index * 33.3f;
-        private static float CreateDefaultPitchRange(int index) => index * 44.4f;
-        private static bool CreateDefaultPitchInvert(int index) => index % 2 != 0;
+        private static int CreateDefaultCategoryId(int index)
+        {
+            return index;
+        }
+
+        private static ThrottleType CreateDefaultThrottleType(int index)
+        {
+            return index % 2 == 0 ? ThrottleType.PriorityOrder : ThrottleType.FirstComeFirstServed;
+        }
+
+        private static int CreateDefaultThrottleLimit(int index)
+        {
+            return index * 2;
+        }
+
+        private static float CreateDefaultVolume(int index)
+        {
+            return -index * 11.1f;
+        }
+
+        private static float CreateDefaultVolumeRange(int index)
+        {
+            return index * 22.2f;
+        }
+
+        private static float CreateDefaultPitch(int index)
+        {
+            return -index * 33.3f;
+        }
+
+        private static float CreateDefaultPitchRange(int index)
+        {
+            return index * 44.4f;
+        }
+
+        private static bool CreateDefaultPitchInvert(int index)
+        {
+            return index % 2 != 0;
+        }
 
         private static CuePlayType CreateDefaultPlayType(int index)
-            => index % 2 != 0 ? CuePlayType.Sequential : CuePlayType.Random;
+        {
+            return index % 2 != 0 ? CuePlayType.Sequential : CuePlayType.Random;
+        }
 
         private static Cue[] CreateTestTargetCues()
         {
@@ -72,7 +110,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].name, Is.EqualTo(CreateDefaultName(i)));
@@ -103,7 +141,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Name = testValue;
@@ -144,7 +182,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].colorId, Is.EqualTo(CreateDefaultColor(i)));
@@ -175,7 +213,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Color = testValue;
@@ -215,7 +253,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].categoryId, Is.EqualTo(CreateDefaultCategoryId(i)));
@@ -246,7 +284,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.CategoryId = testValue;
@@ -286,14 +324,14 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].throttleType, Is.EqualTo(CreateDefaultThrottleType(i)));
             Assert.True(model.ThrottleTypeObservable.Value.HasMultipleDifferentValues);
 
             using (model.ThrottleTypeObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
             {
                 model.ThrottleType = testValue;
                 Assert.That(model.ThrottleType, Is.EqualTo(testValue));
@@ -318,7 +356,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.ThrottleType = testValue;
@@ -353,19 +391,21 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         [Test]
-        public void ChangeThrottleLimit([Random(3)] int testValue)
+        public void ChangeThrottleLimit(
+            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)]
+            int testValue)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].throttleLimit, Is.EqualTo(CreateDefaultThrottleLimit(i)));
             Assert.True(model.ThrottleLimitObservable.Value.HasMultipleDifferentValues);
 
             using (model.ThrottleLimitObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
             {
                 model.ThrottleLimit = testValue;
                 Assert.That(model.ThrottleLimit, Is.EqualTo(testValue));
@@ -373,6 +413,36 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
                     Assert.That(cue.throttleLimit, Is.EqualTo(testValue));
                 Assert.False(model.ThrottleLimitObservable.Value.HasMultipleDifferentValues);
             }
+        }
+
+        [Test]
+        public void ChangeThrottleLimit_BelowMin_ClampsToMin()
+        {
+            var history = new AutoIncrementHistory();
+            var cues = CreateTestTargetCues();
+            var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
+                new AssetSaveService());
+
+            model.ThrottleLimit = ValueRangeConst.ThrottleLimit.Min - 1;
+
+            Assert.That(model.ThrottleLimit, Is.EqualTo(ValueRangeConst.ThrottleLimit.Min));
+            foreach (var cue in cues)
+                Assert.That(cue.throttleLimit, Is.EqualTo(ValueRangeConst.ThrottleLimit.Min));
+        }
+
+        [Test]
+        public void ChangeThrottleLimit_AboveMax_ClampsToMax()
+        {
+            var history = new AutoIncrementHistory();
+            var cues = CreateTestTargetCues();
+            var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
+                new AssetSaveService());
+
+            model.ThrottleLimit = ValueRangeConst.ThrottleLimit.Max + 1;
+
+            Assert.That(model.ThrottleLimit, Is.EqualTo(ValueRangeConst.ThrottleLimit.Max));
+            foreach (var cue in cues)
+                Assert.That(cue.throttleLimit, Is.EqualTo(ValueRangeConst.ThrottleLimit.Max));
         }
 
         [Test]
@@ -390,7 +460,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.ThrottleLimit = testValue;
@@ -426,31 +496,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeVolume_LessThanMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_EqualMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_GreaterThanMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_EqualMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_InRange(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
-            => ChangeVolume(testValue, testValue);
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
+        {
+            ChangeVolume(testValue, testValue);
+        }
 
         private static void ChangeVolume(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].volume, Is.EqualTo(CreateDefaultVolume(i)));
@@ -481,7 +562,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Volume = testValue;
@@ -517,31 +598,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeVolumeRange_LessThanMin()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Min - 1, ValueRangeConst.VolumeRange.Min);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Min - 1, ValueRangeConst.VolumeRange.Min);
+        }
 
         [Test]
         public void ChangeVolumeRange_EqualMin()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Min);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Min);
+        }
 
         [Test]
         public void ChangeVolumeRange_GreaterThanMax()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Max + 1, ValueRangeConst.VolumeRange.Max);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Max + 1, ValueRangeConst.VolumeRange.Max);
+        }
 
         [Test]
         public void ChangeVolumeRange_EqualMax()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Max, ValueRangeConst.VolumeRange.Max);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Max, ValueRangeConst.VolumeRange.Max);
+        }
 
         [Test]
         public void ChangeVolumeRange_InRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
-            => ChangeVolumeRange(testValue, testValue);
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
+        {
+            ChangeVolumeRange(testValue, testValue);
+        }
 
         private static void ChangeVolumeRange(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].volumeRange, Is.EqualTo(CreateDefaultVolumeRange(i)));
@@ -572,7 +664,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.VolumeRange = testValue;
@@ -608,31 +700,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangePitch_LessThanMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_EqualMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_GreaterThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_EqualThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_InRange(
-            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)] float testValue)
-            => ChangePitch(testValue, testValue);
+            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)]
+            float testValue)
+        {
+            ChangePitch(testValue, testValue);
+        }
 
         private static void ChangePitch(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].pitch, Is.EqualTo(CreateDefaultPitch(i)));
@@ -663,7 +766,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Pitch = testValue;
@@ -699,31 +802,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangePitchRange_LessThanMin()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Min - 1, ValueRangeConst.PitchRange.Min);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Min - 1, ValueRangeConst.PitchRange.Min);
+        }
 
         [Test]
         public void ChangePitchRange_EqualMin()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Min);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Min);
+        }
 
         [Test]
         public void ChangePitchRange_GreaterThanMax()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Max + 1, ValueRangeConst.PitchRange.Max);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Max + 1, ValueRangeConst.PitchRange.Max);
+        }
 
         [Test]
         public void ChangePitchRange_EqualMax()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Max, ValueRangeConst.PitchRange.Max);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Max, ValueRangeConst.PitchRange.Max);
+        }
 
         [Test]
         public void ChangePitchRange_InRange(
-            [Random(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Max, 3)] float testValue)
-            => ChangePitchRange(testValue, testValue);
+            [Random(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Max, 3)]
+            float testValue)
+        {
+            ChangePitchRange(testValue, testValue);
+        }
 
         private static void ChangePitchRange(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].pitchRange, Is.EqualTo(CreateDefaultPitchRange(i)));
@@ -754,7 +868,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.PitchRange = testValue;
@@ -794,7 +908,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].pitchInvert, Is.EqualTo(CreateDefaultPitchInvert(i)));
@@ -825,7 +939,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.PitchInvert = testValue;
@@ -865,7 +979,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].playType, Is.EqualTo(CreateDefaultPlayType(i)));
@@ -896,7 +1010,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.PlayType = testValue;
@@ -936,7 +1050,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(itemId, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             Assert.True(model.Contains(itemId));
             Assert.False(model.Contains(itemId + 1));
@@ -950,7 +1064,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].name, Is.EqualTo(CreateDefaultName(i)));
@@ -973,7 +1087,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].colorId, Is.EqualTo(CreateDefaultColor(i)));
@@ -995,7 +1109,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].categoryId, Is.EqualTo(CreateDefaultCategoryId(i)));
@@ -1017,14 +1131,14 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].throttleType, Is.EqualTo(CreateDefaultThrottleType(i)));
             Assert.True(model.ThrottleTypeObservable.Value.HasMultipleDifferentValues);
 
             using (model.ThrottleTypeObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
             {
                 model.ChangeValue(CueListTreeView.ColumnType.ThrottleType, testValue);
                 Assert.That(model.ThrottleType, Is.EqualTo(testValue));
@@ -1035,19 +1149,21 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         [Test]
-        public void ChangeValue_ThrottleLimit([Random(3)] int testValue)
+        public void ChangeValue_ThrottleLimit(
+            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)]
+            int testValue)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].throttleLimit, Is.EqualTo(CreateDefaultThrottleLimit(i)));
             Assert.True(model.ThrottleLimitObservable.Value.HasMultipleDifferentValues);
 
             using (model.ThrottleLimitObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
             {
                 model.ChangeValue(CueListTreeView.ColumnType.ThrottleLimit, testValue);
                 Assert.That(model.ThrottleLimit, Is.EqualTo(testValue));
@@ -1059,12 +1175,13 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Volume(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].volume, Is.EqualTo(CreateDefaultVolume(i)));
@@ -1082,12 +1199,13 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_VolumeRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
         {
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].volumeRange, Is.EqualTo(CreateDefaultVolumeRange(i)));
@@ -1109,7 +1227,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var cues = CreateTestTargetCues();
             var model = new CueInspectorModel(cues.Select(cue => new ItemCue(0, cue)).ToArray(), history,
-                                              new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < cues.Length; ++i)
                 Assert.That(cues[i].playType, Is.EqualTo(CreateDefaultPlayType(i)));
