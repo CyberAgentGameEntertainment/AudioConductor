@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Linq;
@@ -23,6 +23,10 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public void Update()
         {
+            if (ColorDefineContents != null)
+                foreach (var content in ColorDefineContents)
+                    DestroyImmediate(content.image);
+
             var settings = AudioConductorEditorSettingsRepository.instance.Settings;
             var enumerable = settings == null ? Enumerable.Empty<ColorDefine>() : settings.colorDefineList;
 
@@ -32,7 +36,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             {
                 var colorDefine = _colorDefines[i];
                 var content = new GUIContent(colorDefine.name,
-                                             TextureGenerator.CreateTexture(16, 16, colorDefine.color));
+                    TextureGenerator.CreateTexture(16, 16, colorDefine.color));
                 contents[i] = content;
             }
 
@@ -60,6 +64,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public string GetName(string colorId)
-            => _colorDefines?.FirstOrDefault(colorDefine => colorDefine.id == colorId)?.name ?? string.Empty;
+        {
+            return _colorDefines?.FirstOrDefault(colorDefine => colorDefine.id == colorId)?.name ?? string.Empty;
+        }
     }
 }

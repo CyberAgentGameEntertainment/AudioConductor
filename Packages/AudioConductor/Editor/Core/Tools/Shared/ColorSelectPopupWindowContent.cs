@@ -1,10 +1,11 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
@@ -78,6 +79,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public override void OnClose()
         {
+            Object.DestroyImmediate(_style.hover.background);
             EditorApplication.update -= Update;
             base.OnClose();
         }
@@ -108,7 +110,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
             var width = Mathf.Max(maxSize.x, _activatorRect.width);
             var height = Mathf.Clamp(colorDefineContents.Length * (_elementSize.y + GUI.skin.label.margin.bottom), 50,
-                                     300);
+                300);
             const float paddingHeight = 10;
             const float paddingWidth = 10;
             _windowSizeCache = new Vector2(width + paddingWidth, height + paddingHeight);
@@ -140,7 +142,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                         continue;
                 }
                 else
+                {
                     continue;
+                }
 
                 GUI.SetNextControlName(content.text);
                 var style = _selectedIndex == i ? _boldStyle : _style;
