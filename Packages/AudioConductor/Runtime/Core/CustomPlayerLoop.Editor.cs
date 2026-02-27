@@ -1,10 +1,11 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #if UNITY_EDITOR
 
 using UnityEditor;
+using UnityEngine;
 
 namespace AudioConductor.Runtime.Core
 {
@@ -13,7 +14,16 @@ namespace AudioConductor.Runtime.Core
         [InitializeOnLoadMethod]
         private static void InitOnEditor()
         {
-            EditorApplication.update += Update;
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
+        private static void EditorUpdate()
+        {
+            if (Application.isPlaying)
+                return;
+
+            Update();
         }
     }
 }
