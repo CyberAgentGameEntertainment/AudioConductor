@@ -1,9 +1,10 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Shared;
@@ -14,20 +15,20 @@ namespace AudioConductor.Runtime.Core
     internal sealed partial class AudioConductorInternal
     {
         private static AudioConductorInternal _instance;
-        private readonly AudioClipPlayerProvider _provider = new();
-        private readonly Dictionary<uint, CueSheetAsset> _cueSheetAssets = new();
         private readonly Dictionary<int, Category> _categories = new();
-        private readonly Dictionary<uint, CueState> _cueStates = new();
         private readonly List<TrackController> _controllerList = new();
-        private readonly List<TrackController> _tempControllerList = new();
-        private readonly List<AudioClipPlayer> _unmanagedPlayerList = new();
+        private readonly Dictionary<uint, CueSheetAsset> _cueSheetAssets = new();
+        private readonly Dictionary<uint, CueState> _cueStates = new();
         private readonly List<FadeState> _fadeStateList = new();
+        private readonly AudioClipPlayerProvider _provider = new();
         private readonly List<FadeState> _tempFadeStateList = new();
+        private readonly List<AudioClipPlayer> _unmanagedPlayerList = new();
+        private readonly List<TrackController> _updateTempList = new();
+        private Action<CueSheetAsset> _callback;
+        private uint _controllerCounter;
+        private uint _cueStateCounter;
 
         private uint _sheetStateCounter;
-        private uint _cueStateCounter;
-        private uint _controllerCounter;
-        private Action<CueSheetAsset> _callback;
 
         private AudioConductorInternal()
         {
@@ -55,9 +56,9 @@ namespace AudioConductor.Runtime.Core
 
         private void UpdateController(float deltaTime)
         {
-            _tempControllerList.Clear();
-            _tempControllerList.AddRange(_controllerList);
-            foreach (var controller in _tempControllerList)
+            _updateTempList.Clear();
+            _updateTempList.AddRange(_controllerList);
+            foreach (var controller in _updateTempList)
                 controller.Player.ManualUpdate(deltaTime);
 
             foreach (var player in _unmanagedPlayerList)
@@ -93,7 +94,7 @@ namespace AudioConductor.Runtime.Core
 
         public void DisposeCueState(uint manageNumber)
         {
-            if (_cueStates.TryGetValue(manageNumber, out var state) == false)
+            if (!_cueStates.TryGetValue(manageNumber, out var state))
                 return;
 
             Stop(manageNumber, true);
@@ -166,9 +167,9 @@ namespace AudioConductor.Runtime.Core
 
             var soundController = RentPlayer(false);
             var controller = new TrackController(_controllerCounter,
-                                                 soundController,
-                                                 state.CueSheetManageNumber,
-                                                 manageNumber);
+                soundController,
+                state.CueSheetManageNumber,
+                manageNumber);
             _controllerList.Add(controller);
 
             return controller;
@@ -176,7 +177,7 @@ namespace AudioConductor.Runtime.Core
 
         private TrackController Play(uint manageNumber, CueState state, Track track, bool isForceLoop)
         {
-            if (CanPlay(manageNumber, state, track) == false)
+            if (!CanPlay(manageNumber, state, track))
                 return null;
 
             var controller = SetupController(manageNumber, state);
@@ -248,10 +249,7 @@ namespace AudioConductor.Runtime.Core
                 if (minPriority > controller.Priority)
                     minPriority = controller.Priority;
 
-            _tempControllerList.Clear();
-            foreach (var controller in _controllerList)
-                if (controller.Priority == minPriority)
-                    _tempControllerList.Add(controller);
+            var filteredControllers = _controllerList.Where(c => c.Priority == minPriority).ToArray();
 
             for (var i = 0; i < (int)LimitCheckType.Count; ++i)
             {
@@ -287,11 +285,11 @@ namespace AudioConductor.Runtime.Core
 
                 var playNum = (LimitCheckType)i switch
                 {
-                    LimitCheckType.Cue      => GetPlayNumFromCueNumber(manageNumber),
+                    LimitCheckType.Cue => GetPlayNumFromCueNumber(manageNumber),
                     LimitCheckType.CueSheet => GetPlayNumFromSheetNumber(state.CueSheetManageNumber),
                     LimitCheckType.Category => GetPlayNumFromCategory(state.Cue.categoryId),
-                    LimitCheckType.Global   => _controllerList.Count,
-                    _                       => 0
+                    LimitCheckType.Global => _controllerList.Count,
+                    _ => 0
                 };
 
                 if (playNum < throttleLimit)
@@ -309,13 +307,13 @@ namespace AudioConductor.Runtime.Core
                         var candidateController = (LimitCheckType)i switch
                         {
                             LimitCheckType.Cue
-                                => FirstControllerFromCueNumber(manageNumber, _tempControllerList),
+                                => FirstControllerFromCueNumber(manageNumber, filteredControllers),
                             LimitCheckType.CueSheet
-                                => FirstControllerFromSheetNumber(state.CueSheetManageNumber, _tempControllerList),
+                                => FirstControllerFromSheetNumber(state.CueSheetManageNumber, filteredControllers),
                             LimitCheckType.Category
-                                => FirstControllerFromCategory(state.Cue.categoryId, _tempControllerList),
+                                => FirstControllerFromCategory(state.Cue.categoryId, filteredControllers),
                             LimitCheckType.Global
-                                => _tempControllerList[0],
+                                => filteredControllers[0],
                             _
                                 => default
                         };
@@ -345,7 +343,7 @@ namespace AudioConductor.Runtime.Core
             if (state.Player == null)
                 return;
 
-            if (isFade == false || state.Track.fadeTime <= 0f)
+            if (!isFade || state.Track.fadeTime <= 0f)
             {
                 state.Player.Stop();
                 return;
@@ -392,13 +390,8 @@ namespace AudioConductor.Runtime.Core
 
         public bool IsPlaying(uint manageNumber)
         {
-            _tempControllerList.Clear();
-            foreach (var controller in _controllerList)
-                if (controller.CueManageNumber == manageNumber)
-                    _tempControllerList.Add(controller);
-
-            foreach (var controller in _tempControllerList)
-                if (controller.Player.IsPlaying)
+            foreach (var controller in _controllerList.ToArray())
+                if (controller.CueManageNumber == manageNumber && controller.Player.IsPlaying)
                     return true;
 
             return false;
@@ -412,7 +405,7 @@ namespace AudioConductor.Runtime.Core
 
         private CueState GetState(uint manageNumber)
         {
-            if (_cueStates.TryGetValue(manageNumber, out var state) == false)
+            if (!_cueStates.TryGetValue(manageNumber, out var state))
             {
                 Debug.LogWarning("Manage Number Not Found");
                 return null;
@@ -458,7 +451,7 @@ namespace AudioConductor.Runtime.Core
         }
 
         private static TrackController FirstControllerFromCategory(int categoryId,
-                                                                   IReadOnlyList<TrackController> controllerList)
+            IReadOnlyList<TrackController> controllerList)
         {
             foreach (var controller in controllerList)
                 if (controller.Player.CategoryId == categoryId)
@@ -468,7 +461,7 @@ namespace AudioConductor.Runtime.Core
         }
 
         private static TrackController FirstControllerFromSheetNumber(uint manageNumber,
-                                                                      IReadOnlyList<TrackController> controllerList)
+            IReadOnlyList<TrackController> controllerList)
         {
             foreach (var controller in controllerList)
                 if (controller.CueSheetManageNumber == manageNumber)
@@ -478,7 +471,7 @@ namespace AudioConductor.Runtime.Core
         }
 
         private static TrackController FirstControllerFromCueNumber(uint manageNumber,
-                                                                    IReadOnlyList<TrackController> controllerList)
+            IReadOnlyList<TrackController> controllerList)
         {
             foreach (var controller in controllerList)
                 if (controller.CueManageNumber == manageNumber)
@@ -489,21 +482,14 @@ namespace AudioConductor.Runtime.Core
 
         private void ControllerAction(uint manageNumber, Action<TrackController> action)
         {
-            _tempControllerList.Clear();
-            foreach (var controller in _controllerList)
+            foreach (var controller in _controllerList.ToArray())
                 if (controller.CueManageNumber == manageNumber)
-                    _tempControllerList.Add(controller);
-
-            foreach (var controller in _tempControllerList)
-                action.Invoke(controller);
+                    action.Invoke(controller);
         }
 
         private void ControllerAction(Action<TrackController> action)
         {
-            _tempControllerList.Clear();
-            _tempControllerList.AddRange(_controllerList);
-
-            foreach (var controller in _tempControllerList)
+            foreach (var controller in _controllerList.ToArray())
                 action.Invoke(controller);
         }
 
