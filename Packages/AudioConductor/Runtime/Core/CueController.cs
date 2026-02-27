@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using AudioConductor.Runtime.Core.Models;
@@ -16,15 +16,21 @@ namespace AudioConductor.Runtime.Core
 
         /// <inheritdoc />
         public ITrackController Play(bool isForceLoop = false)
-            => GetManager().Play(_managerNumber, isForceLoop);
+        {
+            return GetManager().Play(_managerNumber, isForceLoop);
+        }
 
         /// <inheritdoc />
         public ITrackController Play(int id, bool isForceLoop = false)
-            => GetManager().Play(_managerNumber, id, isForceLoop);
+        {
+            return GetManager().Play(_managerNumber, id, isForceLoop);
+        }
 
         /// <inheritdoc />
         public ITrackController Play(string name, bool isForceLoop = false)
-            => GetManager().Play(_managerNumber, name, isForceLoop);
+        {
+            return GetManager().Play(_managerNumber, name, isForceLoop);
+        }
 
         /// <inheritdoc />
         public void Pause()
@@ -46,7 +52,9 @@ namespace AudioConductor.Runtime.Core
 
         /// <inheritdoc />
         public int GetCategoryId()
-            => GetManager().GetCategoryId(_managerNumber);
+        {
+            return GetManager().GetCategoryId(_managerNumber);
+        }
 
         /// <inheritdoc />
         public void SetVolume(float volume)
@@ -74,6 +82,12 @@ namespace AudioConductor.Runtime.Core
 
         public void Setup(CueSheetAsset sheetAsset, int cueIndex)
         {
+            if (sheetAsset == null)
+            {
+                Debug.LogWarning($"{nameof(sheetAsset)} is null.");
+                return;
+            }
+
             if (cueIndex < 0 || sheetAsset.cueSheet.cueList.Count <= cueIndex)
             {
                 Debug.LogWarning($"cue not found. {nameof(cueIndex)} = {cueIndex}");
@@ -85,10 +99,25 @@ namespace AudioConductor.Runtime.Core
 
         public void Setup(CueSheetAsset sheetAsset, string cueName)
         {
-            Setup(sheetAsset, sheetAsset.cueSheet.cueList.FindIndex(cue => cue.name == cueName));
+            if (sheetAsset == null)
+            {
+                Debug.LogWarning($"{nameof(sheetAsset)} is null.");
+                return;
+            }
+
+            var cueIndex = sheetAsset.cueSheet.cueList.FindIndex(cue => cue.name == cueName);
+            if (cueIndex < 0)
+            {
+                Debug.LogWarning($"cue not found. {nameof(cueName)} = {cueName}");
+                return;
+            }
+
+            Setup(sheetAsset, cueIndex);
         }
 
         private static AudioConductorInternal GetManager()
-            => AudioConductorInternal.Instance;
+        {
+            return AudioConductorInternal.Instance;
+        }
     }
 }
