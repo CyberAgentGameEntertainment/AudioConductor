@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -17,28 +17,28 @@ namespace AudioConductor.Runtime.Core
         private const int AudioSourceNum = 2;
         private const float MinimumDuration = 1.0f;
 
-        [SerializeField]
-        private AudioSource[] _source = new AudioSource[AudioSourceNum];
+        [SerializeField] private AudioSource[] _source = new AudioSource[AudioSourceNum];
 
-        private float _volumeExternal;
-        private float _pitchExternal;
+        private int _endSample;
+        private int _frequency;
 
         private bool _isLoop;
-        private int _frequency;
+        private int _loopStartSample;
+        private double _nextEventTime;
+
+        private int _nextPlayAudioSourceIndex;
 
         private Action _onEnd;
         private Action _onStop;
+        private double _pauseEndTime;
+        private double _pauseStartTime;
+        private int _pausedIndex;
+        private float _pitchExternal;
+        private double _scheduledEndTime;
 
         private int _startSample;
-        private int _loopStartSample;
-        private int _endSample;
 
-        private int _nextPlayAudioSourceIndex;
-        private double _nextEventTime;
-        private int _pausedIndex;
-        private double _pauseStartTime;
-        private double _pauseEndTime;
-        private double _scheduledEndTime;
+        private float _volumeExternal;
 
         internal float VolumeInternal { get; private set; }
 
@@ -56,7 +56,9 @@ namespace AudioConductor.Runtime.Core
             get
             {
                 bool IsPlaying(AudioSource source)
-                    => source != null && source.isPlaying;
+                {
+                    return source != null && source.isPlaying;
+                }
 
                 return IsPlaying(_source[0]) || IsPlaying(_source[1]);
             }
@@ -67,14 +69,14 @@ namespace AudioConductor.Runtime.Core
 
         /// <inheritdoc />
         public void Setup(AudioMixerGroup audioMixerGroup,
-                          AudioClip clip,
-                          int categoryId,
-                          float volume,
-                          float pitch,
-                          bool isLoop,
-                          int startSample,
-                          int loopStartSample,
-                          int endSample)
+            AudioClip clip,
+            int categoryId,
+            float volume,
+            float pitch,
+            bool isLoop,
+            int startSample,
+            int loopStartSample,
+            int endSample)
         {
             if (clip == null)
                 return;
@@ -224,10 +226,15 @@ namespace AudioConductor.Runtime.Core
 
         /// <inheritdoc />
         public float GetActualVolume()
-            => ValueRangeConst.Volume.Clamp(VolumeInternal * _volumeExternal);
+        {
+            return ValueRangeConst.Volume.Clamp(VolumeInternal * _volumeExternal);
+        }
 
         /// <inheritdoc />
-        public float GetVolume() => _volumeExternal;
+        public float GetVolume()
+        {
+            return _volumeExternal;
+        }
 
         /// <inheritdoc />
         public void SetVolume(float volume)
@@ -238,10 +245,15 @@ namespace AudioConductor.Runtime.Core
 
         /// <inheritdoc />
         public float GetActualPitch()
-            => Mathf.Clamp(PitchInternal * _pitchExternal, -ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        {
+            return Mathf.Clamp(PitchInternal * _pitchExternal, -ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        }
 
         /// <inheritdoc />
-        public float GetPitch() => _pitchExternal;
+        public float GetPitch()
+        {
+            return _pitchExternal;
+        }
 
         /// <inheritdoc />
         public void SetPitch(float pitch)
@@ -284,8 +296,10 @@ namespace AudioConductor.Runtime.Core
                     return;
                 source.timeSamples = sample;
             }
-            else
+            else if (_source[0] != null)
+            {
                 _source[0].timeSamples = sample;
+            }
 
             RescheduleEndTime();
         }
@@ -306,9 +320,12 @@ namespace AudioConductor.Runtime.Core
 
         private void SetupPlayLoopSchedule(double playStartTime, int startSample)
         {
+            var pitch = Mathf.Abs(GetActualPitch());
+            if (pitch == 0f)
+                return;
+
             var samples = _endSample > startSample ? _endSample - startSample : startSample - _endSample;
             var duration = (float)samples / _frequency;
-            var pitch = Mathf.Abs(GetActualPitch());
             _scheduledEndTime = playStartTime + duration / pitch;
 
             _source[_nextPlayAudioSourceIndex].timeSamples = startSample;
@@ -328,6 +345,9 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             var pitch = Mathf.Abs(GetActualPitch());
+            if (pitch == 0f)
+                return;
+
             var nowSample = source.timeSamples;
             var samples = _endSample > nowSample ? _endSample - nowSample : nowSample - _endSample;
             var duration = (float)samples / _frequency;
@@ -392,7 +412,9 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             if (_isLoop)
+            {
                 PlayLoop();
+            }
             else
             {
                 _onEnd?.Invoke();
