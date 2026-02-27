@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -11,9 +11,9 @@ namespace AudioConductor.Runtime.Core
     internal sealed class TrackController : ITrackControllerInternal
     {
         public TrackController(uint manageNumber,
-                               AudioClipPlayer player,
-                               uint cueSheetManageNumber,
-                               uint cueManageNumber)
+            AudioClipPlayer player,
+            uint cueSheetManageNumber,
+            uint cueManageNumber)
         {
             ManageNumber = manageNumber;
             Player = player;
@@ -93,13 +93,22 @@ namespace AudioConductor.Runtime.Core
         }
 
         /// <inheritdoc />
-        public int GetCategoryId() => Player == null ? 0 : Player.CategoryId;
+        public int GetCategoryId()
+        {
+            return Player == null ? 0 : Player.CategoryId;
+        }
 
         /// <inheritdoc />
-        public float GetActualVolume() => Player == null ? 0f : Player.GetActualVolume();
+        public float GetActualVolume()
+        {
+            return Player == null ? 0f : Player.GetActualVolume();
+        }
 
         /// <inheritdoc />
-        public float GetVolume() => Player == null ? 0f : Player.GetVolume();
+        public float GetVolume()
+        {
+            return Player == null ? 0f : Player.GetVolume();
+        }
 
         /// <inheritdoc />
         public void SetVolume(float volume)
@@ -111,10 +120,16 @@ namespace AudioConductor.Runtime.Core
         }
 
         /// <inheritdoc />
-        public float GetActualPitch() => Player == null ? 0f : Player.GetActualPitch();
+        public float GetActualPitch()
+        {
+            return Player == null ? 0f : Player.GetActualPitch();
+        }
 
         /// <inheritdoc />
-        public float GetPitch() => Player == null ? 0f : Player.GetPitch();
+        public float GetPitch()
+        {
+            return Player == null ? 0f : Player.GetPitch();
+        }
 
         /// <inheritdoc />
         public void SetPitch(float pitch)
@@ -144,7 +159,10 @@ namespace AudioConductor.Runtime.Core
         }
 
         /// <inheritdoc />
-        public int GetCurrentSample() => Player == null ? 0 : Player.GetCurrentSample();
+        public int GetCurrentSample()
+        {
+            return Player == null ? 0 : Player.GetCurrentSample();
+        }
 
         /// <inheritdoc />
         public void ReleasePlayer()
@@ -154,9 +172,12 @@ namespace AudioConductor.Runtime.Core
 
         public void Setup(Category category, Track track, float volume, float pitch, bool isLoop)
         {
+            if (Player == null)
+                return;
+
             Priority = track.priority;
             Player.Setup(category?.audioMixerGroup, track.audioClip, category?.id ?? -1, volume, pitch, isLoop,
-                         track.startSample, track.loopStartSample, track.endSample);
+                track.startSample, track.loopStartSample, track.endSample);
 
             Track = track;
         }
