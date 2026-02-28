@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -10,8 +10,8 @@ namespace AudioConductor.Runtime.Core
 {
     internal sealed class RandomTrackSelector : ITrackSelector
     {
-        private IReadOnlyList<Track> _tracks;
         private int _trackWeightTotal;
+        private IReadOnlyList<Track> _tracks;
 
         public void Setup(IReadOnlyList<Track> tracks)
         {
@@ -24,6 +24,9 @@ namespace AudioConductor.Runtime.Core
 
         public int NextTrackIndex()
         {
+            if (_tracks == null)
+                return -1;
+
             if (_trackWeightTotal == 0)
                 return Random.Range(0, _tracks.Count);
 

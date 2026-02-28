@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -20,6 +20,9 @@ namespace AudioConductor.Runtime.Core
 
         public int NextTrackIndex()
         {
+            if (_trackNum <= 0)
+                return -1;
+
             _currentIndex++;
             if (_currentIndex >= _trackNum)
                 _currentIndex = 0;

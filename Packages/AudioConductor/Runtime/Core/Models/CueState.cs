@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Linq;
@@ -35,6 +35,9 @@ namespace AudioConductor.Runtime.Core.Models
 
         public Track NextTrack()
         {
+            if (Cue.trackList.Count == 0)
+                return null;
+
             var index = _selector.NextTrackIndex();
             return Cue.trackList[index];
         }
