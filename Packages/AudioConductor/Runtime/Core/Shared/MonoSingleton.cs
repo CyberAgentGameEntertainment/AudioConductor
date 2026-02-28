@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using UnityEngine;
@@ -25,7 +25,7 @@ namespace AudioConductor.Runtime.Core.Shared
                 if (_instance == null)
                 {
 #if UNITY_EDITOR
-                    if (Application.isPlaying == false)
+                    if (!Application.isPlaying)
                     {
                         CreateInstanceNonPlaying();
                         return _instance;
@@ -40,11 +40,20 @@ namespace AudioConductor.Runtime.Core.Shared
 
         public static bool ExistInstance => _instance != null;
 
-        protected void Awake() => Initialize(this as T);
+        protected void Awake()
+        {
+            Initialize(this as T);
+        }
 
-        protected void OnDestroy() => Finalize(this as T);
+        protected void OnDestroy()
+        {
+            Finalize(this as T);
+        }
 
-        protected void OnApplicationQuit() => Finalize(this as T);
+        protected void OnApplicationQuit()
+        {
+            Finalize(this as T);
+        }
 
         private static void CreateInstance()
         {
@@ -151,11 +160,24 @@ namespace AudioConductor.Runtime.Core.Shared
             _instance = null;
         }
 
-        protected virtual bool IsDontDestroy() => false;
+        protected virtual bool IsDontDestroy()
+        {
+            return false;
+        }
+
+        protected static void ResetStaticFields()
+        {
+            _instance = null;
+#if UNITY_EDITOR
+            _prefabStageInstance = null;
+#endif
+        }
 
 #if UNITY_EDITOR
         private static bool IsPrefabStageInstance(T instance)
-            => PrefabStageUtility.GetPrefabStage(instance.gameObject) != null;
+        {
+            return PrefabStageUtility.GetPrefabStage(instance.gameObject) != null;
+        }
 #endif
     }
 }

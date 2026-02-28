@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using UnityEngine;
@@ -21,6 +21,7 @@ namespace AudioConductor.Runtime.Core.Shared
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void OnInitialize()
         {
+            Application.quitting -= OnQuitting;
             Application.quitting += OnQuitting;
             _isQuiting = false;
         }
