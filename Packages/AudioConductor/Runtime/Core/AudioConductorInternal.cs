@@ -83,10 +83,20 @@ namespace AudioConductor.Runtime.Core
         {
             var sheetStateManagerNumber = SetupCueSheet(sheetAsset);
 
+            if (_cueStates.Count >= int.MaxValue)
+                throw new InvalidOperationException("CueState counter exhausted.");
+
             if (_cueStateCounter >= uint.MaxValue)
                 _cueStateCounter = 0;
 
             _cueStateCounter++;
+            while (_cueStates.ContainsKey(_cueStateCounter))
+            {
+                if (_cueStateCounter >= uint.MaxValue)
+                    _cueStateCounter = 0;
+                _cueStateCounter++;
+            }
+
             _cueStates.Add(_cueStateCounter, new CueState(sheetStateManagerNumber, cue));
 
             return _cueStateCounter;
@@ -126,10 +136,20 @@ namespace AudioConductor.Runtime.Core
                 if (pair.Value == sheetAsset)
                     return pair.Key;
 
+            if (_cueSheetAssets.Count >= int.MaxValue)
+                throw new InvalidOperationException("CueSheet counter exhausted.");
+
             if (_sheetStateCounter >= uint.MaxValue)
                 _sheetStateCounter = 0;
 
             _sheetStateCounter++;
+            while (_cueSheetAssets.ContainsKey(_sheetStateCounter))
+            {
+                if (_sheetStateCounter >= uint.MaxValue)
+                    _sheetStateCounter = 0;
+                _sheetStateCounter++;
+            }
+
             _cueSheetAssets.Add(_sheetStateCounter, sheetAsset);
 
             return _sheetStateCounter;
@@ -164,6 +184,12 @@ namespace AudioConductor.Runtime.Core
                 _controllerCounter = 0;
 
             _controllerCounter++;
+            while (_controllerList.Exists(c => c.ManageNumber == _controllerCounter))
+            {
+                if (_controllerCounter >= uint.MaxValue)
+                    _controllerCounter = 0;
+                _controllerCounter++;
+            }
 
             var soundController = RentPlayer(false);
             var controller = new TrackController(_controllerCounter,
@@ -233,7 +259,7 @@ namespace AudioConductor.Runtime.Core
                 return null;
 
             var track = state.NextTrack();
-            return Play(manageNumber, state, track, isForceLoop);
+            return track == null ? null : Play(manageNumber, state, track, isForceLoop);
         }
 
         private bool CanPlay(uint manageNumber, CueState state, Track track)
