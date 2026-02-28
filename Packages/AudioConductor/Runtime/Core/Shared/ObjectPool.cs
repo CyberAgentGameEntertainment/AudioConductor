@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -15,6 +15,7 @@ namespace AudioConductor.Runtime.Core.Shared
     {
         private bool _isDisposed;
         private Stack<T> _pool;
+        private HashSet<T> _rentedInstances;
 
         /// <summary>
         ///     Initial capacity of pool.
@@ -72,11 +73,13 @@ namespace AudioConductor.Runtime.Core.Shared
                 throw new ObjectDisposedException("ObjectPool was already disposed.");
 
             _pool ??= new Stack<T>(InitialCapacity);
+            _rentedInstances ??= new HashSet<T>();
 
             var instance = _pool.Count > 0
                 ? _pool.Pop()
                 : CreateInstance();
 
+            _rentedInstances.Add(instance);
             OnBeforeRent(instance);
             return instance;
         }
@@ -90,6 +93,10 @@ namespace AudioConductor.Runtime.Core.Shared
                 throw new ObjectDisposedException("ObjectPool was already disposed.");
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
+
+            _rentedInstances ??= new HashSet<T>();
+            if (!_rentedInstances.Remove(instance))
+                throw new InvalidOperationException("Instance is not rented from this pool.");
 
             _pool ??= new Stack<T>(InitialCapacity);
 
@@ -150,7 +157,10 @@ namespace AudioConductor.Runtime.Core.Shared
                 return;
 
             if (disposing)
+            {
                 Clear();
+                _rentedInstances?.Clear();
+            }
 
             _isDisposed = true;
         }
