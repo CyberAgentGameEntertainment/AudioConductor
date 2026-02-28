@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using UnityEngine;
@@ -32,6 +32,15 @@ namespace AudioConductor.Runtime.Core.Models
 
         public bool Elapsed(float time)
         {
+            if (FadeTime <= 0f)
+            {
+                Fadeable.SetVolumeInternal(TargetVolume);
+                IsFinished = true;
+                if (IsStopTarget)
+                    Fadeable.Stop();
+                return true;
+            }
+
             ElapsedTime += time;
 
             var elapsedRate = Mathf.Clamp01(ElapsedTime / FadeTime);
