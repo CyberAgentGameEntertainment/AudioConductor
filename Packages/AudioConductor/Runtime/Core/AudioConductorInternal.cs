@@ -9,6 +9,7 @@ using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace AudioConductor.Runtime.Core
 {
@@ -525,6 +526,12 @@ namespace AudioConductor.Runtime.Core
                 return category;
 
             return null;
+        }
+
+        internal AudioMixerGroup GetAudioMixerGroup(int categoryId)
+        {
+            var category = GetCategory(categoryId);
+            return category?.audioMixerGroup;
         }
 
         internal void Reset()

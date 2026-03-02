@@ -1,9 +1,10 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
 using AudioConductor.Runtime.Core.Models;
+using UnityEngine.Audio;
 
 namespace AudioConductor.Runtime.Core
 {
@@ -26,7 +27,9 @@ namespace AudioConductor.Runtime.Core
         }
 
         internal static void ForceSetup(AudioConductorSettings settings, Action<CueSheetAsset> callback = null)
-            => AudioConductorInternal.Instance.Setup(settings, callback);
+        {
+            AudioConductorInternal.Instance.Setup(settings, callback);
+        }
 
         /// <summary>
         ///     Create a controller for the specified cue.
@@ -62,21 +65,27 @@ namespace AudioConductor.Runtime.Core
         /// <param name="controller">The track </param>
         /// <param name="isFade">True if fade-out.</param>
         public static void StopTrack(ITrackController controller, bool isFade)
-            => AudioConductorInternal.Instance.StopController(controller, isFade);
+        {
+            AudioConductorInternal.Instance.StopController(controller, isFade);
+        }
 
         /// <summary>
         ///     Rents an unmanaged AudioClipPlayer instance.
         /// </summary>
         /// <returns>The rented player.</returns>
         public static IAudioClipPlayer RentUnmanagedPlayer()
-            => AudioConductorInternal.Instance.RentPlayer(true);
+        {
+            return AudioConductorInternal.Instance.RentPlayer(true);
+        }
 
         /// <summary>
         ///     Returns an unmanaged AudioClipPlayer instance.
         /// </summary>
         /// <param name="player">The rented player.</param>
         public static void ReturnUnmanagedPlayer(IAudioClipPlayer player)
-            => AudioConductorInternal.Instance.ReturnPlayer(player as AudioClipPlayer);
+        {
+            AudioConductorInternal.Instance.ReturnPlayer(player as AudioClipPlayer);
+        }
 
         /// <summary>
         ///     Check cue-sheet is in use.
@@ -84,13 +93,27 @@ namespace AudioConductor.Runtime.Core
         /// <param name="sheet"></param>
         /// <returns>True if the cue-sheet is in use.</returns>
         public static bool IsCueSheetUsed(CueSheetAsset sheet)
-            => AudioConductorInternal.Instance.IsCueSheetUsed(sheet);
+        {
+            return AudioConductorInternal.Instance.IsCueSheetUsed(sheet);
+        }
 
         /// <summary>
         ///     Stop all audio.
         /// </summary>
         /// <param name="isFade">True if fade-out.</param>
         public static void StopAll(bool isFade)
-            => AudioConductorInternal.Instance.StopAll(isFade);
+        {
+            AudioConductorInternal.Instance.StopAll(isFade);
+        }
+
+        /// <summary>
+        ///     Gets the AudioMixerGroup assigned to the specified category.
+        /// </summary>
+        /// <param name="categoryId">The category ID.</param>
+        /// <returns>The AudioMixerGroup, or null if not found.</returns>
+        public static AudioMixerGroup GetAudioMixerGroup(int categoryId)
+        {
+            return AudioConductorInternal.Instance.GetAudioMixerGroup(categoryId);
+        }
     }
 }
