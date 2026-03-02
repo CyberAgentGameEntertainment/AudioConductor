@@ -29,6 +29,7 @@ namespace AudioConductor.Runtime.Core
         private uint _controllerCounter;
         private uint _cueStateCounter;
 
+        private float _masterVolume = 1f;
         private uint _sheetStateCounter;
 
         private AudioConductorInternal()
@@ -44,6 +45,7 @@ namespace AudioConductor.Runtime.Core
             Reset();
             AudioConductorSettings = settings;
             _callback = callback;
+            _masterVolume = ValueRangeConst.Volume.Clamp(settings.masterVolume);
 
             foreach (var category in AudioConductorSettings.categoryList)
                 _categories.Add(category.id, category);
@@ -161,6 +163,7 @@ namespace AudioConductor.Runtime.Core
             var player = _provider.Rent();
             if (isUnmanaged)
                 _unmanagedPlayerList.Add(player);
+            player.SetMasterVolume(_masterVolume);
             return player;
         }
 
@@ -215,6 +218,7 @@ namespace AudioConductor.Runtime.Core
             var hasFade = track.fadeTime > 0;
             var isLoop = isForceLoop || track.isLoop;
             controller.Setup(category, track, hasFade ? 0f : volume, pitch, isLoop);
+            controller.Player.SetMasterVolume(_masterVolume);
             controller.Player.AddStopAction(() =>
             {
                 _controllerList.Remove(controller);
@@ -534,11 +538,26 @@ namespace AudioConductor.Runtime.Core
             return category?.audioMixerGroup;
         }
 
+        internal float GetMasterVolume()
+        {
+            return _masterVolume;
+        }
+
+        internal void SetMasterVolume(float volume)
+        {
+            _masterVolume = ValueRangeConst.Volume.Clamp(volume);
+            foreach (var controller in _controllerList.ToArray())
+                controller.Player?.SetMasterVolume(_masterVolume);
+            foreach (var player in _unmanagedPlayerList.ToArray())
+                player.SetMasterVolume(_masterVolume);
+        }
+
         internal void Reset()
         {
             StopAll(false);
 
             _callback = null;
+            _masterVolume = 1f;
             _cueSheetAssets.Clear();
             _categories.Clear();
             _cueStates.Clear();
