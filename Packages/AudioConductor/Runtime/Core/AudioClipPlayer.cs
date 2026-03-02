@@ -17,8 +17,6 @@ namespace AudioConductor.Runtime.Core
         private const int AudioSourceNum = 2;
         private const float MinimumDuration = 1.0f;
 
-        [SerializeField] private AudioSource[] _source = new AudioSource[AudioSourceNum];
-
         private int _endSample;
         private int _frequency;
 
@@ -35,6 +33,8 @@ namespace AudioConductor.Runtime.Core
         private int _pausedIndex;
         private float _pitchExternal;
         private double _scheduledEndTime;
+
+        private readonly AudioSource[] _source = new AudioSource[AudioSourceNum];
 
         private int _startSample;
 
@@ -308,6 +308,22 @@ namespace AudioConductor.Runtime.Core
         {
             VolumeInternal = volume;
             UpdateVolume();
+        }
+
+        internal static AudioClipPlayer Create(Transform parent)
+        {
+            var root = new GameObject(nameof(AudioClipPlayer));
+            root.transform.SetParent(parent);
+
+            var player = root.AddComponent<AudioClipPlayer>();
+            for (var i = 0; i < AudioSourceNum; i++)
+            {
+                var child = new GameObject($"AudioSource{i + 1}");
+                child.transform.SetParent(root.transform);
+                player._source[i] = child.AddComponent<AudioSource>();
+            }
+
+            return player;
         }
 
         private void PlayLoop()
