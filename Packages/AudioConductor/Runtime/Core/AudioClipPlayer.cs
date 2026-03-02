@@ -17,6 +17,8 @@ namespace AudioConductor.Runtime.Core
         private const int AudioSourceNum = 2;
         private const float MinimumDuration = 1.0f;
 
+        private readonly AudioSource[] _source = new AudioSource[AudioSourceNum];
+
         private int _endSample;
         private int _frequency;
 
@@ -34,11 +36,10 @@ namespace AudioConductor.Runtime.Core
         private float _pitchExternal;
         private double _scheduledEndTime;
 
-        private readonly AudioSource[] _source = new AudioSource[AudioSourceNum];
-
         private int _startSample;
 
         private float _volumeExternal;
+        private float _volumeMaster = 1f;
 
         internal float VolumeInternal { get; private set; }
 
@@ -227,7 +228,7 @@ namespace AudioConductor.Runtime.Core
         /// <inheritdoc />
         public float GetActualVolume()
         {
-            return ValueRangeConst.Volume.Clamp(VolumeInternal * _volumeExternal);
+            return ValueRangeConst.Volume.Clamp(VolumeInternal * _volumeExternal * _volumeMaster);
         }
 
         /// <inheritdoc />
@@ -307,6 +308,12 @@ namespace AudioConductor.Runtime.Core
         public void SetVolumeInternal(float volume)
         {
             VolumeInternal = volume;
+            UpdateVolume();
+        }
+
+        internal void SetMasterVolume(float volume)
+        {
+            _volumeMaster = volume;
             UpdateVolume();
         }
 
@@ -453,6 +460,7 @@ namespace AudioConductor.Runtime.Core
                 _source[1].Stop();
 
             _startSample = _endSample = 0;
+            _volumeMaster = 1f;
 
             _onStop = _onEnd = null;
         }
