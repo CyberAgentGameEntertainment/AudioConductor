@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -36,6 +36,9 @@ namespace AudioConductor.Editor.Core.CustomEditors
             var throttleLimitField = container.Q<IntegerField>("ThrottleLimit");
             throttleLimitField.bindingPath = nameof(AudioConductorSettings.throttleLimit);
 
+            var masterVolumeField = container.Q<FloatField>("MasterVolume");
+            masterVolumeField.bindingPath = nameof(AudioConductorSettings.masterVolume);
+
             var categoryListView = container.Q<ListView>();
             categoryListView.bindingPath = nameof(AudioConductorSettings.categoryList);
             categoryListView.makeItem = () => new CategoryView();
@@ -71,8 +74,8 @@ namespace AudioConductor.Editor.Core.CustomEditors
             sizeField.SetVisible(false);
 
             container.schedule
-                     .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
-                     .Every(1000);
+                .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
+                .Every(1000);
 
             return container;
         }
@@ -81,8 +84,9 @@ namespace AudioConductor.Editor.Core.CustomEditors
         {
             int id;
             do
+            {
                 id = Random.Range(0, int.MaxValue);
-            while (_existIds.Contains(id));
+            } while (_existIds.Contains(id));
 
             return id;
         }
