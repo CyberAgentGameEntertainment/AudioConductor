@@ -115,5 +115,23 @@ namespace AudioConductor.Runtime.Core
         {
             return AudioConductorInternal.Instance.GetAudioMixerGroup(categoryId);
         }
+
+        /// <summary>
+        ///     Gets the current master volume.
+        /// </summary>
+        /// <returns>The master volume (0.0 to 1.0).</returns>
+        public static float GetMasterVolume()
+        {
+            return AudioConductorInternal.Instance.GetMasterVolume();
+        }
+
+        /// <summary>
+        ///     Sets the master volume applied to all audio.
+        /// </summary>
+        /// <param name="volume">The master volume (0.0 to 1.0).</param>
+        public static void SetMasterVolume(float volume)
+        {
+            AudioConductorInternal.Instance.SetMasterVolume(volume);
+        }
     }
 }
