@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ namespace AudioConductor.Runtime.Core.Models
     ///     Contains runtime settings for the AudioConductor.
     /// </summary>
     [CreateAssetMenu(fileName = nameof(AudioConductorSettings),
-                     menuName = "Audio Conductor/" + "Settings",
-                     order = 0)]
+        menuName = "Audio Conductor/" + "Settings",
+        order = 0)]
     public sealed class AudioConductorSettings : ScriptableObject
     {
         /// <summary>
@@ -25,6 +25,11 @@ namespace AudioConductor.Runtime.Core.Models
         ///     Limit of concurrent play.
         /// </summary>
         public int throttleLimit;
+
+        /// <summary>
+        ///     Master volume scale applied to all audio. (Value range 0.00 to 1.00)
+        /// </summary>
+        public float masterVolume = 1f;
 
         /// <summary>
         ///     List of <see cref="Category" />.
