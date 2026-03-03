@@ -11,7 +11,6 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Shared;
@@ -46,7 +45,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public CueInspectorModel([NotNull] ItemCue[] items,
             [NotNull] AutoIncrementHistory history,
-            [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] IAssetSaveService assetSaveService,
+            Func<AudioConductorSettings> settingsProvider = null)
         {
             Assert.IsTrue(items.Length > 0);
 
@@ -95,13 +95,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _playType = new(new(PlayType, mixed[10]));
             // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
 
-            if (CanPreview)
-                _trackPreviewModel = new CuePreviewModel(_items[0]);
+            if (_items.Length == 1 && settingsProvider != null)
+                _trackPreviewModel = new CuePreviewModel(_items[0], settingsProvider);
         }
 
         private Cue TypicalTarget => _target[0];
 
-        public bool CanPreview => _items.Length == 1;
+        public bool CanPreview => _trackPreviewModel != null;
 
         #region Name
 
@@ -597,9 +597,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public ICueController PlayCue()
+        public void PlayCue()
         {
-            return _trackPreviewModel?.Play();
+            _trackPreviewModel?.Play();
         }
 
         public void StopCue()

@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -28,9 +28,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public IReadOnlyObservableProperty<List<int>> CategoryIdList => _categoryIdList;
 
-        public void Update()
+        public void Refresh(AudioConductorSettings settings)
         {
-            var settings = AudioConductorSettingsRepository.instance.Settings;
             var enumerable = settings == null ? Enumerable.Empty<Category>() : settings.categoryList;
 
             _categories = enumerable.Prepend(Invalid).ToArray();
@@ -59,9 +58,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public Category Find(int categoryId)
-            => _categories?.FirstOrDefault(category => category.id == categoryId) ?? Invalid;
+        {
+            return _categories?.FirstOrDefault(category => category.id == categoryId) ?? Invalid;
+        }
 
         public string GetName(int categoryId)
-            => _categories?.FirstOrDefault(category => category.id == categoryId)?.name ?? Invalid.name;
+        {
+            return _categories?.FirstOrDefault(category => category.id == categoryId)?.name ?? Invalid.name;
+        }
     }
 }

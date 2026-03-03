@@ -1,7 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
@@ -9,6 +10,7 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
+using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
@@ -18,20 +20,25 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly TrackInspectorModel _trackInspectorModel;
 
         public InspectorModel([NotNull] CueListItem[] items,
-                              [NotNull] AutoIncrementHistory history,
-                              [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            Func<AudioConductorSettings> settingsProvider = null)
         {
             var cueItems = items.OfType<ItemCue>().ToArray();
             var trackItems = items.OfType<ItemTrack>().ToArray();
 
             if (cueItems.Length == 0 && trackItems.Length == 0)
+            {
                 InspectorType = InspectorType.None;
+            }
             else if (cueItems.Length > 0 && trackItems.Length > 0)
+            {
                 InspectorType = InspectorType.CueAndTrack;
+            }
             else if (cueItems.Length > 0)
             {
                 InspectorType = InspectorType.Cue;
-                _cueInspectorModel = new CueInspectorModel(cueItems, history, assetSaveService);
+                _cueInspectorModel = new CueInspectorModel(cueItems, history, assetSaveService, settingsProvider);
             }
             else
             {

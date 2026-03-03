@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -17,20 +17,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     [Serializable]
     internal sealed class CueSheetAssetEditorWindowModel
     {
-        [SerializeField]
-        private CueSheetAsset _target;
+        [SerializeField] private CueSheetAsset _target;
 
         [SerializeField]
         private ObservableProperty<CueSheetEditorPresenter.Pane> _paneState = new(CueSheetEditorPresenter.Pane.Default);
 
-        [SerializeField]
-        private ObservableProperty<bool> _inspectorUnCollapsed = new(true);
+        [SerializeField] private ObservableProperty<bool> _inspectorUnCollapsed = new(true);
 
-        [SerializeField]
-        private CueListTreeView.State _cueListTreeViewState = new();
+        [SerializeField] private CueListTreeView.State _cueListTreeViewState = new();
+
+        private readonly IAssetSaveService _assetSaveService = new AssetSaveService();
 
         private readonly AutoIncrementHistory _history = new();
-        private readonly IAssetSaveService _assetSaveService = new AssetSaveService();
 
         private CueSheetAssetEditorWindowModel()
         {
@@ -45,15 +43,22 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public ICueSheetEditorModel CueSheetEditorModel { get; private set; }
 
-        public void Setup()
+        public void Setup(Func<AudioConductorSettings> settingsProvider = null)
         {
             _assetSaveService.SetAsset(_target);
             CueSheetEditorModel = new CueSheetEditorModel(_target.cueSheet, _history, _assetSaveService, _paneState,
-                                                          _inspectorUnCollapsed, _cueListTreeViewState);
+                _inspectorUnCollapsed, _cueListTreeViewState,
+                settingsProvider);
         }
 
-        public void Undo() => _history.Undo();
+        public void Undo()
+        {
+            _history.Undo();
+        }
 
-        public void Redo() => _history.Redo();
+        public void Redo()
+        {
+            _history.Redo();
+        }
     }
 }

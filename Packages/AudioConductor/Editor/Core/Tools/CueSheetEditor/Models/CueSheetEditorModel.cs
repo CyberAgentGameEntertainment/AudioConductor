@@ -1,7 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
@@ -18,11 +19,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly OtherOperationPaneModel _otherOperationPaneModel;
 
         public CueSheetEditorModel([NotNull] CueSheet cueSheet,
-                                   [NotNull] AutoIncrementHistory history,
-                                   [NotNull] IAssetSaveService assetSaveService,
-                                   IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
-                                   IObservableProperty<bool> inspectorUnCollapsed,
-                                   CueListTreeView.State cueListTreeViewState
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
+            IObservableProperty<bool> inspectorUnCollapsed,
+            CueListTreeView.State cueListTreeViewState,
+            Func<AudioConductorSettings> settingsProvider = null
         )
         {
             CueSheetParameterPaneModel =
@@ -30,7 +32,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             CueListEditorPaneModel
                 = new CueListEditorPaneModel(cueSheet, history, assetSaveService, inspectorUnCollapsed,
-                                             cueListTreeViewState);
+                    cueListTreeViewState, settingsProvider);
 
             OtherOperationPaneModel = new OtherOperationPaneModel(cueSheet, history, assetSaveService);
 

@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System;
@@ -17,27 +17,30 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed partial class CueListModel : ICueListModel
     {
-        private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
-        private readonly ItemCueSheet _root;
-
-        private readonly Subject<Empty> _moveSubject = new();
         private readonly Subject<CueListItem> _addSubject = new();
-        private readonly Subject<CueListItem> _removeSubject = new();
+        private readonly IAssetSaveService _assetSaveService;
+        private readonly AutoIncrementHistory _history;
 
         private readonly Dictionary<int, CueListItem> _itemTable = new();
 
-        private InspectorModel _latestInspectorModel;
+        private readonly Subject<Empty> _moveSubject = new();
+        private readonly Subject<CueListItem> _removeSubject = new();
+        private readonly ItemCueSheet _root;
+        private readonly Func<AudioConductorSettings> _settingsProvider;
 
         private int _currentItemId;
 
+        private InspectorModel _latestInspectorModel;
+
         public CueListModel([NotNull] CueSheet cueSheet,
-                            [NotNull] AutoIncrementHistory history,
-                            [NotNull] IAssetSaveService assetSaveService,
-                            CueListTreeView.State cueListTreeViewState)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            CueListTreeView.State cueListTreeViewState,
+            Func<AudioConductorSettings> settingsProvider = null)
         {
             _history = history;
             _assetSaveService = assetSaveService;
+            _settingsProvider = settingsProvider;
             CueListTreeViewState = cueListTreeViewState;
 
             _root = new ItemCueSheet(-1, cueSheet);
@@ -71,7 +74,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public IInspectorModel CreateInspectorModel(CueListItem[] items)
         {
-            return _latestInspectorModel = new InspectorModel(items, _history, _assetSaveService);
+            return _latestInspectorModel = new InspectorModel(items, _history, _assetSaveService, _settingsProvider);
         }
     }
 }
