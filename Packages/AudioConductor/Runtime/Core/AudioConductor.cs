@@ -166,6 +166,12 @@ namespace AudioConductor.Runtime.Core
             if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
                 throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
 
+            if (options?.TrackIndex.HasValue == true && options?.Selector != null)
+                throw new ArgumentException("TrackIndex and Selector are mutually exclusive.");
+
+            if (!string.IsNullOrEmpty(options?.TrackName) && options?.Selector != null)
+                throw new ArgumentException("TrackName and Selector are mutually exclusive.");
+
             if (!sheetHandle.IsValid)
                 return default;
 
@@ -185,7 +191,7 @@ namespace AudioConductor.Runtime.Core
             else if (!string.IsNullOrEmpty(options?.TrackName))
                 track = cueState.GetTrack(options.Value.TrackName);
             else
-                track = cueState.NextTrack();
+                track = cueState.NextTrack(options?.Selector);
 
             if (track == null || track.audioClip == null)
                 return default;

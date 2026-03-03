@@ -9,36 +9,32 @@ namespace AudioConductor.Runtime.Core.Models
 {
     internal sealed class CueState
     {
-        private readonly ITrackSelector _selector;
+        private readonly TrackSelectionContext _context;
+        private readonly ITrackSelector _trackSelector;
 
         public CueState(uint cueSheetManageNumber, Cue cue)
         {
             CueSheetManageNumber = cueSheetManageNumber;
             Cue = cue;
-
-            switch (Cue.playType)
-            {
-                case CuePlayType.Random:
-                    _selector = new RandomTrackSelector();
-                    break;
-                case CuePlayType.Sequential:
-                default:
-                    _selector = new SequentialTrackSelector();
-                    break;
-            }
-
-            _selector.Setup(Cue.trackList);
+            _context = new TrackSelectionContext(cue.trackList);
+            _trackSelector = cue.playType == CuePlayType.Random
+                ? TrackSelectors.Random
+                : TrackSelectors.Sequential;
         }
 
         public uint CueSheetManageNumber { get; }
         public Cue Cue { get; }
 
-        public Track NextTrack()
+        public Track NextTrack(ITrackSelector selectorOverride = null)
         {
             if (Cue.trackList.Count == 0)
                 return null;
 
-            var index = _selector.NextTrackIndex();
+            var selector = selectorOverride ?? _trackSelector;
+            var index = selector.SelectNext(_context);
+            if (index < 0 || index >= Cue.trackList.Count)
+                return null;
+
             return Cue.trackList[index];
         }
 

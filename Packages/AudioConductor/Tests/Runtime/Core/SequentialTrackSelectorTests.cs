@@ -11,46 +11,42 @@ namespace Tests.Runtime.Core
 {
     public class SequentialTrackSelectorTests
     {
-        private static IReadOnlyList<Track> CreateTracks(int count)
+        private static TrackSelectionContext CreateContext(int count)
         {
             var tracks = new List<Track>();
             for (var i = 0; i < count; i++)
                 tracks.Add(new Track { name = $"Track{i}" });
-            return tracks;
+            return new TrackSelectionContext(tracks);
         }
 
         [Test]
-        public void NextTrackIndex_AfterReset_ReturnsMinusOne()
+        public void SelectNext_WithEmptyTracks_ReturnsMinusOne()
         {
-            var selector = new SequentialTrackSelector();
-            selector.Setup(CreateTracks(3));
-            selector.Reset();
+            var ctx = CreateContext(0);
 
-            var index = selector.NextTrackIndex();
+            var index = TrackSelectors.Sequential.SelectNext(ctx);
 
             Assert.That(index, Is.EqualTo(-1));
         }
 
         [Test]
-        public void NextTrackIndex_AfterSetup_ReturnsSequentialIndices()
+        public void SelectNext_ReturnsSequentialIndices()
         {
-            var selector = new SequentialTrackSelector();
-            selector.Setup(CreateTracks(3));
+            var ctx = CreateContext(3);
 
-            Assert.That(selector.NextTrackIndex(), Is.EqualTo(0));
-            Assert.That(selector.NextTrackIndex(), Is.EqualTo(1));
-            Assert.That(selector.NextTrackIndex(), Is.EqualTo(2));
+            Assert.That(TrackSelectors.Sequential.SelectNext(ctx), Is.EqualTo(0));
+            Assert.That(TrackSelectors.Sequential.SelectNext(ctx), Is.EqualTo(1));
+            Assert.That(TrackSelectors.Sequential.SelectNext(ctx), Is.EqualTo(2));
         }
 
         [Test]
-        public void NextTrackIndex_AfterLastTrack_WrapsToFirst()
+        public void SelectNext_AfterLastTrack_WrapsToFirst()
         {
-            var selector = new SequentialTrackSelector();
-            selector.Setup(CreateTracks(2));
+            var ctx = CreateContext(2);
 
-            selector.NextTrackIndex(); // 0
-            selector.NextTrackIndex(); // 1
-            var index = selector.NextTrackIndex(); // wraps to 0
+            TrackSelectors.Sequential.SelectNext(ctx); // 0
+            TrackSelectors.Sequential.SelectNext(ctx); // 1
+            var index = TrackSelectors.Sequential.SelectNext(ctx); // wraps to 0
 
             Assert.That(index, Is.EqualTo(0));
         }

@@ -11,46 +11,41 @@ namespace Tests.Runtime.Core
 {
     public class RandomTrackSelectorTests
     {
-        private static IReadOnlyList<Track> CreateTracks(int count)
+        private static TrackSelectionContext CreateContext(int count)
         {
             var tracks = new List<Track>();
             for (var i = 0; i < count; i++)
                 tracks.Add(new Track { name = $"Track{i}" });
-            return tracks;
+            return new TrackSelectionContext(tracks);
         }
 
         [Test]
-        public void NextTrackIndex_AfterReset_ReturnsMinusOne()
+        public void SelectNext_WithEmptyTracks_ReturnsMinusOne()
         {
-            var selector = new RandomTrackSelector();
-            selector.Setup(CreateTracks(3));
-            selector.Reset();
+            var ctx = CreateContext(0);
 
-            var index = selector.NextTrackIndex();
+            var index = TrackSelectors.Random.SelectNext(ctx);
 
             Assert.That(index, Is.EqualTo(-1));
         }
 
         [Test]
-        public void NextTrackIndex_AfterSetup_ReturnsValidIndex()
+        public void SelectNext_ReturnsValidIndex()
         {
-            var selector = new RandomTrackSelector();
-            var tracks = CreateTracks(3);
-            selector.Setup(tracks);
+            var ctx = CreateContext(3);
 
-            var index = selector.NextTrackIndex();
+            var index = TrackSelectors.Random.SelectNext(ctx);
 
             Assert.That(index, Is.GreaterThanOrEqualTo(0));
-            Assert.That(index, Is.LessThan(tracks.Count));
+            Assert.That(index, Is.LessThan(3));
         }
 
         [Test]
-        public void NextTrackIndex_WithSingleTrack_ReturnsZero()
+        public void SelectNext_WithSingleTrack_ReturnsZero()
         {
-            var selector = new RandomTrackSelector();
-            selector.Setup(CreateTracks(1));
+            var ctx = CreateContext(1);
 
-            var index = selector.NextTrackIndex();
+            var index = TrackSelectors.Random.SelectNext(ctx);
 
             Assert.That(index, Is.EqualTo(0));
         }

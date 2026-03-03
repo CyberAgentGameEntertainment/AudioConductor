@@ -1,16 +1,19 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
-
-using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Runtime.Core
 {
-    internal interface ITrackSelector
+    /// <summary>
+    ///     Stateless strategy for selecting the next track index from a <see cref="TrackSelectionContext" />.
+    /// </summary>
+    public interface ITrackSelector
     {
-        void Setup(IReadOnlyList<Track> trackList);
-        int NextTrackIndex();
-        void Reset();
+        /// <summary>
+        ///     Selects the next track index and updates <paramref name="context" />.
+        /// </summary>
+        /// <param name="context">The per-cue playback context. <see cref="TrackSelectionContext.CurrentIndex" /> is updated.</param>
+        /// <returns>The selected track index, or -1 if no track is available.</returns>
+        int SelectNext(TrackSelectionContext context);
     }
 }

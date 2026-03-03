@@ -35,5 +35,11 @@ namespace AudioConductor.Runtime.Core
         ///     Custom fader curve. When null, <see cref="Faders.Linear" /> is used.
         /// </summary>
         public IFader Fader;
+
+        /// <summary>
+        ///     Custom track selector. When null, the cue's configured selector is used.
+        ///     Mutually exclusive with <see cref="TrackIndex" /> and <see cref="TrackName" />.
+        /// </summary>
+        public ITrackSelector Selector;
     }
 }

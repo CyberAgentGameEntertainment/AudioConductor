@@ -2,51 +2,45 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
 using UnityEngine;
 
 namespace AudioConductor.Runtime.Core
 {
     internal sealed class RandomTrackSelector : ITrackSelector
     {
-        private int _trackWeightTotal;
-        private IReadOnlyList<Track> _tracks;
-
-        public void Setup(IReadOnlyList<Track> tracks)
+        public int SelectNext(TrackSelectionContext context)
         {
-            Reset();
-            _tracks = tracks;
-
-            foreach (var track in _tracks)
-                _trackWeightTotal += track.randomWeight;
-        }
-
-        public int NextTrackIndex()
-        {
-            if (_tracks == null)
+            if (context.Tracks.Count == 0)
                 return -1;
 
-            if (_trackWeightTotal == 0)
-                return Random.Range(0, _tracks.Count);
+            var weightTotal = 0;
+            foreach (var track in context.Tracks)
+                weightTotal += track.randomWeight;
 
-            var total = 0;
-            var randomValue = Random.Range(0, _trackWeightTotal);
-            for (var i = 0; i < _tracks.Count; ++i)
+            int index;
+            if (weightTotal == 0)
             {
-                var track = _tracks[i];
-                total += track.randomWeight;
-                if (randomValue < total)
-                    return i;
+                index = Random.Range(0, context.Tracks.Count);
+            }
+            else
+            {
+                var total = 0;
+                var randomValue = Random.Range(0, weightTotal);
+                index = 0;
+                for (var i = 0; i < context.Tracks.Count; i++)
+                {
+                    total += context.Tracks[i].randomWeight;
+                    if (randomValue < total)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
             }
 
-            return 0;
-        }
-
-        public void Reset()
-        {
-            _trackWeightTotal = 0;
-            _tracks = null;
+            context.CurrentIndex = index;
+            context.PlayCount++;
+            return index;
         }
     }
 }
