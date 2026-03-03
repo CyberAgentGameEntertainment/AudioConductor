@@ -34,6 +34,7 @@ namespace AudioConductor.Runtime.Core
         private readonly List<PlaybackState> _updateTempList = new();
         private ConductorBehaviour _behaviour;
         private uint _cueSheetHandleCounter;
+        private float _masterVolume = 1f;
         private uint _playStateCounter;
         private GameObject _rootObject;
 
@@ -200,6 +201,7 @@ namespace AudioConductor.Runtime.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
+            player.SetMasterVolume(_masterVolume);
 
             var id = ++_playStateCounter;
             var state = new PlaybackState(id, sheetHandle.Id, cue, player) { Priority = track.priority };
@@ -406,6 +408,51 @@ namespace AudioConductor.Runtime.Core
         }
 
         /// <summary>
+        ///     Returns the current master volume of this conductor.
+        /// </summary>
+        /// <returns>Master volume in the range [0, 1].</returns>
+        public float GetMasterVolume()
+        {
+            return _masterVolume;
+        }
+
+        /// <summary>
+        ///     Sets the master volume for all active playbacks (Managed and OneShot) under this conductor.
+        ///     The value is clamped to [0, 1].
+        /// </summary>
+        /// <param name="volume">Target master volume.</param>
+        public void SetMasterVolume(float volume)
+        {
+            _masterVolume = ValueRangeConst.Volume.Clamp(volume);
+            foreach (var playback in _playbacks.Values)
+                playback.Player?.SetMasterVolume(_masterVolume);
+            foreach (var state in _oneShotStates)
+                state.Player?.SetMasterVolume(_masterVolume);
+        }
+
+        /// <summary>
+        ///     Stops all active Managed and OneShot playbacks under this conductor.
+        ///     When <paramref name="fadeTime" /> is greater than zero, Managed playbacks fade out instead of stopping immediately.
+        ///     OneShot playbacks are always stopped immediately.
+        /// </summary>
+        /// <param name="fadeTime">Fade-out duration in seconds for Managed playbacks. When null or zero, the stop is immediate.</param>
+        /// <param name="fader">Custom fader curve for Managed fade-out. When null, <see cref="Faders.Linear" /> is used.</param>
+        public void StopAll(float? fadeTime = null, IFader fader = null)
+        {
+            foreach (var id in new List<uint>(_playbacks.Keys))
+                Stop(new PlaybackHandle(id), fadeTime, fader);
+
+            foreach (var state in _oneShotStates.ToArray())
+                if (state.Player != null)
+                {
+                    state.Player.Stop();
+                    _oneShotProvider.Return(state.Player);
+                }
+
+            _oneShotStates.Clear();
+        }
+
+        /// <summary>
         ///     Plays a cue as a fire-and-forget OneShot.
         ///     No handle is returned; the playback cannot be controlled after it starts.
         ///     The AudioClipPlayer is automatically returned to the OneShot pool when playback completes.
@@ -441,6 +488,7 @@ namespace AudioConductor.Runtime.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, false,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
+            player.SetMasterVolume(_masterVolume);
             _oneShotStates.Add(new OneShotState(++_playStateCounter, sheetHandle.Id, cue, player, track.priority));
         }
 
