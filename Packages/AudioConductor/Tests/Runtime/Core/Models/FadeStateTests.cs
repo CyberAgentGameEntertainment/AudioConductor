@@ -14,7 +14,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsZero_SetsTargetVolumeImmediately()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 1f, 0f, false);
 
             fadeState.Elapsed(0f);
@@ -26,7 +26,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsZero_SetsIsFinishedToTrue()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 1f, 0f, false);
 
             var result = fadeState.Elapsed(0f);
@@ -39,7 +39,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsZeroAndIsStopTarget_CallsStop()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 0f, 0f, true);
 
             fadeState.Elapsed(0f);
@@ -51,7 +51,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsZeroAndIsNotStopTarget_DoesNotCallStop()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 1f, 0f, false);
 
             fadeState.Elapsed(0f);
@@ -63,7 +63,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsPositive_InterpolatesVolume()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 1f, 1f, false);
 
             fadeState.Elapsed(0.5f);
@@ -76,7 +76,7 @@ namespace Tests.Runtime.Core.Models
         public void Elapsed_WhenFadeTimeIsPositiveAndElapsed_ReturnsTrue()
         {
             var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState(fadeable);
+            var fadeState = new FadeState(fadeable, Faders.Linear);
             fadeState.Setup(0f, 1f, 1f, false);
 
             var result = fadeState.Elapsed(1f);

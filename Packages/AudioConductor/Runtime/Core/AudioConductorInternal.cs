@@ -229,7 +229,7 @@ namespace AudioConductor.Runtime.Core
 
             if (track.fadeTime > 0)
             {
-                var fadeState = new FadeState(controller.Player);
+                var fadeState = new FadeState(controller.Player, Faders.Linear);
                 fadeState.Setup(controller.Player.VolumeInternal, volume, track.fadeTime, false);
                 _fadeStateList.Add(fadeState);
             }
@@ -380,7 +380,7 @@ namespace AudioConductor.Runtime.Core
                 return;
             }
 
-            var fadeState = new FadeState(state.Player);
+            var fadeState = new FadeState(state.Player, Faders.Linear);
             fadeState.Setup(state.Player.VolumeInternal, 0f, state.Track.fadeTime, true);
             _fadeStateList.Add(fadeState);
         }

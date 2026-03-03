@@ -22,6 +22,8 @@ namespace AudioConductor.Runtime.Core
     {
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
+        private readonly List<FadeState> _fadeStates = new();
+        private readonly List<FadeState> _fadeUpdateTempList = new();
         private readonly AudioClipPlayerProvider _oneShotProvider;
         private readonly List<OneShotState> _oneShotStates = new();
         private readonly List<OneShotState> _oneShotUpdateTempList = new();
@@ -83,6 +85,7 @@ namespace AudioConductor.Runtime.Core
                 }
 
             _oneShotStates.Clear();
+            _fadeStates.Clear();
 
             foreach (var registration in _cueSheets.Values)
                 _provider?.Release(registration.Asset);
@@ -202,21 +205,46 @@ namespace AudioConductor.Runtime.Core
             var state = new PlaybackState(id, sheetHandle.Id, cue, player) { Priority = track.priority };
             _playbacks[id] = state;
 
+            if (options?.FadeTime > 0f)
+            {
+                var fader = options.Value.Fader ?? Faders.Linear;
+                var fadeState = new FadeState(player, fader);
+                fadeState.Setup(0f, volume, options.Value.FadeTime.Value, false);
+                player.SetVolumeInternal(0f);
+                _fadeStates.Add(fadeState);
+            }
+
             return new PlaybackHandle(id);
         }
 
         /// <summary>
         ///     Stops the playback identified by the handle.
-        ///     After stopping, the handle remains valid but operations become no-ops.
+        ///     When <paramref name="fadeTime" /> is greater than zero, a fade-out begins instead of an immediate stop.
+        ///     After stopping (or when fade completes), the handle remains valid but operations become no-ops.
         /// </summary>
         /// <param name="handle">The playback handle to stop.</param>
-        public void Stop(PlaybackHandle handle)
+        /// <param name="fadeTime">Fade-out duration in seconds. When null or zero, the stop is immediate.</param>
+        /// <param name="fader">Custom fader curve. When null, <see cref="Faders.Linear" /> is used.</param>
+        public void Stop(PlaybackHandle handle, float? fadeTime = null, IFader fader = null)
         {
             if (!handle.IsValid)
                 return;
 
             if (!_playbacks.TryGetValue(handle.Id, out var state))
                 return;
+
+            if (fadeTime > 0f)
+            {
+                // Do not add a duplicate fade-out entry for the same player.
+                if (_fadeStates.Exists(f => f.IsStopTarget && ReferenceEquals(f.Fadeable, state.Player)))
+                    return;
+
+                var effectiveFader = fader ?? Faders.Linear;
+                var fadeState = new FadeState(state.Player, effectiveFader);
+                fadeState.Setup(state.Player.VolumeInternal, 0f, fadeTime.Value, true);
+                _fadeStates.Add(fadeState);
+                return;
+            }
 
             StopPlayback(state);
             _playbacks.Remove(handle.Id);
@@ -302,6 +330,28 @@ namespace AudioConductor.Runtime.Core
 
         internal void Update(float deltaTime)
         {
+            // Process active fade states.
+            _fadeUpdateTempList.Clear();
+            _fadeUpdateTempList.AddRange(_fadeStates);
+            foreach (var fade in _fadeUpdateTempList)
+            {
+                var finished = fade.Elapsed(deltaTime);
+                if (finished)
+                {
+                    _fadeStates.Remove(fade);
+                    // When the fade target was stopped, remove its playback entry.
+                    if (fade.IsStopTarget)
+                        foreach (var kv in _playbacks)
+                            if (ReferenceEquals(kv.Value.Player, fade.Fadeable))
+                            {
+                                _playbacks.Remove(kv.Key);
+                                _playerProvider.Return(kv.Value.Player);
+                                kv.Value.ReleasePlayer();
+                                break;
+                            }
+                }
+            }
+
             // Copy to temp list first so that _playbacks.Remove inside the loop is safe.
             _updateTempList.Clear();
             foreach (var playback in _playbacks.Values)
@@ -314,7 +364,8 @@ namespace AudioConductor.Runtime.Core
 
                 playback.Player.ManualUpdate(deltaTime);
 
-                if (!playback.Player.IsPlaying && !playback.Player.IsPaused)
+                var isFading = _fadeStates.Exists(f => ReferenceEquals(f.Fadeable, playback.Player));
+                if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !isFading)
                 {
                     _playerProvider.Return(playback.Player);
                     playback.ReleasePlayer();

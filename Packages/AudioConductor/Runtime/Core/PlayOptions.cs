@@ -25,5 +25,15 @@ namespace AudioConductor.Runtime.Core
         ///     Mutually exclusive with <see cref="TrackIndex" />.
         /// </summary>
         public string TrackName;
+
+        /// <summary>
+        ///     Fade-in duration in seconds. When null, no fade-in is applied.
+        /// </summary>
+        public float? FadeTime;
+
+        /// <summary>
+        ///     Custom fader curve. When null, <see cref="Faders.Linear" /> is used.
+        /// </summary>
+        public IFader Fader;
     }
 }

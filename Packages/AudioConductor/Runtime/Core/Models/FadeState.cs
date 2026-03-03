@@ -8,9 +8,12 @@ namespace AudioConductor.Runtime.Core.Models
 {
     internal sealed class FadeState
     {
-        public FadeState(IFadeable fadeable)
+        private readonly IFader _fader;
+
+        public FadeState(IFadeable fadeable, IFader fader)
         {
             Fadeable = fadeable;
+            _fader = fader;
         }
 
         public IFadeable Fadeable { get; }
@@ -44,7 +47,7 @@ namespace AudioConductor.Runtime.Core.Models
             ElapsedTime += time;
 
             var elapsedRate = Mathf.Clamp01(ElapsedTime / FadeTime);
-            var volume = Mathf.Lerp(StartVolume, TargetVolume, elapsedRate);
+            var volume = _fader.Evaluate(elapsedRate, StartVolume, TargetVolume);
             Fadeable.SetVolumeInternal(volume);
 
             IsFinished = elapsedRate >= 1f;
