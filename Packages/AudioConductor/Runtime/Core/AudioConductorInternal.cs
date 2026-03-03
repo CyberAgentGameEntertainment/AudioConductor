@@ -21,7 +21,7 @@ namespace AudioConductor.Runtime.Core
         private readonly Dictionary<uint, CueSheetAsset> _cueSheetAssets = new();
         private readonly Dictionary<uint, CueState> _cueStates = new();
         private readonly List<FadeState> _fadeStateList = new();
-        private readonly AudioClipPlayerProvider _provider = new();
+        private readonly AudioClipPlayerProvider _provider = new(GlobalGameObject.Instance.transform);
         private readonly List<FadeState> _tempFadeStateList = new();
         private readonly List<AudioClipPlayer> _unmanagedPlayerList = new();
         private readonly List<TrackController> _updateTempList = new();

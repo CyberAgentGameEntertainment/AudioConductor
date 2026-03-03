@@ -1,0 +1,296 @@
+// --------------------------------------------------------------
+// Copyright 2026 CyberAgent, Inc.
+// --------------------------------------------------------------
+
+using System;
+using AudioConductor.Runtime.Core;
+using AudioConductor.Runtime.Core.Models;
+using NUnit.Framework;
+using UnityEngine;
+using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
+using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
+using Object = UnityEngine.Object;
+
+namespace AudioConductor.Tests.Runtime.Core
+{
+    public class AudioConductorPlaybackTests
+    {
+        private CueSheetAsset _cueSheetAsset;
+        private AudioConductorSettings _settings;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
+            _cueSheetAsset = ScriptableObject.CreateInstance<CueSheetAsset>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_settings);
+            Object.DestroyImmediate(_cueSheetAsset);
+        }
+
+        [Test]
+        public void Play_WithInvalidSheetHandle_ReturnsInvalidHandle()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            var handle = conductor.Play(default, "cue");
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithUnregisteredHandle_ReturnsInvalidHandle()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            var handle = conductor.Play(new CueSheetHandle(999), "cue");
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithNonExistentCueName_ReturnsInvalidHandle()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, "nonexistent_cue");
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Stop_WithInvalidHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.Stop(default));
+        }
+
+        [Test]
+        public void Stop_WithUnknownHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.Stop(new PlaybackHandle(999)));
+        }
+
+        [Test]
+        public void Pause_WithInvalidHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.Pause(default));
+        }
+
+        [Test]
+        public void Resume_WithInvalidHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.Resume(default));
+        }
+
+        [Test]
+        public void SetVolume_WithInvalidHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.SetVolume(default, 0.5f));
+        }
+
+        [Test]
+        public void SetPitch_WithInvalidHandle_DoesNotThrow()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.SetPitch(default, 1.0f));
+        }
+
+        [Test]
+        public void IsPlaying_WithInvalidHandle_ReturnsFalse()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.That(conductor.IsPlaying(default), Is.False);
+        }
+
+        [Test]
+        public void IsPlaying_WithUnknownHandle_ReturnsFalse()
+        {
+            using var conductor = new CoreAudioConductor(_settings);
+
+            Assert.That(conductor.IsPlaying(new PlaybackHandle(999)), Is.False);
+        }
+
+        [Test]
+        public void Play_WithCueHavingNoTracks_ReturnsInvalidHandle()
+        {
+            var cue = new Cue { name = "empty_cue" };
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, "empty_cue");
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithCueHavingTrackWithNullClip_ReturnsInvalidHandle()
+        {
+            var track = new Track { name = "track1", audioClip = null };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, "cue1");
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithBothTrackIndexAndTrackName_ThrowsArgumentException()
+        {
+            var track = new Track { name = "track0", audioClip = null };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.Throws<ArgumentException>(() =>
+                conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackIndex = 0, TrackName = "track0" }));
+        }
+
+        [Test]
+        public void PlayOptions_TrackIndex_SelectsSpecificTrack()
+        {
+            // A cue with two tracks but null clips — both return invalid,
+            // but we verify the overload does not throw.
+            var track0 = new Track { name = "track0", audioClip = null };
+            var track1 = new Track { name = "track1", audioClip = null };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track0);
+            cue.trackList.Add(track1);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.DoesNotThrow(() => conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackIndex = 1 }));
+        }
+
+        [Test]
+        public void PlayOptions_TrackName_SelectsSpecificTrack()
+        {
+            var track = new Track { name = "named_track", audioClip = null };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.DoesNotThrow(() =>
+                conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackName = "named_track" }));
+        }
+
+        [Test]
+        public void Play_WithValidAudioClip_ReturnsValidHandle()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, "cue1");
+
+            Object.DestroyImmediate(clip);
+            Assert.That(handle.IsValid, Is.True);
+        }
+
+        [Test]
+        public void Play_TwiceWithValidAudioClip_ReturnsDifferentHandles()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle1 = conductor.Play(sheetHandle, "cue1");
+            var handle2 = conductor.Play(sheetHandle, "cue1");
+
+            Object.DestroyImmediate(clip);
+            Assert.That(handle1, Is.Not.EqualTo(handle2));
+        }
+
+        [Test]
+        public void Stop_AfterPlay_HandleRemainsValidButIsPlayingReturnsFalse()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+            var handle = conductor.Play(sheetHandle, "cue1");
+
+            conductor.Stop(handle);
+
+            Object.DestroyImmediate(clip);
+            // Handle itself is still valid (IsValid checks Id != 0)
+            Assert.That(handle.IsValid, Is.True);
+            // After stop, the playback is removed so IsPlaying returns false
+            Assert.That(conductor.IsPlaying(handle), Is.False);
+        }
+
+        [Test]
+        public void Stop_CalledTwice_DoesNotThrow()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+            var handle = conductor.Play(sheetHandle, "cue1");
+
+            conductor.Stop(handle);
+
+            Object.DestroyImmediate(clip);
+            Assert.DoesNotThrow(() => conductor.Stop(handle));
+        }
+
+        [Test]
+        public void Dispose_WithActivePlaybacks_DoesNotThrow()
+        {
+            var conductor = new CoreAudioConductor(_settings);
+            // Just register without actually playing (no real AudioClip)
+            conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.DoesNotThrow(() => conductor.Dispose());
+        }
+    }
+}

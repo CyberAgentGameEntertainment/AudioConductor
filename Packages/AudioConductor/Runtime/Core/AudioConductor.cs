@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using UnityEngine.Audio;
 using Object = UnityEngine.Object;
@@ -20,9 +22,14 @@ namespace AudioConductor.Runtime.Core
     {
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
+        private readonly Dictionary<uint, PlaybackState> _playbacks = new();
+        private readonly AudioClipPlayerProvider _playerProvider;
         private readonly ICueSheetProvider _provider;
+        private readonly AudioConductorSettings _settings;
+        private readonly List<PlaybackState> _updateTempList = new();
         private ConductorBehaviour _behaviour;
         private uint _cueSheetHandleCounter;
+        private uint _playbackHandleCounter;
         private GameObject _rootObject;
 
         /// <summary>
@@ -33,6 +40,7 @@ namespace AudioConductor.Runtime.Core
         /// <param name="provider">Optional provider for async CueSheet loading and releasing.</param>
         public AudioConductor(AudioConductorSettings settings, ICueSheetProvider provider = null)
         {
+            _settings = settings;
             _provider = provider;
 
             _rootObject = new GameObject(nameof(AudioConductor));
@@ -41,6 +49,8 @@ namespace AudioConductor.Runtime.Core
 
             _behaviour = _rootObject.AddComponent<ConductorBehaviour>();
             _behaviour.Conductor = this;
+
+            _playerProvider = new AudioClipPlayerProvider(_rootObject.transform);
 
             foreach (var category in settings.categoryList)
                 _categories[category.id] = category;
@@ -52,6 +62,10 @@ namespace AudioConductor.Runtime.Core
         /// </summary>
         public void Dispose()
         {
+            foreach (var playback in _playbacks.Values)
+                StopPlayback(playback);
+            _playbacks.Clear();
+
             foreach (var registration in _cueSheets.Values)
                 _provider?.Release(registration.Asset);
             _cueSheets.Clear();
@@ -117,8 +131,178 @@ namespace AudioConductor.Runtime.Core
             _cueSheets.Remove(handle.Id);
         }
 
+        /// <summary>
+        ///     Plays a cue from the registered CueSheet identified by the handle.
+        ///     Returns a <see cref="PlaybackHandle" /> for controlling the playback.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue to play.</param>
+        /// <param name="options">Optional playback settings. If null, CueSheet defaults are used.</param>
+        /// <returns>A handle for controlling this playback instance.</returns>
+        public PlaybackHandle Play(CueSheetHandle sheetHandle, string cueName, PlayOptions? options = null)
+        {
+            if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
+                throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
+
+            if (!sheetHandle.IsValid)
+                return default;
+
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return default;
+
+            var cueSheet = registration.Asset.cueSheet;
+            var cue = cueSheet.cueList.Find(c => c.name == cueName);
+            if (cue == null)
+                return default;
+
+            var cueState = new CueState(sheetHandle.Id, cue);
+
+            Track track;
+            if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
+                track = cueState.GetTrack(options.Value.TrackIndex.Value);
+            else if (!string.IsNullOrEmpty(options?.TrackName))
+                track = cueState.GetTrack(options.Value.TrackName);
+            else
+                track = cueState.NextTrack();
+
+            if (track == null || track.audioClip == null)
+                return default;
+
+            if (!CanPlay(sheetHandle.Id, cue, track))
+                return default;
+
+            var player = _playerProvider.Rent();
+            _categories.TryGetValue(cue.categoryId, out var category);
+            var volume = Calculator.CalcVolume(cueSheet, cue, track);
+            var pitch = Calculator.CalcPitch(cueSheet, cue, track);
+            var isLoop = options?.IsLoop == true || track.isLoop;
+            player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
+                track.startSample, track.loopStartSample, track.endSample);
+            player.Play();
+
+            var id = ++_playbackHandleCounter;
+            var state = new PlaybackState(id, sheetHandle.Id, cue, player) { Priority = track.priority };
+            _playbacks[id] = state;
+
+            return new PlaybackHandle(id);
+        }
+
+        /// <summary>
+        ///     Stops the playback identified by the handle.
+        ///     After stopping, the handle remains valid but operations become no-ops.
+        /// </summary>
+        /// <param name="handle">The playback handle to stop.</param>
+        public void Stop(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state))
+                return;
+
+            StopPlayback(state);
+            _playbacks.Remove(handle.Id);
+        }
+
+        /// <summary>
+        ///     Pauses the playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle to pause.</param>
+        public void Pause(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.Pause();
+        }
+
+        /// <summary>
+        ///     Resumes the paused playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle to resume.</param>
+        public void Resume(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.Resume();
+        }
+
+        /// <summary>
+        ///     Sets the volume of the playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle.</param>
+        /// <param name="volume">The volume value.</param>
+        public void SetVolume(PlaybackHandle handle, float volume)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.SetVolume(volume);
+        }
+
+        /// <summary>
+        ///     Sets the pitch of the playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle.</param>
+        /// <param name="pitch">The pitch value.</param>
+        public void SetPitch(PlaybackHandle handle, float pitch)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.SetPitch(pitch);
+        }
+
+        /// <summary>
+        ///     Returns true if the playback identified by the handle is currently playing.
+        /// </summary>
+        /// <param name="handle">The playback handle.</param>
+        /// <returns>True if the playback is active; false otherwise.</returns>
+        public bool IsPlaying(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return false;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return false;
+
+            return state.Player.IsPlaying;
+        }
+
         internal void Update(float deltaTime)
         {
+            // Copy to temp list first so that _playbacks.Remove inside the loop is safe.
+            _updateTempList.Clear();
+            foreach (var playback in _playbacks.Values)
+                _updateTempList.Add(playback);
+
+            foreach (var playback in _updateTempList)
+            {
+                if (playback.Player == null)
+                    continue;
+
+                playback.Player.ManualUpdate(deltaTime);
+
+                if (!playback.Player.IsPlaying && !playback.Player.IsPaused)
+                {
+                    _playerProvider.Return(playback.Player);
+                    playback.ReleasePlayer();
+                    _playbacks.Remove(playback.Id);
+                }
+            }
         }
 
         /// <summary>
@@ -134,6 +318,229 @@ namespace AudioConductor.Runtime.Core
             return null;
         }
 
+        private bool CanPlay(uint cueSheetId, Cue cue, Track track)
+        {
+            if (_playbacks.Count == 0)
+                return true;
+
+            for (var i = 0; i < (int)LimitCheckType.Count; i++)
+            {
+                ThrottleType throttleType = default;
+                int throttleLimit = default;
+
+                switch ((LimitCheckType)i)
+                {
+                    case LimitCheckType.Cue:
+                        throttleType = cue.throttleType;
+                        throttleLimit = cue.throttleLimit;
+                        break;
+                    case LimitCheckType.CueSheet:
+                        if (_cueSheets.TryGetValue(cueSheetId, out var reg))
+                        {
+                            throttleType = reg.Asset.cueSheet.throttleType;
+                            throttleLimit = reg.Asset.cueSheet.throttleLimit;
+                        }
+
+                        break;
+                    case LimitCheckType.Category:
+                        if (_categories.TryGetValue(cue.categoryId, out var cat))
+                        {
+                            throttleType = cat.throttleType;
+                            throttleLimit = cat.throttleLimit;
+                        }
+
+                        break;
+                    case LimitCheckType.Global:
+                        throttleType = _settings.throttleType;
+                        throttleLimit = _settings.throttleLimit;
+                        break;
+                }
+
+                if (throttleLimit <= 0)
+                    continue;
+
+                var playNum = (LimitCheckType)i switch
+                {
+                    LimitCheckType.Cue => CountPlayingByCue(cue),
+                    LimitCheckType.CueSheet => CountPlayingByCueSheet(cueSheetId),
+                    LimitCheckType.Category => CountPlayingByCategory(cue.categoryId),
+                    LimitCheckType.Global => CountAllPlaying(),
+                    _ => 0
+                };
+
+                if (playNum < throttleLimit)
+                    continue;
+
+                // Compute minimum priority within the scope of this limit check.
+                var minPriority = (LimitCheckType)i switch
+                {
+                    LimitCheckType.Cue => MinPriorityByCue(cue),
+                    LimitCheckType.CueSheet => MinPriorityByCueSheet(cueSheetId),
+                    LimitCheckType.Category => MinPriorityByCategory(cue.categoryId),
+                    LimitCheckType.Global => MinPriorityGlobal(),
+                    _ => int.MaxValue
+                };
+
+                if (minPriority > track.priority)
+                    return false;
+
+                if (minPriority < track.priority)
+                    throttleType = ThrottleType.PriorityOrder;
+
+                switch (throttleType)
+                {
+                    case ThrottleType.PriorityOrder:
+                        var candidate = (LimitCheckType)i switch
+                        {
+                            LimitCheckType.Cue => FindOldestByCue(cue, minPriority),
+                            LimitCheckType.CueSheet => FindOldestByCueSheet(cueSheetId, minPriority),
+                            LimitCheckType.Category => FindOldestByCategory(cue.categoryId, minPriority),
+                            LimitCheckType.Global => FindOldestGlobal(minPriority),
+                            _ => null
+                        };
+
+                        if (candidate != null)
+                        {
+                            StopPlayback(candidate);
+                            _playbacks.Remove(candidate.Id);
+                        }
+
+                        break;
+                    case ThrottleType.FirstComeFirstServed:
+                        return false;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            return true;
+        }
+
+        private void StopPlayback(PlaybackState playback)
+        {
+            if (playback.Player == null)
+                return;
+
+            playback.Player.Stop();
+            _playerProvider.Return(playback.Player);
+            playback.ReleasePlayer();
+        }
+
+        private int CountAllPlaying()
+        {
+            var count = 0;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying)
+                    count++;
+            return count;
+        }
+
+        private int CountPlayingByCue(Cue cue)
+        {
+            var count = 0;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue)
+                    count++;
+            return count;
+        }
+
+        private int CountPlayingByCueSheet(uint cueSheetId)
+        {
+            var count = 0;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId)
+                    count++;
+            return count;
+        }
+
+        private int CountPlayingByCategory(int categoryId)
+        {
+            var count = 0;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId)
+                    count++;
+            return count;
+        }
+
+        private int MinPriorityByCue(Cue cue)
+        {
+            var min = int.MaxValue;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue && p.Priority < min)
+                    min = p.Priority;
+            return min;
+        }
+
+        private int MinPriorityByCueSheet(uint cueSheetId)
+        {
+            var min = int.MaxValue;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId && p.Priority < min)
+                    min = p.Priority;
+            return min;
+        }
+
+        private int MinPriorityByCategory(int categoryId)
+        {
+            var min = int.MaxValue;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId && p.Priority < min)
+                    min = p.Priority;
+            return min;
+        }
+
+        private int MinPriorityGlobal()
+        {
+            var min = int.MaxValue;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Priority < min)
+                    min = p.Priority;
+            return min;
+        }
+
+        // Returns the oldest (lowest Id) playback in scope matching the given priority.
+        private PlaybackState FindOldestByCue(Cue cue, int minPriority)
+        {
+            PlaybackState oldest = null;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue && p.Priority == minPriority)
+                    if (oldest == null || p.Id < oldest.Id)
+                        oldest = p;
+            return oldest;
+        }
+
+        private PlaybackState FindOldestByCueSheet(uint cueSheetId, int minPriority)
+        {
+            PlaybackState oldest = null;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId &&
+                    p.Priority == minPriority)
+                    if (oldest == null || p.Id < oldest.Id)
+                        oldest = p;
+            return oldest;
+        }
+
+        private PlaybackState FindOldestByCategory(int categoryId, int minPriority)
+        {
+            PlaybackState oldest = null;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId &&
+                    p.Priority == minPriority)
+                    if (oldest == null || p.Id < oldest.Id)
+                        oldest = p;
+            return oldest;
+        }
+
+        private PlaybackState FindOldestGlobal(int minPriority)
+        {
+            PlaybackState oldest = null;
+            foreach (var p in _playbacks.Values)
+                if (p.Player != null && p.Player.IsPlaying && p.Priority == minPriority)
+                    if (oldest == null || p.Id < oldest.Id)
+                        oldest = p;
+            return oldest;
+        }
+
         private sealed class CueSheetRegistration
         {
             internal CueSheetRegistration(CueSheetAsset asset)
@@ -142,6 +549,39 @@ namespace AudioConductor.Runtime.Core
             }
 
             internal CueSheetAsset Asset { get; }
+        }
+
+        private sealed class PlaybackState
+        {
+            internal PlaybackState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player)
+            {
+                Id = id;
+                CueSheetId = cueSheetId;
+                Cue = cue;
+                Player = player;
+                Priority = 0;
+            }
+
+            internal uint Id { get; }
+            internal uint CueSheetId { get; }
+            internal Cue Cue { get; }
+            internal AudioClipPlayer Player { get; private set; }
+            internal int Priority { get; set; }
+
+            internal void ReleasePlayer()
+            {
+                Player = null;
+            }
+        }
+
+        private enum LimitCheckType
+        {
+            Cue,
+            CueSheet,
+            Category,
+            Global,
+
+            Count
         }
     }
 }
