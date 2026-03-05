@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using System.Linq;
@@ -7,56 +7,47 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using UnityEngine;
 using UnityEngine.UI;
+using Conductor = AudioConductor.Runtime.Core.AudioConductor;
 
 namespace AudioConductor.Sample
 {
     public class SampleScene : MonoBehaviour
     {
-        [SerializeField]
-        private AudioConductorSettings _setting;
+        [SerializeField] private AudioConductorSettings _setting;
 
-        [SerializeField]
-        private CueSheetAsset _sheetAsset;
+        [SerializeField] private CueSheetAsset _sheetAsset;
 
-        [SerializeField]
-        private Dropdown _cueNames;
+        [SerializeField] private Dropdown _cueNames;
 
-        [SerializeField]
-        private Dropdown _trackIds;
+        [SerializeField] private Dropdown _trackIds;
 
-        [SerializeField]
-        private Dropdown _trackNames;
+        [SerializeField] private Dropdown _trackNames;
 
-        [SerializeField]
-        private Button _playButton;
+        [SerializeField] private Button _playButton;
 
-        [SerializeField]
-        private Button _idPlayButton;
+        [SerializeField] private Button _idPlayButton;
 
-        [SerializeField]
-        private Button _namePlayButton;
+        [SerializeField] private Button _namePlayButton;
 
-        [SerializeField]
-        private Button _stopButton;
+        [SerializeField] private Button _stopButton;
 
-        [SerializeField]
-        private Button _pauseUnPauseButton;
+        [SerializeField] private Button _pauseUnPauseButton;
 
-        [SerializeField]
-        private Button _disposeControllerButton;
+        [SerializeField] private Button _disposeControllerButton;
 
-        private ICueController[] _controllers;
+        private Conductor _conductor;
+        private CueSheetHandle _cueSheetHandle;
 
         private int _currentIndex;
         private bool _isPaused;
+        private PlaybackHandle _playbackHandle;
 
         private void Awake()
         {
-            AudioConductorInterface.Setup(_setting, OnCueSheetUnused);
+            _conductor = new Conductor(_setting);
+            _cueSheetHandle = _conductor.RegisterCueSheet(_sheetAsset);
 
             var cueList = _sheetAsset.cueSheet.cueList;
-
-            _controllers = new ICueController[cueList.Count];
 
             _cueNames.options.AddRange(cueList.Select(cue => new Dropdown.OptionData(cue.name)));
             _cueNames.onValueChanged.AddListener(SelectIndex);
@@ -77,8 +68,7 @@ namespace AudioConductor.Sample
 
         private void OnDestroy()
         {
-            foreach (var controller in _controllers)
-                controller?.Dispose();
+            _conductor?.Dispose();
         }
 
         private void SelectIndex(int index)
@@ -87,7 +77,7 @@ namespace AudioConductor.Sample
             var cue = _sheetAsset.cueSheet.cueList[index];
             _trackIds.options.Clear();
             _trackIds.options.AddRange(Enumerable.Range(0, cue.trackList.Count)
-                                                 .Select(i => new Dropdown.OptionData(i.ToString())));
+                .Select(i => new Dropdown.OptionData(i.ToString())));
             _trackIds.value = 0;
             _trackIds.RefreshShownValue();
             _trackNames.options.Clear();
@@ -99,59 +89,47 @@ namespace AudioConductor.Sample
         private void Play()
         {
             _isPaused = false;
-            _controllers[_currentIndex] ??= AudioConductorInterface.CreateController(_sheetAsset, _currentIndex);
-            _controllers[_currentIndex].Play();
+            var cueName = _sheetAsset.cueSheet.cueList[_currentIndex].name;
+            _playbackHandle = _conductor.Play(_cueSheetHandle, cueName);
         }
 
         private void Play(string trackName)
         {
             _isPaused = false;
-            _controllers[_currentIndex] ??= AudioConductorInterface.CreateController(_sheetAsset, _currentIndex);
-            _controllers[_currentIndex].Play(trackName);
+            var cueName = _sheetAsset.cueSheet.cueList[_currentIndex].name;
+            _playbackHandle = _conductor.Play(_cueSheetHandle, cueName, new PlayOptions { TrackName = trackName });
         }
 
         private void Play(int index)
         {
             _isPaused = false;
-            _controllers[_currentIndex] ??= AudioConductorInterface.CreateController(_sheetAsset, _currentIndex);
-            _controllers[_currentIndex].Play(index);
+            var cueName = _sheetAsset.cueSheet.cueList[_currentIndex].name;
+            _playbackHandle = _conductor.Play(_cueSheetHandle, cueName, new PlayOptions { TrackIndex = index });
         }
 
         private void Stop()
         {
             _isPaused = false;
-            if (_controllers[_currentIndex] == null)
-                return;
-
-            _controllers[_currentIndex].Stop(true);
+            _conductor.Stop(_playbackHandle);
         }
 
         private void PauseOrResume()
         {
-            if (_controllers[_currentIndex] == null)
-                return;
-
             if (!_isPaused)
             {
-                _controllers[_currentIndex].Pause();
+                _conductor.Pause(_playbackHandle);
                 _isPaused = true;
             }
             else
             {
-                _controllers[_currentIndex].Resume();
+                _conductor.Resume(_playbackHandle);
                 _isPaused = false;
             }
         }
 
         private void DisposeController()
         {
-            foreach (var controller in _controllers)
-                controller?.Dispose();
-        }
-
-        private static void OnCueSheetUnused(CueSheetAsset sheetAsset)
-        {
-            Resources.UnloadAsset(sheetAsset);
+            _conductor.UnregisterCueSheet(_cueSheetHandle);
         }
     }
 }
