@@ -432,6 +432,65 @@ namespace AudioConductor.Runtime.Core
         }
 
         /// <summary>
+        ///     Returns information about all currently registered CueSheets.
+        /// </summary>
+        public List<CueSheetInfo> GetCueSheetInfos()
+        {
+            var list = new List<CueSheetInfo>(_cueSheets.Count);
+            foreach (var kv in _cueSheets)
+                list.Add(new CueSheetInfo(new CueSheetHandle(kv.Key), kv.Value.Asset.cueSheet.name));
+            return list;
+        }
+
+        /// <summary>
+        ///     Returns information about all Cues in the specified CueSheet.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <returns>Cue information list, or an empty collection if the handle is invalid.</returns>
+        public List<CueInfo> GetCueInfos(CueSheetHandle sheetHandle)
+        {
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return new List<CueInfo>();
+
+            var cueList = registration.Asset.cueSheet.cueList;
+            var list = new List<CueInfo>(cueList.Count);
+            for (var i = 0; i < cueList.Count; i++)
+                list.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
+            return list;
+        }
+
+        /// <summary>
+        ///     Returns information about all Tracks in the specified Cue.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue.</param>
+        /// <returns>Track information list, or an empty collection if the handle or cue name is invalid.</returns>
+        public List<TrackInfo> GetTrackInfos(CueSheetHandle sheetHandle, string cueName)
+        {
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return new List<TrackInfo>();
+
+            var cueList = registration.Asset.cueSheet.cueList;
+            Cue cue = null;
+            for (var i = 0; i < cueList.Count; i++)
+                if (cueList[i].name == cueName)
+                {
+                    cue = cueList[i];
+                    break;
+                }
+
+            if (cue == null)
+                return new List<TrackInfo>();
+
+            var trackList = cue.trackList;
+            var list = new List<TrackInfo>(trackList.Count);
+            for (var i = 0; i < trackList.Count; i++)
+                list.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
+                    trackList[i].priority));
+            return list;
+        }
+
+        /// <summary>
         ///     Gets the AudioMixerGroup assigned to the specified category.
         /// </summary>
         /// <param name="categoryId">The category ID.</param>
