@@ -22,6 +22,7 @@ namespace AudioConductor.Runtime.Core
     {
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
+        private readonly Stack<FadeState> _fadePool = new();
         private readonly List<FadeState> _fadeStates = new();
         private readonly List<FadeState> _fadeUpdateTempList = new();
         private readonly AudioClipPlayerProvider _oneShotProvider;
@@ -191,7 +192,7 @@ namespace AudioConductor.Runtime.Core
             if (cue == null)
                 return default;
 
-            var cueState = new CueState(sheetHandle.Id, cue);
+            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
 
             Track track;
             if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
@@ -218,14 +219,14 @@ namespace AudioConductor.Runtime.Core
             player.SetMasterVolume(_masterVolume);
 
             var id = ++_playStateCounter;
-            var state = new PlaybackState(id, sheetHandle.Id, cue, player) { Priority = track.priority };
+            var state = new PlaybackState(id, sheetHandle.Id, cue, player, track.priority);
             _playbacks[id] = state;
 
             if (options?.FadeTime > 0f)
             {
                 var fader = options.Value.Fader ?? Faders.Linear;
-                var fadeState = new FadeState(player, fader);
-                fadeState.Setup(0f, volume, options.Value.FadeTime.Value, false);
+                var fadeState = RentFadeState();
+                fadeState.Setup(player, fader, 0f, volume, options.Value.FadeTime.Value, false);
                 player.SetVolumeInternal(0f);
                 _fadeStates.Add(fadeState);
             }
@@ -264,8 +265,8 @@ namespace AudioConductor.Runtime.Core
                     return;
 
                 var effectiveFader = fader ?? Faders.Linear;
-                var fadeState = new FadeState(state.Player, effectiveFader);
-                fadeState.Setup(state.Player.VolumeInternal, 0f, fadeTime.Value, true);
+                var fadeState = RentFadeState();
+                fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeInternal, 0f, fadeTime.Value, true);
                 _fadeStates.Add(fadeState);
                 return;
             }
@@ -370,9 +371,10 @@ namespace AudioConductor.Runtime.Core
                             {
                                 _playbacks.Remove(kv.Key);
                                 _playerProvider.Return(kv.Value.Player);
-                                kv.Value.ReleasePlayer();
                                 break;
                             }
+
+                    _fadePool.Push(fade);
                 }
             }
 
@@ -399,7 +401,6 @@ namespace AudioConductor.Runtime.Core
                 if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !isFading)
                 {
                     _playerProvider.Return(playback.Player);
-                    playback.ReleasePlayer();
                     _playbacks.Remove(playback.Id);
                 }
             }
@@ -418,7 +419,7 @@ namespace AudioConductor.Runtime.Core
                 if (!state.Player.IsPlaying && !state.Player.IsPaused)
                 {
                     _oneShotProvider.Return(state.Player);
-                    _oneShotStates.Remove(state);
+                    RemoveOneShotById(state.Id);
                 }
             }
         }
@@ -514,7 +515,7 @@ namespace AudioConductor.Runtime.Core
             if (cue == null)
                 return;
 
-            var cueState = new CueState(sheetHandle.Id, cue);
+            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
             var track = cueState.NextTrack();
 
             if (track == null || track.audioClip == null)
@@ -539,12 +540,12 @@ namespace AudioConductor.Runtime.Core
             if (_playbacks.Count == 0 && _oneShotStates.Count == 0)
                 return true;
 
-            for (var i = 0; i < (int)LimitCheckType.Count; i++)
+            for (var i = 0; i < (int) LimitCheckType.Count; i++)
             {
                 ThrottleType throttleType = default;
                 int throttleLimit = default;
 
-                switch ((LimitCheckType)i)
+                switch ((LimitCheckType) i)
                 {
                     case LimitCheckType.Cue:
                         throttleType = cue.throttleType;
@@ -575,7 +576,7 @@ namespace AudioConductor.Runtime.Core
                 if (throttleLimit <= 0)
                     continue;
 
-                var playNum = (LimitCheckType)i switch
+                var playNum = (LimitCheckType) i switch
                 {
                     LimitCheckType.Cue => CountPlayingByCue(cue),
                     LimitCheckType.CueSheet => CountPlayingByCueSheet(cueSheetId),
@@ -588,7 +589,7 @@ namespace AudioConductor.Runtime.Core
                     continue;
 
                 // Compute minimum priority within the scope of this limit check.
-                var minPriority = (LimitCheckType)i switch
+                var minPriority = (LimitCheckType) i switch
                 {
                     LimitCheckType.Cue => MinPriorityByCue(cue),
                     LimitCheckType.CueSheet => MinPriorityByCueSheet(cueSheetId),
@@ -606,7 +607,7 @@ namespace AudioConductor.Runtime.Core
                 switch (throttleType)
                 {
                     case ThrottleType.PriorityOrder:
-                        switch ((LimitCheckType)i)
+                        switch ((LimitCheckType) i)
                         {
                             case LimitCheckType.Cue:
                                 StopOldestByCue(cue, minPriority);
@@ -640,7 +641,11 @@ namespace AudioConductor.Runtime.Core
 
             playback.Player.Stop();
             _playerProvider.Return(playback.Player);
-            playback.ReleasePlayer();
+        }
+
+        private FadeState RentFadeState()
+        {
+            return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
         }
 
         private int CountAllPlaying()
@@ -742,16 +747,16 @@ namespace AudioConductor.Runtime.Core
         // Stops the oldest (lowest Id) managed or one-shot playback in scope matching the given priority.
         private void StopOldestByCue(Cue cue, int minPriority)
         {
-            PlaybackState oldestManaged = null;
+            PlaybackState? oldestManaged = null;
             foreach (var p in _playbacks.Values)
                 if (p.Player != null && p.Player.IsPlaying && p.Cue == cue && p.Priority == minPriority)
-                    if (oldestManaged == null || p.Id < oldestManaged.Id)
+                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
                         oldestManaged = p;
 
-            OneShotState oldestOneShot = null;
+            OneShotState? oldestOneShot = null;
             foreach (var s in _oneShotStates)
                 if (s.Player != null && s.Player.IsPlaying && s.Cue == cue && s.Priority == minPriority)
-                    if (oldestOneShot == null || s.Id < oldestOneShot.Id)
+                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
                         oldestOneShot = s;
 
             StopOldestCandidate(oldestManaged, oldestOneShot);
@@ -759,18 +764,18 @@ namespace AudioConductor.Runtime.Core
 
         private void StopOldestByCueSheet(uint cueSheetId, int minPriority)
         {
-            PlaybackState oldestManaged = null;
+            PlaybackState? oldestManaged = null;
             foreach (var p in _playbacks.Values)
                 if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId &&
                     p.Priority == minPriority)
-                    if (oldestManaged == null || p.Id < oldestManaged.Id)
+                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
                         oldestManaged = p;
 
-            OneShotState oldestOneShot = null;
+            OneShotState? oldestOneShot = null;
             foreach (var s in _oneShotStates)
                 if (s.Player != null && s.Player.IsPlaying && s.CueSheetId == cueSheetId &&
                     s.Priority == minPriority)
-                    if (oldestOneShot == null || s.Id < oldestOneShot.Id)
+                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
                         oldestOneShot = s;
 
             StopOldestCandidate(oldestManaged, oldestOneShot);
@@ -778,18 +783,18 @@ namespace AudioConductor.Runtime.Core
 
         private void StopOldestByCategory(int categoryId, int minPriority)
         {
-            PlaybackState oldestManaged = null;
+            PlaybackState? oldestManaged = null;
             foreach (var p in _playbacks.Values)
                 if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId &&
                     p.Priority == minPriority)
-                    if (oldestManaged == null || p.Id < oldestManaged.Id)
+                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
                         oldestManaged = p;
 
-            OneShotState oldestOneShot = null;
+            OneShotState? oldestOneShot = null;
             foreach (var s in _oneShotStates)
                 if (s.Player != null && s.Player.IsPlaying && s.Cue.categoryId == categoryId &&
                     s.Priority == minPriority)
-                    if (oldestOneShot == null || s.Id < oldestOneShot.Id)
+                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
                         oldestOneShot = s;
 
             StopOldestCandidate(oldestManaged, oldestOneShot);
@@ -797,71 +802,90 @@ namespace AudioConductor.Runtime.Core
 
         private void StopOldestGlobal(int minPriority)
         {
-            PlaybackState oldestManaged = null;
+            PlaybackState? oldestManaged = null;
             foreach (var p in _playbacks.Values)
                 if (p.Player != null && p.Player.IsPlaying && p.Priority == minPriority)
-                    if (oldestManaged == null || p.Id < oldestManaged.Id)
+                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
                         oldestManaged = p;
 
-            OneShotState oldestOneShot = null;
+            OneShotState? oldestOneShot = null;
             foreach (var s in _oneShotStates)
                 if (s.Player != null && s.Player.IsPlaying && s.Priority == minPriority)
-                    if (oldestOneShot == null || s.Id < oldestOneShot.Id)
+                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
                         oldestOneShot = s;
 
             StopOldestCandidate(oldestManaged, oldestOneShot);
         }
 
-        private void StopOldestCandidate(PlaybackState oldestManaged, OneShotState oldestOneShot)
+        private void StopOldestCandidate(PlaybackState? oldestManaged, OneShotState? oldestOneShot)
         {
             // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
-            if (oldestManaged != null && (oldestOneShot == null || oldestManaged.Id <= oldestOneShot.Id))
+            if (oldestManaged.HasValue &&
+                (!oldestOneShot.HasValue || oldestManaged.Value.Id <= oldestOneShot.Value.Id))
             {
-                StopPlayback(oldestManaged);
-                _playbacks.Remove(oldestManaged.Id);
+                StopPlayback(oldestManaged.Value);
+                _playbacks.Remove(oldestManaged.Value.Id);
             }
-            else if (oldestOneShot != null)
+            else if (oldestOneShot.HasValue)
             {
-                oldestOneShot.Player.Stop();
-                _oneShotProvider.Return(oldestOneShot.Player);
-                _oneShotStates.Remove(oldestOneShot);
+                oldestOneShot.Value.Player.Stop();
+                _oneShotProvider.Return(oldestOneShot.Value.Player);
+                RemoveOneShotById(oldestOneShot.Value.Id);
             }
+        }
+
+        private void RemoveOneShotById(uint id)
+        {
+            for (var i = 0; i < _oneShotStates.Count; i++)
+                if (_oneShotStates[i].Id == id)
+                {
+                    _oneShotStates.RemoveAt(i);
+                    return;
+                }
         }
 
         private sealed class CueSheetRegistration
         {
+            private readonly Dictionary<Cue, CueState> _cueStateCache = new();
+
             internal CueSheetRegistration(CueSheetAsset asset)
             {
                 Asset = asset;
             }
 
             internal CueSheetAsset Asset { get; }
+
+            internal CueState GetOrCreateCueState(uint cueSheetId, Cue cue)
+            {
+                if (!_cueStateCache.TryGetValue(cue, out var state))
+                {
+                    state = new CueState(cueSheetId, cue);
+                    _cueStateCache[cue] = state;
+                }
+
+                return state;
+            }
         }
 
-        private sealed class PlaybackState
+        private readonly struct PlaybackState
         {
-            internal PlaybackState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player)
+            internal PlaybackState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
                 Cue = cue;
                 Player = player;
-                Priority = 0;
+                Priority = priority;
             }
 
             internal uint Id { get; }
             internal uint CueSheetId { get; }
             internal Cue Cue { get; }
-            internal AudioClipPlayer Player { get; private set; }
-            internal int Priority { get; set; }
-
-            internal void ReleasePlayer()
-            {
-                Player = null;
-            }
+            internal AudioClipPlayer Player { get; }
+            internal int Priority { get; }
         }
 
-        private sealed class OneShotState
+        private readonly struct OneShotState
         {
             internal OneShotState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
             {
