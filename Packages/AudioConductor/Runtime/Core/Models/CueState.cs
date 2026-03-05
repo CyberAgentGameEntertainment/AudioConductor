@@ -12,9 +12,9 @@ namespace AudioConductor.Runtime.Core.Models
         private readonly TrackSelectionContext _context;
         private readonly ITrackSelector _trackSelector;
 
-        public CueState(uint cueSheetManageNumber, Cue cue)
+        public CueState(uint cueSheetId, Cue cue)
         {
-            CueSheetManageNumber = cueSheetManageNumber;
+            CueSheetId = cueSheetId;
             Cue = cue;
             _context = new TrackSelectionContext(cue.trackList);
             _trackSelector = cue.playType == CuePlayType.Random
@@ -22,7 +22,7 @@ namespace AudioConductor.Runtime.Core.Models
                 : TrackSelectors.Sequential;
         }
 
-        public uint CueSheetManageNumber { get; }
+        public uint CueSheetId { get; }
         public Cue Cue { get; }
 
         public Track NextTrack(ITrackSelector selectorOverride = null)
