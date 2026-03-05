@@ -35,7 +35,7 @@ namespace AudioConductor.Runtime.Core.Models
         {
             if (FadeTime <= 0f)
             {
-                Fadeable.SetVolumeInternal(TargetVolume);
+                Fadeable.SetVolumeFade(TargetVolume);
                 IsFinished = true;
                 if (IsStopTarget)
                     Fadeable.Stop();
@@ -46,7 +46,7 @@ namespace AudioConductor.Runtime.Core.Models
 
             var elapsedRate = Mathf.Clamp01(ElapsedTime / FadeTime);
             var volume = _fader.Evaluate(elapsedRate, StartVolume, TargetVolume);
-            Fadeable.SetVolumeInternal(volume);
+            Fadeable.SetVolumeFade(volume);
 
             IsFinished = elapsedRate >= 1f;
             if (IsFinished && IsStopTarget)

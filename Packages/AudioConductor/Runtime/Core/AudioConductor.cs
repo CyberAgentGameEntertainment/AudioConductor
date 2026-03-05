@@ -233,8 +233,8 @@ namespace AudioConductor.Runtime.Core
             {
                 var fader = options.Value.Fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
-                fadeState.Setup(player, fader, 0f, volume, options.Value.FadeTime.Value, false);
-                player.SetVolumeInternal(0f);
+                fadeState.Setup(player, fader, 0f, 1f, options.Value.FadeTime.Value, false);
+                player.SetVolumeFade(0f);
                 _fadeStates.Add(fadeState);
             }
 
@@ -273,7 +273,7 @@ namespace AudioConductor.Runtime.Core
 
                 var effectiveFader = fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
-                fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeInternal, 0f, fadeTime.Value, true);
+                fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value, true);
                 _fadeStates.Add(fadeState);
                 return;
             }

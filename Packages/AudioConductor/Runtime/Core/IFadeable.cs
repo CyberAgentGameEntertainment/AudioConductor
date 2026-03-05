@@ -1,12 +1,13 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 namespace AudioConductor.Runtime.Core
 {
     internal interface IFadeable
     {
-        void SetVolumeInternal(float volume);
+        float VolumeFade { get; }
+        void SetVolumeFade(float fade);
         void Stop();
     }
 }

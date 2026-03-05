@@ -41,7 +41,7 @@ namespace AudioConductor.Runtime.Core
 
         private float _volumeRuntime;
 
-        internal float VolumeInternal { get; private set; }
+        internal float VolumeAsset { get; private set; }
 
         internal float PitchInternal { get; private set; }
 
@@ -108,7 +108,9 @@ namespace AudioConductor.Runtime.Core
 
             _volumeRuntime = _pitchExternal = 1f;
             SetPitchInternal(pitch);
-            SetVolumeInternal(volume);
+            VolumeAsset = volume;
+            VolumeFade = 1f;
+            UpdateVolume();
 
             _onEnd = _onStop = null;
 
@@ -228,7 +230,7 @@ namespace AudioConductor.Runtime.Core
         /// <inheritdoc />
         public float GetActualVolume()
         {
-            return ValueRangeConst.Volume.Clamp(VolumeInternal * _volumeRuntime * _volumeMaster);
+            return ValueRangeConst.Volume.Clamp(VolumeAsset * VolumeFade * _volumeRuntime * _volumeMaster);
         }
 
         /// <inheritdoc />
@@ -305,9 +307,11 @@ namespace AudioConductor.Runtime.Core
             RescheduleEndTime();
         }
 
-        public void SetVolumeInternal(float volume)
+        public float VolumeFade { get; private set; } = 1f;
+
+        public void SetVolumeFade(float fade)
         {
-            VolumeInternal = volume;
+            VolumeFade = fade;
             UpdateVolume();
         }
 
@@ -461,6 +465,7 @@ namespace AudioConductor.Runtime.Core
 
             _startSample = _endSample = 0;
             _volumeMaster = 1f;
+            VolumeFade = 1f;
 
             _onStop = _onEnd = null;
         }

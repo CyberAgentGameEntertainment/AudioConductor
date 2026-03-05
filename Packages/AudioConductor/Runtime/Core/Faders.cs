@@ -12,9 +12,9 @@ namespace AudioConductor.Runtime.Core
 
         private sealed class LinearFader : IFader
         {
-            public float Evaluate(float t, float startVolume, float targetVolume)
+            public float Evaluate(float t, float from, float to)
             {
-                return Mathf.Lerp(startVolume, targetVolume, t);
+                return Mathf.Lerp(from, to, t);
             }
         }
     }

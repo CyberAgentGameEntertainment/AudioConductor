@@ -107,9 +107,12 @@ namespace AudioConductor.Tests.Runtime.Core.Models
             public float Volume { get; private set; }
             public int StopCallCount { get; private set; }
 
-            public void SetVolumeInternal(float volume)
+            public float VolumeFade { get; private set; } = 1f;
+
+            public void SetVolumeFade(float fade)
             {
-                Volume = volume;
+                VolumeFade = fade;
+                Volume = fade;
             }
 
             public void Stop()
