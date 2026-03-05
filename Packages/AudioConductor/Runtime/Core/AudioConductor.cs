@@ -31,6 +31,7 @@ namespace AudioConductor.Runtime.Core
         private readonly AudioClipPlayerProvider _playerProvider;
         private readonly ICueSheetProvider _provider;
         private readonly AudioConductorSettings _settings;
+        private readonly List<uint> _stopAllKeyBuffer = new();
         private readonly List<PlaybackState> _updateTempList = new();
         private ConductorBehaviour _behaviour;
         private uint _cueSheetHandleCounter;
@@ -179,7 +180,14 @@ namespace AudioConductor.Runtime.Core
                 return default;
 
             var cueSheet = registration.Asset.cueSheet;
-            var cue = cueSheet.cueList.Find(c => c.name == cueName);
+            Cue cue = null;
+            for (var i = 0; i < cueSheet.cueList.Count; i++)
+                if (cueSheet.cueList[i].name == cueName)
+                {
+                    cue = cueSheet.cueList[i];
+                    break;
+                }
+
             if (cue == null)
                 return default;
 
@@ -244,7 +252,15 @@ namespace AudioConductor.Runtime.Core
             if (fadeTime > 0f)
             {
                 // Do not add a duplicate fade-out entry for the same player.
-                if (_fadeStates.Exists(f => f.IsStopTarget && ReferenceEquals(f.Fadeable, state.Player)))
+                var hasDuplicateFade = false;
+                for (var i = 0; i < _fadeStates.Count; i++)
+                    if (_fadeStates[i].IsStopTarget && ReferenceEquals(_fadeStates[i].Fadeable, state.Player))
+                    {
+                        hasDuplicateFade = true;
+                        break;
+                    }
+
+                if (hasDuplicateFade)
                     return;
 
                 var effectiveFader = fader ?? Faders.Linear;
@@ -372,7 +388,14 @@ namespace AudioConductor.Runtime.Core
 
                 playback.Player.ManualUpdate(deltaTime);
 
-                var isFading = _fadeStates.Exists(f => ReferenceEquals(f.Fadeable, playback.Player));
+                var isFading = false;
+                for (var i = 0; i < _fadeStates.Count; i++)
+                    if (ReferenceEquals(_fadeStates[i].Fadeable, playback.Player))
+                    {
+                        isFading = true;
+                        break;
+                    }
+
                 if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !isFading)
                 {
                     _playerProvider.Return(playback.Player);
@@ -445,15 +468,21 @@ namespace AudioConductor.Runtime.Core
         /// <param name="fader">Custom fader curve for Managed fade-out. When null, <see cref="Faders.Linear" /> is used.</param>
         public void StopAll(float? fadeTime = null, IFader fader = null)
         {
-            foreach (var id in new List<uint>(_playbacks.Keys))
-                Stop(new PlaybackHandle(id), fadeTime, fader);
+            _stopAllKeyBuffer.Clear();
+            foreach (var id in _playbacks.Keys)
+                _stopAllKeyBuffer.Add(id);
+            for (var i = 0; i < _stopAllKeyBuffer.Count; i++)
+                Stop(new PlaybackHandle(_stopAllKeyBuffer[i]), fadeTime, fader);
 
-            foreach (var state in _oneShotStates.ToArray())
+            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
+            {
+                var state = _oneShotStates[i];
                 if (state.Player != null)
                 {
                     state.Player.Stop();
                     _oneShotProvider.Return(state.Player);
                 }
+            }
 
             _oneShotStates.Clear();
         }
@@ -474,7 +503,14 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             var cueSheet = registration.Asset.cueSheet;
-            var cue = cueSheet.cueList.Find(c => c.name == cueName);
+            Cue cue = null;
+            for (var i = 0; i < cueSheet.cueList.Count; i++)
+                if (cueSheet.cueList[i].name == cueName)
+                {
+                    cue = cueSheet.cueList[i];
+                    break;
+                }
+
             if (cue == null)
                 return;
 

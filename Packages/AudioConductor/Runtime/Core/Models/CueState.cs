@@ -2,7 +2,6 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using System.Linq;
 using AudioConductor.Runtime.Core.Enums;
 
 namespace AudioConductor.Runtime.Core.Models
@@ -48,7 +47,10 @@ namespace AudioConductor.Runtime.Core.Models
 
         public Track GetTrack(string name)
         {
-            return Cue.trackList.FirstOrDefault(track => track.name == name);
+            for (var i = 0; i < Cue.trackList.Count; i++)
+                if (Cue.trackList[i].name == name)
+                    return Cue.trackList[i];
+            return null;
         }
     }
 }
