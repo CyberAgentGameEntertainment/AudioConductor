@@ -15,6 +15,11 @@ namespace AudioConductor.Runtime.Core
             _pool = new AudioClipPlayerPool(parent);
         }
 
+        public void Prewarm(int count)
+        {
+            _pool.Prewarm(count);
+        }
+
         public AudioClipPlayer Rent()
         {
             return _pool.Rent();

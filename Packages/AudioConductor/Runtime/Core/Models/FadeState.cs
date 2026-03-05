@@ -8,15 +8,9 @@ namespace AudioConductor.Runtime.Core.Models
 {
     internal sealed class FadeState
     {
-        private readonly IFader _fader;
+        private IFader _fader;
 
-        public FadeState(IFadeable fadeable, IFader fader)
-        {
-            Fadeable = fadeable;
-            _fader = fader;
-        }
-
-        public IFadeable Fadeable { get; }
+        public IFadeable Fadeable { get; private set; }
         public float FadeTime { get; private set; }
         public bool IsStopTarget { get; private set; }
         public float StartVolume { get; private set; }
@@ -24,13 +18,17 @@ namespace AudioConductor.Runtime.Core.Models
         public float ElapsedTime { get; private set; }
         public bool IsFinished { get; private set; }
 
-        public void Setup(float startVolume, float targetVolume, float time, bool isStopTarget)
+        public void Setup(IFadeable fadeable, IFader fader, float startVolume, float targetVolume, float time,
+            bool isStopTarget)
         {
+            Fadeable = fadeable;
+            _fader = fader;
             StartVolume = startVolume;
             TargetVolume = targetVolume;
             FadeTime = time;
             ElapsedTime = 0f;
             IsStopTarget = isStopTarget;
+            IsFinished = false;
         }
 
         public bool Elapsed(float time)

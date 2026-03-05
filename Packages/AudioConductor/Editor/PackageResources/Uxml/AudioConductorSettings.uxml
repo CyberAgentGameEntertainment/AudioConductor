@@ -2,5 +2,7 @@
     <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" tooltip="Concurrent play control type." />
     <uie:IntegerField label="Throttle Limit" name="ThrottleLimit" is-delayed="true" tooltip="Limit of concurrent play." />
     <uie:FloatField label="Master Volume" name="MasterVolume" is-delayed="true" tooltip="Master volume scale applied to all audio. (0.0 to 1.0)" />
+    <uie:IntegerField label="Managed Pool Capacity" name="ManagedPoolCapacity" is-delayed="true" tooltip="Number of managed AudioClipPlayers to pre-create on construction." />
+    <uie:IntegerField label="OneShot Pool Capacity" name="OneShotPoolCapacity" is-delayed="true" tooltip="Number of one-shot AudioClipPlayers to pre-create on construction." />
     <ui:ListView focusable="true" reorderable="true" reorder-mode="Animated" show-border="true" show-add-remove-footer="true" show-foldout-header="true" header-title="Category" show-alternating-row-backgrounds="All" fixed-item-height="90" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 1px;" />
 </ui:UXML>

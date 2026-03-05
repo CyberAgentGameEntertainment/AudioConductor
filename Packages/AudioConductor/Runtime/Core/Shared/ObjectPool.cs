@@ -65,6 +65,20 @@ namespace AudioConductor.Runtime.Core.Shared
         }
 
         /// <summary>
+        ///     Pre-creates instances and pushes them into the pool.
+        /// </summary>
+        /// <param name="count">Number of instances to pre-create.</param>
+        public void Prewarm(int count)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException("ObjectPool was already disposed.");
+
+            _pool ??= new Stack<T>(Math.Max(InitialCapacity, count));
+            for (var i = 0; i < count; i++)
+                _pool.Push(CreateInstance());
+        }
+
+        /// <summary>
         ///     Get instance from pool.
         /// </summary>
         public T Rent()

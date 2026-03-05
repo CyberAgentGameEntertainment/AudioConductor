@@ -39,6 +39,12 @@ namespace AudioConductor.Editor.Core.CustomEditors
             var masterVolumeField = container.Q<FloatField>("MasterVolume");
             masterVolumeField.bindingPath = nameof(AudioConductorSettings.masterVolume);
 
+            var managedPoolCapacityField = container.Q<IntegerField>("ManagedPoolCapacity");
+            managedPoolCapacityField.bindingPath = nameof(AudioConductorSettings.managedPoolCapacity);
+
+            var oneShotPoolCapacityField = container.Q<IntegerField>("OneShotPoolCapacity");
+            oneShotPoolCapacityField.bindingPath = nameof(AudioConductorSettings.oneShotPoolCapacity);
+
             var categoryListView = container.Q<ListView>();
             categoryListView.bindingPath = nameof(AudioConductorSettings.categoryList);
             categoryListView.makeItem = () => new CategoryView();

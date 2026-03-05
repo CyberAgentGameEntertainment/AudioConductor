@@ -4,6 +4,7 @@
 
 using System;
 using AudioConductor.Runtime.Core;
+using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
@@ -291,6 +292,32 @@ namespace AudioConductor.Tests.Runtime.Core
             conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.Dispose());
+        }
+
+        [Test]
+        public void Play_SequentialCuePlayedTwice_SecondPlayUsesNextTrack()
+        {
+            var clip0 = AudioClip.Create("clip0", 44100, 1, 44100, false);
+            var clip1 = AudioClip.Create("clip1", 44100, 1, 44100, false);
+            var track0 = new Track { name = "track0", audioClip = clip0 };
+            var track1 = new Track { name = "track1", audioClip = clip1 };
+            var cue = new Cue { name = "cue1", playType = CuePlayType.Sequential };
+            cue.trackList.Add(track0);
+            cue.trackList.Add(track1);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new CoreAudioConductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle1 = conductor.Play(sheetHandle, "cue1");
+            var handle2 = conductor.Play(sheetHandle, "cue1");
+
+            Object.DestroyImmediate(clip0);
+            Object.DestroyImmediate(clip1);
+
+            // Both plays should succeed because each sequential play advances the track index.
+            Assert.That(handle1.IsValid, Is.True);
+            Assert.That(handle2.IsValid, Is.True);
         }
     }
 }

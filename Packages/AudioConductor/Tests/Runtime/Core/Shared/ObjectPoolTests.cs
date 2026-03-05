@@ -57,6 +57,37 @@ namespace AudioConductor.Tests.Runtime.Core.Shared
             Assert.Throws<ObjectDisposedException>(() => pool.Return(instance));
         }
 
+        [Test]
+        public void Prewarm_WithCount3_PoolCountIs3()
+        {
+            using var pool = new IntPool();
+
+            pool.Prewarm(3);
+
+            Assert.That(pool.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Prewarm_WithCount0_PoolCountIs0()
+        {
+            using var pool = new IntPool();
+
+            pool.Prewarm(0);
+
+            Assert.That(pool.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Prewarm_AfterRent_PoolCountIsPrewarmedCountMinusRented()
+        {
+            using var pool = new IntPool();
+            pool.Prewarm(3);
+
+            pool.Rent();
+
+            Assert.That(pool.Count, Is.EqualTo(2));
+        }
+
         private sealed class IntPool : ObjectPool<int[]>
         {
             protected override int[] CreateInstance()

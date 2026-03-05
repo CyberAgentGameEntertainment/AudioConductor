@@ -32,6 +32,16 @@ namespace AudioConductor.Runtime.Core.Models
         public float masterVolume = 1f;
 
         /// <summary>
+        ///     Number of managed AudioClipPlayers to pre-create on construction.
+        /// </summary>
+        public int managedPoolCapacity;
+
+        /// <summary>
+        ///     Number of one-shot AudioClipPlayers to pre-create on construction.
+        /// </summary>
+        public int oneShotPoolCapacity;
+
+        /// <summary>
         ///     List of <see cref="Category" />.
         /// </summary>
         public List<Category> categoryList = new();

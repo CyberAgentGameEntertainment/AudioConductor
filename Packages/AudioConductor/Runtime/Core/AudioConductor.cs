@@ -20,9 +20,10 @@ namespace AudioConductor.Runtime.Core
     /// </summary>
     public sealed class AudioConductor : IDisposable
     {
+        private const int FadePoolInitialCapacity = 8;
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
-        private readonly Stack<FadeState> _fadePool = new();
+        private readonly Stack<FadeState> _fadePool = new(FadePoolInitialCapacity);
         private readonly List<FadeState> _fadeStates = new();
         private readonly List<FadeState> _fadeUpdateTempList = new();
         private readonly AudioClipPlayerProvider _oneShotProvider;
@@ -68,6 +69,12 @@ namespace AudioConductor.Runtime.Core
 
             foreach (var category in settings.categoryList)
                 _categories[category.id] = category;
+
+            _playerProvider.Prewarm(settings.managedPoolCapacity);
+            _oneShotProvider.Prewarm(settings.oneShotPoolCapacity);
+
+            for (var i = 0; i < FadePoolInitialCapacity; i++)
+                _fadePool.Push(new FadeState());
         }
 
         /// <summary>
@@ -540,12 +547,12 @@ namespace AudioConductor.Runtime.Core
             if (_playbacks.Count == 0 && _oneShotStates.Count == 0)
                 return true;
 
-            for (var i = 0; i < (int) LimitCheckType.Count; i++)
+            for (var i = 0; i < (int)LimitCheckType.Count; i++)
             {
                 ThrottleType throttleType = default;
                 int throttleLimit = default;
 
-                switch ((LimitCheckType) i)
+                switch ((LimitCheckType)i)
                 {
                     case LimitCheckType.Cue:
                         throttleType = cue.throttleType;
@@ -576,7 +583,7 @@ namespace AudioConductor.Runtime.Core
                 if (throttleLimit <= 0)
                     continue;
 
-                var playNum = (LimitCheckType) i switch
+                var playNum = (LimitCheckType)i switch
                 {
                     LimitCheckType.Cue => CountPlayingByCue(cue),
                     LimitCheckType.CueSheet => CountPlayingByCueSheet(cueSheetId),
@@ -589,7 +596,7 @@ namespace AudioConductor.Runtime.Core
                     continue;
 
                 // Compute minimum priority within the scope of this limit check.
-                var minPriority = (LimitCheckType) i switch
+                var minPriority = (LimitCheckType)i switch
                 {
                     LimitCheckType.Cue => MinPriorityByCue(cue),
                     LimitCheckType.CueSheet => MinPriorityByCueSheet(cueSheetId),
@@ -607,7 +614,7 @@ namespace AudioConductor.Runtime.Core
                 switch (throttleType)
                 {
                     case ThrottleType.PriorityOrder:
-                        switch ((LimitCheckType) i)
+                        switch ((LimitCheckType)i)
                         {
                             case LimitCheckType.Cue:
                                 StopOldestByCue(cue, minPriority);
