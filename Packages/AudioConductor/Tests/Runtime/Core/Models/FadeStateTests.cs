@@ -6,7 +6,7 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 
-namespace Tests.Runtime.Core.Models
+namespace AudioConductor.Tests.Runtime.Core.Models
 {
     public class FadeStateTests
     {

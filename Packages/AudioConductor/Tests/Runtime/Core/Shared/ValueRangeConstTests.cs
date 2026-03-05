@@ -1,12 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using AudioConductor.Runtime.Core.Shared;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace Tests.Runtime.Core.Shared
+namespace AudioConductor.Tests.Runtime.Core.Shared
 {
     public static class ValueRangeConstTests
     {

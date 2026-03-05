@@ -6,7 +6,7 @@ using System;
 using AudioConductor.Runtime.Core.Shared;
 using NUnit.Framework;
 
-namespace Tests.Runtime.Core.Shared
+namespace AudioConductor.Tests.Runtime.Core.Shared
 {
     public class ObjectPoolTests
     {
