@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -31,15 +33,15 @@ namespace AudioConductor.Runtime.Core
         private readonly List<OneShotState> _oneShotStates = new();
         private readonly Dictionary<uint, PlaybackState> _playbacks = new();
         private readonly AudioClipPlayerProvider _playerProvider;
-        private readonly ICueSheetProvider _provider;
+        private readonly ICueSheetProvider? _provider;
         private readonly List<uint> _removeKeyBuffer = new(BufferInitialCapacity);
         private readonly AudioConductorSettings _settings;
         private readonly List<uint> _stopAllKeyBuffer = new(BufferInitialCapacity);
-        private ConductorBehaviour _behaviour;
+        private ConductorBehaviour? _behaviour;
         private uint _cueSheetHandleCounter;
         private float _masterVolume = 1f;
         private uint _playStateCounter;
-        private GameObject _rootObject;
+        private GameObject? _rootObject;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="AudioConductor" /> with the specified settings.
@@ -47,7 +49,7 @@ namespace AudioConductor.Runtime.Core
         /// </summary>
         /// <param name="settings">The runtime settings for this conductor instance.</param>
         /// <param name="provider">Optional provider for async CueSheet loading and releasing.</param>
-        public AudioConductor(AudioConductorSettings settings, ICueSheetProvider provider = null)
+        public AudioConductor(AudioConductorSettings settings, ICueSheetProvider? provider = null)
         {
             _settings = settings;
             _provider = provider;
@@ -142,6 +144,8 @@ namespace AudioConductor.Runtime.Core
                 throw new InvalidOperationException("ICueSheetProvider is not set.");
 
             var asset = await _provider.LoadAsync(key);
+            if (asset == null)
+                throw new InvalidOperationException($"Failed to load CueSheet with key '{key}'.");
             return RegisterCueSheet(asset);
         }
 
@@ -197,7 +201,7 @@ namespace AudioConductor.Runtime.Core
             if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
                 track = cueState.GetTrack(options.Value.TrackIndex.Value);
             else if (!string.IsNullOrEmpty(options?.TrackName))
-                track = cueState.GetTrack(options.Value.TrackName);
+                track = cueState.GetTrack(options!.Value.TrackName);
             else
                 track = cueState.NextTrack(options?.Selector);
 
@@ -243,7 +247,7 @@ namespace AudioConductor.Runtime.Core
         /// <param name="handle">The playback handle to stop.</param>
         /// <param name="fadeTime">Fade-out duration in seconds. When null or zero, the stop is immediate.</param>
         /// <param name="fader">Custom fader curve. When null, <see cref="Faders.Linear" /> is used.</param>
-        public void Stop(PlaybackHandle handle, float? fadeTime = null, IFader fader = null)
+        public void Stop(PlaybackHandle handle, float? fadeTime = null, IFader? fader = null)
         {
             if (!handle.IsValid)
                 return;
@@ -513,7 +517,7 @@ namespace AudioConductor.Runtime.Core
         /// </summary>
         /// <param name="categoryId">The category ID.</param>
         /// <returns>The AudioMixerGroup, or null if not found.</returns>
-        public AudioMixerGroup GetAudioMixerGroup(int categoryId)
+        public AudioMixerGroup? GetAudioMixerGroup(int categoryId)
         {
             if (_categories.TryGetValue(categoryId, out var category))
                 return category.audioMixerGroup;
@@ -551,7 +555,7 @@ namespace AudioConductor.Runtime.Core
         /// </summary>
         /// <param name="fadeTime">Fade-out duration in seconds for Managed playbacks. When null or zero, the stop is immediate.</param>
         /// <param name="fader">Custom fader curve for Managed fade-out. When null, <see cref="Faders.Linear" /> is used.</param>
-        public void StopAll(float? fadeTime = null, IFader fader = null)
+        public void StopAll(float? fadeTime = null, IFader? fader = null)
         {
             _stopAllKeyBuffer.Clear();
             foreach (var id in _playbacks.Keys)
@@ -829,7 +833,7 @@ namespace AudioConductor.Runtime.Core
 
             internal CueSheetAsset Asset { get; }
 
-            internal Cue FindCue(string cueName)
+            internal Cue? FindCue(string cueName)
             {
                 _cueNameLookup.TryGetValue(cueName, out var cue);
                 return cue;

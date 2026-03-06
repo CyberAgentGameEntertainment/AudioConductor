@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Shared;
 
@@ -24,7 +26,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _cueSheet = cueSheetItem.RawData;
         }
 
-        public TrackPreviewController Play(int? sample)
+        public TrackPreviewController? Play(int? sample)
         {
             var clip = _track.audioClip;
             if (clip == null)

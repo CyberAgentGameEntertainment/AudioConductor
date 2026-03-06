@@ -2,6 +2,8 @@
 // Copyright 2023 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
 using UnityEditor;
@@ -20,7 +22,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             EditorApplication.update += OnUpdate;
         }
 
-        public Object Asset { get; private set; }
+        public Object? Asset { get; private set; }
 
         public IReadOnlyObservableProperty<bool> IsDirty => _isDirty;
 

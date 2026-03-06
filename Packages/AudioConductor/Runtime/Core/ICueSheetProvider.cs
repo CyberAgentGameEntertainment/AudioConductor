@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Threading.Tasks;
 using AudioConductor.Runtime.Core.Models;
 
@@ -15,16 +17,16 @@ namespace AudioConductor.Runtime.Core
         /// <summary>
         ///     Synchronously loads a <see cref="CueSheetAsset" /> by key.
         /// </summary>
-        CueSheetAsset Load(string key);
+        CueSheetAsset? Load(string key);
 
         /// <summary>
         ///     Asynchronously loads a <see cref="CueSheetAsset" /> by key.
         /// </summary>
-        Task<CueSheetAsset> LoadAsync(string key);
+        Task<CueSheetAsset?> LoadAsync(string key);
 
         /// <summary>
         ///     Releases a previously loaded <see cref="CueSheetAsset" />.
         /// </summary>
-        void Release(CueSheetAsset asset);
+        void Release(CueSheetAsset? asset);
     }
 }

@@ -2,6 +2,8 @@
 // Copyright 2023 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Runtime.Core.Enums;

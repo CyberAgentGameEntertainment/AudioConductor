@@ -3,6 +3,9 @@
 // --------------------------------------------------------------
 
 #if AUDIOCONDUCTOR_ADDRESSABLES
+
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,7 +29,7 @@ namespace AudioConductor.Runtime.Core.Providers
         }
 
         /// <inheritdoc />
-        public virtual async Task<CueSheetAsset> LoadAsync(string key)
+        public virtual async Task<CueSheetAsset?> LoadAsync(string key)
         {
             var handle = Addressables.LoadAssetAsync<CueSheetAsset>(key);
 
@@ -58,7 +61,7 @@ namespace AudioConductor.Runtime.Core.Providers
         }
 
         /// <inheritdoc />
-        public virtual void Release(CueSheetAsset asset)
+        public virtual void Release(CueSheetAsset? asset)
         {
             if (asset == null)
                 return;

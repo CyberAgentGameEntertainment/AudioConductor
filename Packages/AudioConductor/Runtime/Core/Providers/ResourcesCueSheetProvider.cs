@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AudioConductor.Runtime.Core.Models;
@@ -17,7 +19,7 @@ namespace AudioConductor.Runtime.Core.Providers
         private readonly Dictionary<CueSheetAsset, int> _refCounts = new();
 
         /// <inheritdoc />
-        public virtual CueSheetAsset Load(string key)
+        public virtual CueSheetAsset? Load(string key)
         {
             var asset = Resources.Load<CueSheetAsset>(key);
             if (asset != null)
@@ -26,9 +28,9 @@ namespace AudioConductor.Runtime.Core.Providers
         }
 
         /// <inheritdoc />
-        public virtual Task<CueSheetAsset> LoadAsync(string key)
+        public virtual Task<CueSheetAsset?> LoadAsync(string key)
         {
-            var tcs = new TaskCompletionSource<CueSheetAsset>();
+            var tcs = new TaskCompletionSource<CueSheetAsset?>();
             var request = Resources.LoadAsync<CueSheetAsset>(key);
             request.completed += _ =>
             {
@@ -41,7 +43,7 @@ namespace AudioConductor.Runtime.Core.Providers
         }
 
         /// <inheritdoc />
-        public virtual void Release(CueSheetAsset asset)
+        public virtual void Release(CueSheetAsset? asset)
         {
             if (asset == null)
                 return;

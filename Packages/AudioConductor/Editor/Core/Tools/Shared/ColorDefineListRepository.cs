@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Linq;
 using AudioConductor.Editor.Core.Models;
 using UnityEditor;
@@ -18,8 +20,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             color = new Color(0, 0, 0, 0)
         };
 
-        private ColorDefine[] _colorDefines;
-        public GUIContent[] ColorDefineContents { get; private set; }
+        private ColorDefine[]? _colorDefines;
+        public GUIContent[]? ColorDefineContents { get; private set; }
 
         public void Update()
         {
@@ -43,7 +45,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             ColorDefineContents = contents;
         }
 
-        public string ToColorId(int index)
+        public string? ToColorId(int index)
         {
             if (index < 0 || _colorDefines == null || _colorDefines.Length <= index)
                 return null;

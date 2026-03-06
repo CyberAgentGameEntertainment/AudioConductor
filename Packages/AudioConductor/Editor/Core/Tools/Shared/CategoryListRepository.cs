@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
@@ -22,13 +24,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         private readonly ObservableProperty<List<int>> _categoryIdList = new();
 
-        private Category[] _categories;
+        private Category[]? _categories;
 
-        public string[] CategoryNames { get; private set; }
+        public string[]? CategoryNames { get; private set; }
 
         public IReadOnlyObservableProperty<List<int>> CategoryIdList => _categoryIdList;
 
-        public void Refresh(AudioConductorSettings settings)
+        public void Refresh(AudioConductorSettings? settings)
         {
             var enumerable = settings == null ? Enumerable.Empty<Category>() : settings.categoryList;
 

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 
@@ -9,7 +11,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 {
     internal sealed class AudioConductorSettingsRepository : ScriptableSingleton<AudioConductorSettingsRepository>
     {
-        private AudioConductorSettings[] _allSettings;
+        private AudioConductorSettings[]? _allSettings; // null = cache invalidated
 
         /// <summary>
         ///     Returns all <see cref="AudioConductorSettings" /> assets found in the Assets folder.
@@ -30,7 +32,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         /// <summary>
         ///     Resolves an <see cref="AudioConductorSettings" /> asset by its GUID.
         /// </summary>
-        public AudioConductorSettings GetByGuid(string guid)
+        public AudioConductorSettings? GetByGuid(string guid)
         {
             if (string.IsNullOrEmpty(guid))
                 return null;
@@ -46,7 +48,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         {
             var guids = AssetDatabase.FindAssets("t:" + nameof(AudioConductorSettings), new[] { "Assets" });
             if (guids == null || guids.Length == 0)
-                return null;
+                return System.Array.Empty<AudioConductorSettings>();
 
             var result = new AudioConductorSettings[guids.Length];
             for (var i = 0; i < guids.Length; i++)

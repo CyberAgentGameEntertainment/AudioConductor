@@ -2,6 +2,8 @@
 // Copyright 2023 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Editor.Core.Models;
 using UnityEditor;
 
@@ -10,9 +12,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
     internal sealed class
         AudioConductorEditorSettingsRepository : ScriptableSingleton<AudioConductorEditorSettingsRepository>
     {
-        private AudioConductorEditorSettings _settings;
+        private AudioConductorEditorSettings? _settings;
 
-        public AudioConductorEditorSettings Settings
+        public AudioConductorEditorSettings? Settings
         {
             get
             {
@@ -23,7 +25,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
         }
 
-        private static AudioConductorEditorSettings LoadSettings()
+        private static AudioConductorEditorSettings? LoadSettings()
         {
             var guids = AssetDatabase.FindAssets("t:" + nameof(AudioConductorEditorSettings), new[] { "Assets" });
             if (guids == null || guids.Length == 0)
