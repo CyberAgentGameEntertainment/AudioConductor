@@ -10,9 +10,9 @@ namespace AudioConductor.Runtime.Core
     {
         private readonly AudioClipPlayerPool _pool;
 
-        internal AudioClipPlayerProvider(Transform parent)
+        internal AudioClipPlayerProvider(Transform parent, bool deactivateOnReturn)
         {
-            _pool = new AudioClipPlayerPool(parent);
+            _pool = new AudioClipPlayerPool(parent, deactivateOnReturn);
         }
 
         public void Prewarm(int count)

@@ -42,6 +42,12 @@ namespace AudioConductor.Runtime.Core.Models
         public int oneShotPoolCapacity;
 
         /// <summary>
+        ///     When true, pooled AudioClipPlayer GameObjects are deactivated while idle.
+        ///     Reduces the overhead of active GameObjects at the cost of SetActive calls on rent/return.
+        /// </summary>
+        public bool deactivatePooledObjects;
+
+        /// <summary>
         ///     List of <see cref="Category" />.
         /// </summary>
         public List<Category> categoryList = new();

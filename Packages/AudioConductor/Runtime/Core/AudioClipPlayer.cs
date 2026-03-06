@@ -442,6 +442,9 @@ namespace AudioConductor.Runtime.Core
 
         internal void ManualUpdate(float _)
         {
+            if (!IsPlaying && !IsPaused)
+                return;
+
             UpdateVolume();
 
             if (IsPaused)
