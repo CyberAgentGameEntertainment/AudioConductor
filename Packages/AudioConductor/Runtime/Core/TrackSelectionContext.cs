@@ -17,10 +17,18 @@ namespace AudioConductor.Runtime.Core
             Tracks = tracks;
             CurrentIndex = -1;
             PlayCount = 0;
+
+            var total = 0;
+            for (var i = 0; i < tracks.Count; i++)
+                total += tracks[i].randomWeight;
+            WeightTotal = total;
         }
 
         /// <summary>The track list of the cue.</summary>
         public IReadOnlyList<Track> Tracks { get; }
+
+        /// <summary>Pre-computed sum of all track random weights.</summary>
+        public int WeightTotal { get; }
 
         /// <summary>
         ///     Index of the most recently selected track. -1 means no track has been selected yet.

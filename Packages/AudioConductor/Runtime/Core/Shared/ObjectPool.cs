@@ -15,7 +15,9 @@ namespace AudioConductor.Runtime.Core.Shared
     {
         private bool _isDisposed;
         private Stack<T> _pool;
+#if UNITY_ASSERTIONS
         private HashSet<T> _rentedInstances;
+#endif
 
         /// <summary>
         ///     Initial capacity of pool.
@@ -87,13 +89,15 @@ namespace AudioConductor.Runtime.Core.Shared
                 throw new ObjectDisposedException("ObjectPool was already disposed.");
 
             _pool ??= new Stack<T>(InitialCapacity);
-            _rentedInstances ??= new HashSet<T>();
 
             var instance = _pool.Count > 0
                 ? _pool.Pop()
                 : CreateInstance();
 
+#if UNITY_ASSERTIONS
+            _rentedInstances ??= new HashSet<T>();
             _rentedInstances.Add(instance);
+#endif
             OnBeforeRent(instance);
             return instance;
         }
@@ -108,9 +112,11 @@ namespace AudioConductor.Runtime.Core.Shared
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
+#if UNITY_ASSERTIONS
             _rentedInstances ??= new HashSet<T>();
             if (!_rentedInstances.Remove(instance))
                 throw new InvalidOperationException("Instance is not rented from this pool.");
+#endif
 
             _pool ??= new Stack<T>(InitialCapacity);
 
@@ -173,7 +179,9 @@ namespace AudioConductor.Runtime.Core.Shared
             if (disposing)
             {
                 Clear();
+#if UNITY_ASSERTIONS
                 _rentedInstances?.Clear();
+#endif
             }
 
             _isDisposed = true;

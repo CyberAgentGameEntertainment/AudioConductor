@@ -13,19 +13,15 @@ namespace AudioConductor.Runtime.Core
             if (context.Tracks.Count == 0)
                 return -1;
 
-            var weightTotal = 0;
-            foreach (var track in context.Tracks)
-                weightTotal += track.randomWeight;
-
             int index;
-            if (weightTotal == 0)
+            if (context.WeightTotal == 0)
             {
                 index = Random.Range(0, context.Tracks.Count);
             }
             else
             {
                 var total = 0;
-                var randomValue = Random.Range(0, weightTotal);
+                var randomValue = Random.Range(0, context.WeightTotal);
                 index = 0;
                 for (var i = 0; i < context.Tracks.Count; i++)
                 {

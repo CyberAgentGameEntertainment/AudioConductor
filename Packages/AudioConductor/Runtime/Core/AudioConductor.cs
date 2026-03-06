@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
@@ -25,16 +26,14 @@ namespace AudioConductor.Runtime.Core
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
         private readonly Stack<FadeState> _fadePool = new(FadePoolInitialCapacity);
         private readonly List<FadeState> _fadeStates = new();
-        private readonly List<FadeState> _fadeUpdateTempList = new();
         private readonly AudioClipPlayerProvider _oneShotProvider;
         private readonly List<OneShotState> _oneShotStates = new();
-        private readonly List<OneShotState> _oneShotUpdateTempList = new();
         private readonly Dictionary<uint, PlaybackState> _playbacks = new();
         private readonly AudioClipPlayerProvider _playerProvider;
         private readonly ICueSheetProvider _provider;
+        private readonly List<uint> _removeKeyBuffer = new();
         private readonly AudioConductorSettings _settings;
         private readonly List<uint> _stopAllKeyBuffer = new();
-        private readonly List<PlaybackState> _updateTempList = new();
         private ConductorBehaviour _behaviour;
         private uint _cueSheetHandleCounter;
         private float _masterVolume = 1f;
@@ -235,6 +234,7 @@ namespace AudioConductor.Runtime.Core
                 var fadeState = RentFadeState();
                 fadeState.Setup(player, fader, 0f, 1f, options.Value.FadeTime.Value, false);
                 player.SetVolumeFade(0f);
+                player.IsFading = true;
                 _fadeStates.Add(fadeState);
             }
 
@@ -274,6 +274,7 @@ namespace AudioConductor.Runtime.Core
                 var effectiveFader = fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
                 fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value, true);
+                state.Player.IsFading = true;
                 _fadeStates.Add(fadeState);
                 return;
             }
@@ -362,15 +363,15 @@ namespace AudioConductor.Runtime.Core
 
         internal void Update(float deltaTime)
         {
-            // Process active fade states.
-            _fadeUpdateTempList.Clear();
-            _fadeUpdateTempList.AddRange(_fadeStates);
-            foreach (var fade in _fadeUpdateTempList)
+            // Process active fade states (reverse iteration for safe removal).
+            for (var i = _fadeStates.Count - 1; i >= 0; i--)
             {
+                var fade = _fadeStates[i];
                 var finished = fade.Elapsed(deltaTime);
                 if (finished)
                 {
-                    _fadeStates.Remove(fade);
+                    ((AudioClipPlayer)fade.Fadeable).IsFading = false;
+                    _fadeStates.RemoveAt(i);
                     // When the fade target was stopped, remove its playback entry.
                     if (fade.IsStopTarget)
                         foreach (var kv in _playbacks)
@@ -385,39 +386,29 @@ namespace AudioConductor.Runtime.Core
                 }
             }
 
-            // Copy to temp list first so that _playbacks.Remove inside the loop is safe.
-            _updateTempList.Clear();
+            // Iterate _playbacks.Values directly; collect removal keys in _removeKeyBuffer.
+            _removeKeyBuffer.Clear();
             foreach (var playback in _playbacks.Values)
-                _updateTempList.Add(playback);
-
-            foreach (var playback in _updateTempList)
             {
                 if (playback.Player == null)
                     continue;
 
                 playback.Player.ManualUpdate(deltaTime);
 
-                var isFading = false;
-                for (var i = 0; i < _fadeStates.Count; i++)
-                    if (ReferenceEquals(_fadeStates[i].Fadeable, playback.Player))
-                    {
-                        isFading = true;
-                        break;
-                    }
-
-                if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !isFading)
+                if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !playback.Player.IsFading)
                 {
                     _playerProvider.Return(playback.Player);
-                    _playbacks.Remove(playback.Id);
+                    _removeKeyBuffer.Add(playback.Id);
                 }
             }
 
-            // Copy to temp list first so that _oneShotStates.Remove inside the loop is safe.
-            _oneShotUpdateTempList.Clear();
-            _oneShotUpdateTempList.AddRange(_oneShotStates);
+            for (var i = 0; i < _removeKeyBuffer.Count; i++)
+                _playbacks.Remove(_removeKeyBuffer[i]);
 
-            foreach (var state in _oneShotUpdateTempList)
+            // Process one-shot states (reverse iteration for safe removal).
+            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
             {
+                var state = _oneShotStates[i];
                 if (state.Player == null)
                     continue;
 
@@ -426,7 +417,7 @@ namespace AudioConductor.Runtime.Core
                 if (!state.Player.IsPlaying && !state.Player.IsPaused)
                 {
                     _oneShotProvider.Return(state.Player);
-                    RemoveOneShotById(state.Id);
+                    _oneShotStates.RemoveAt(i);
                 }
             }
         }
@@ -437,9 +428,20 @@ namespace AudioConductor.Runtime.Core
         public List<CueSheetInfo> GetCueSheetInfos()
         {
             var list = new List<CueSheetInfo>(_cueSheets.Count);
-            foreach (var kv in _cueSheets)
-                list.Add(new CueSheetInfo(new CueSheetHandle(kv.Key), kv.Value.Asset.cueSheet.name));
+            GetCueSheetInfos(list);
             return list;
+        }
+
+        /// <summary>
+        ///     Fills the provided list with information about all currently registered CueSheets.
+        ///     The list is cleared before filling.
+        /// </summary>
+        /// <param name="result">The list to fill with CueSheet information.</param>
+        public void GetCueSheetInfos(List<CueSheetInfo> result)
+        {
+            result.Clear();
+            foreach (var kv in _cueSheets)
+                result.Add(new CueSheetInfo(new CueSheetHandle(kv.Key), kv.Value.Asset.cueSheet.name));
         }
 
         /// <summary>
@@ -457,6 +459,23 @@ namespace AudioConductor.Runtime.Core
             for (var i = 0; i < cueList.Count; i++)
                 list.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
             return list;
+        }
+
+        /// <summary>
+        ///     Fills the provided list with information about all Cues in the specified CueSheet.
+        ///     The list is cleared before filling.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="result">The list to fill with Cue information.</param>
+        public void GetCueInfos(CueSheetHandle sheetHandle, List<CueInfo> result)
+        {
+            result.Clear();
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cueList = registration.Asset.cueSheet.cueList;
+            for (var i = 0; i < cueList.Count; i++)
+                result.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
         }
 
         /// <summary>
@@ -488,6 +507,37 @@ namespace AudioConductor.Runtime.Core
                 list.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
                     trackList[i].priority));
             return list;
+        }
+
+        /// <summary>
+        ///     Fills the provided list with information about all Tracks in the specified Cue.
+        ///     The list is cleared before filling.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue.</param>
+        /// <param name="result">The list to fill with Track information.</param>
+        public void GetTrackInfos(CueSheetHandle sheetHandle, string cueName, List<TrackInfo> result)
+        {
+            result.Clear();
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cueList = registration.Asset.cueSheet.cueList;
+            Cue cue = null;
+            for (var i = 0; i < cueList.Count; i++)
+                if (cueList[i].name == cueName)
+                {
+                    cue = cueList[i];
+                    break;
+                }
+
+            if (cue == null)
+                return;
+
+            var trackList = cue.trackList;
+            for (var i = 0; i < trackList.Count; i++)
+                result.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
+                    trackList[i].priority));
         }
 
         /// <summary>
@@ -642,27 +692,20 @@ namespace AudioConductor.Runtime.Core
                 if (throttleLimit <= 0)
                     continue;
 
-                var playNum = (LimitCheckType)i switch
+                var (playNum, minPriority) = (LimitCheckType)i switch
                 {
-                    LimitCheckType.Cue => CountPlayingByCue(cue),
-                    LimitCheckType.CueSheet => CountPlayingByCueSheet(cueSheetId),
-                    LimitCheckType.Category => CountPlayingByCategory(cue.categoryId),
-                    LimitCheckType.Global => CountAllPlaying(),
-                    _ => 0
+                    LimitCheckType.Cue => CountAndMinPriority(LimitCheckType.Cue, cueSheetId, cue, cue.categoryId),
+                    LimitCheckType.CueSheet => CountAndMinPriority(LimitCheckType.CueSheet, cueSheetId, cue,
+                        cue.categoryId),
+                    LimitCheckType.Category => CountAndMinPriority(LimitCheckType.Category, cueSheetId, cue,
+                        cue.categoryId),
+                    LimitCheckType.Global => CountAndMinPriority(LimitCheckType.Global, cueSheetId, cue,
+                        cue.categoryId),
+                    _ => (0, int.MaxValue)
                 };
 
                 if (playNum < throttleLimit)
                     continue;
-
-                // Compute minimum priority within the scope of this limit check.
-                var minPriority = (LimitCheckType)i switch
-                {
-                    LimitCheckType.Cue => MinPriorityByCue(cue),
-                    LimitCheckType.CueSheet => MinPriorityByCueSheet(cueSheetId),
-                    LimitCheckType.Category => MinPriorityByCategory(cue.categoryId),
-                    LimitCheckType.Global => MinPriorityGlobal(),
-                    _ => int.MaxValue
-                };
 
                 if (minPriority > track.priority)
                     return false;
@@ -673,22 +716,7 @@ namespace AudioConductor.Runtime.Core
                 switch (throttleType)
                 {
                     case ThrottleType.PriorityOrder:
-                        switch ((LimitCheckType)i)
-                        {
-                            case LimitCheckType.Cue:
-                                StopOldestByCue(cue, minPriority);
-                                break;
-                            case LimitCheckType.CueSheet:
-                                StopOldestByCueSheet(cueSheetId, minPriority);
-                                break;
-                            case LimitCheckType.Category:
-                                StopOldestByCategory(cue.categoryId, minPriority);
-                                break;
-                            case LimitCheckType.Global:
-                                StopOldestGlobal(minPriority);
-                                break;
-                        }
-
+                        StopOldest((LimitCheckType)i, cueSheetId, cue, cue.categoryId, minPriority);
                         break;
                     case ThrottleType.FirstComeFirstServed:
                         return false;
@@ -714,171 +742,67 @@ namespace AudioConductor.Runtime.Core
             return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
         }
 
-        private int CountAllPlaying()
+        private (int count, int minPriority) CountAndMinPriority(LimitCheckType type, uint cueSheetId, Cue cue,
+            int categoryId)
         {
             var count = 0;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying)
-                    count++;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying)
-                    count++;
-            return count;
-        }
-
-        private int CountPlayingByCue(Cue cue)
-        {
-            var count = 0;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue)
-                    count++;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue == cue)
-                    count++;
-            return count;
-        }
-
-        private int CountPlayingByCueSheet(uint cueSheetId)
-        {
-            var count = 0;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId)
-                    count++;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.CueSheetId == cueSheetId)
-                    count++;
-            return count;
-        }
-
-        private int CountPlayingByCategory(int categoryId)
-        {
-            var count = 0;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId)
-                    count++;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue.categoryId == categoryId)
-                    count++;
-            return count;
-        }
-
-        private int MinPriorityByCue(Cue cue)
-        {
             var min = int.MaxValue;
+
             foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue && p.Priority < min)
-                    min = p.Priority;
+                AccumulatePlayingState(p.Player, p.CueSheetId, p.Cue, p.Priority,
+                    type, cueSheetId, cue, categoryId, ref count, ref min);
+
             foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue == cue && s.Priority < min)
-                    min = s.Priority;
-            return min;
+                AccumulatePlayingState(s.Player, s.CueSheetId, s.Cue, s.Priority,
+                    type, cueSheetId, cue, categoryId, ref count, ref min);
+
+            return (count, min);
         }
 
-        private int MinPriorityByCueSheet(uint cueSheetId)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AccumulatePlayingState(AudioClipPlayer player, uint itemCueSheetId, Cue itemCue,
+            int itemPriority, LimitCheckType type, uint targetCueSheetId, Cue targetCue, int targetCategoryId,
+            ref int count, ref int min)
         {
-            var min = int.MaxValue;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId && p.Priority < min)
-                    min = p.Priority;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.CueSheetId == cueSheetId && s.Priority < min)
-                    min = s.Priority;
-            return min;
+            if (player == null || !player.IsPlaying)
+                return;
+            if (!MatchesScope(type, itemCueSheetId, itemCue, itemCue.categoryId, targetCueSheetId, targetCue,
+                    targetCategoryId))
+                return;
+            count++;
+            if (itemPriority < min)
+                min = itemPriority;
         }
 
-        private int MinPriorityByCategory(int categoryId)
+        private static bool MatchesScope(LimitCheckType type, uint itemCueSheetId, Cue itemCue, int itemCategoryId,
+            uint targetCueSheetId, Cue targetCue, int targetCategoryId)
         {
-            var min = int.MaxValue;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId && p.Priority < min)
-                    min = p.Priority;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue.categoryId == categoryId && s.Priority < min)
-                    min = s.Priority;
-            return min;
-        }
-
-        private int MinPriorityGlobal()
-        {
-            var min = int.MaxValue;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Priority < min)
-                    min = p.Priority;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Priority < min)
-                    min = s.Priority;
-            return min;
+            return type switch
+            {
+                LimitCheckType.Cue => itemCue == targetCue,
+                LimitCheckType.CueSheet => itemCueSheetId == targetCueSheetId,
+                LimitCheckType.Category => itemCategoryId == targetCategoryId,
+                LimitCheckType.Global => true,
+                _ => false
+            };
         }
 
         // Stops the oldest (lowest Id) managed or one-shot playback in scope matching the given priority.
-        private void StopOldestByCue(Cue cue, int minPriority)
+        private void StopOldest(LimitCheckType type, uint cueSheetId, Cue cue, int categoryId, int minPriority)
         {
             PlaybackState? oldestManaged = null;
             foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue == cue && p.Priority == minPriority)
-                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
-                        oldestManaged = p;
+                if (p.Player != null && p.Player.IsPlaying && p.Priority == minPriority
+                    && MatchesScope(type, p.CueSheetId, p.Cue, p.Cue.categoryId, cueSheetId, cue, categoryId)
+                    && (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id))
+                    oldestManaged = p;
 
             OneShotState? oldestOneShot = null;
             foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue == cue && s.Priority == minPriority)
-                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
-                        oldestOneShot = s;
-
-            StopOldestCandidate(oldestManaged, oldestOneShot);
-        }
-
-        private void StopOldestByCueSheet(uint cueSheetId, int minPriority)
-        {
-            PlaybackState? oldestManaged = null;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.CueSheetId == cueSheetId &&
-                    p.Priority == minPriority)
-                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
-                        oldestManaged = p;
-
-            OneShotState? oldestOneShot = null;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.CueSheetId == cueSheetId &&
-                    s.Priority == minPriority)
-                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
-                        oldestOneShot = s;
-
-            StopOldestCandidate(oldestManaged, oldestOneShot);
-        }
-
-        private void StopOldestByCategory(int categoryId, int minPriority)
-        {
-            PlaybackState? oldestManaged = null;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Cue.categoryId == categoryId &&
-                    p.Priority == minPriority)
-                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
-                        oldestManaged = p;
-
-            OneShotState? oldestOneShot = null;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Cue.categoryId == categoryId &&
-                    s.Priority == minPriority)
-                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
-                        oldestOneShot = s;
-
-            StopOldestCandidate(oldestManaged, oldestOneShot);
-        }
-
-        private void StopOldestGlobal(int minPriority)
-        {
-            PlaybackState? oldestManaged = null;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Priority == minPriority)
-                    if (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id)
-                        oldestManaged = p;
-
-            OneShotState? oldestOneShot = null;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Priority == minPriority)
-                    if (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id)
-                        oldestOneShot = s;
+                if (s.Player != null && s.Player.IsPlaying && s.Priority == minPriority
+                    && MatchesScope(type, s.CueSheetId, s.Cue, s.Cue.categoryId, cueSheetId, cue, categoryId)
+                    && (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id))
+                    oldestOneShot = s;
 
             StopOldestCandidate(oldestManaged, oldestOneShot);
         }

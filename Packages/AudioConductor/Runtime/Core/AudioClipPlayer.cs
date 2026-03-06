@@ -17,12 +17,17 @@ namespace AudioConductor.Runtime.Core
         private const int AudioSourceNum = 2;
         private const float MinimumDuration = 1.0f;
 
+        private const int VolumeScale = 10000;
+        private static readonly string[] AudioSourceNames = { "AudioSource1", "AudioSource2" };
+
         private readonly AudioSource[] _source = new AudioSource[AudioSourceNum];
 
         private int _endSample;
         private int _frequency;
 
         private bool _isLoop;
+        private bool _isVolumeDirty;
+        private int _lastAppliedVolumeScaled = -1;
         private int _loopStartSample;
         private double _nextEventTime;
 
@@ -44,6 +49,8 @@ namespace AudioConductor.Runtime.Core
         internal float VolumeAsset { get; private set; }
 
         internal float PitchInternal { get; private set; }
+
+        internal bool IsFading { get; set; }
 
         /// <inheritdoc />
         public int ClipSamples { get; private set; }
@@ -329,7 +336,7 @@ namespace AudioConductor.Runtime.Core
             var player = root.AddComponent<AudioClipPlayer>();
             for (var i = 0; i < AudioSourceNum; i++)
             {
-                var child = new GameObject($"AudioSource{i + 1}");
+                var child = new GameObject(AudioSourceNames[i]);
                 child.transform.SetParent(root.transform);
                 player._source[i] = child.AddComponent<AudioSource>();
             }
@@ -409,6 +416,11 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             var volume = GetActualVolume();
+            var volumeScaled = (int)(volume * VolumeScale);
+            if (volumeScaled == _lastAppliedVolumeScaled)
+                return;
+
+            _lastAppliedVolumeScaled = volumeScaled;
             _source[0].volume = volume;
 
             if (_isLoop && _source[1] != null)
@@ -466,6 +478,8 @@ namespace AudioConductor.Runtime.Core
             _startSample = _endSample = 0;
             _volumeMaster = 1f;
             VolumeFade = 1f;
+            _lastAppliedVolumeScaled = -1;
+            IsFading = false;
 
             _onStop = _onEnd = null;
         }
