@@ -197,11 +197,11 @@ namespace AudioConductor.Runtime.Core
 
             var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
 
-            Track track;
+            Track? track;
             if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
                 track = cueState.GetTrack(options.Value.TrackIndex.Value);
             else if (!string.IsNullOrEmpty(options?.TrackName))
-                track = cueState.GetTrack(options!.Value.TrackName);
+                track = cueState.GetTrack(options!.Value.TrackName!);
             else
                 track = cueState.NextTrack(options?.Selector);
 
