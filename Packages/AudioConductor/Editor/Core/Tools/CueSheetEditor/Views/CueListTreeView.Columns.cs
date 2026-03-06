@@ -95,7 +95,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     break;
                 case CueListTreeView.ColumnType.PlayType:
                     column.headerContent = new GUIContent("Play Type");
-                    column.minWidth = column.minWidth;
+                    column.width = column.minWidth;
                     column.maxWidth = column.minWidth;
                     break;
                 default:
