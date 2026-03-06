@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Runtime.ExceptionServices;
@@ -13,11 +15,11 @@ namespace AudioConductor.Editor.Foundation.TinyRx
     /// <typeparam name="T"></typeparam>
     internal class Observer<T> : IObserver<T>
     {
-        private readonly Action _onCompleted;
-        private readonly Action<Exception> _onError;
+        private readonly Action? _onCompleted;
+        private readonly Action<Exception>? _onError;
         private readonly Action<T> _onNext;
 
-        public Observer(Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
+        public Observer(Action<T> onNext, Action<Exception>? onError = null, Action? onCompleted = null)
         {
             _onNext = onNext;
             _onError = onError;

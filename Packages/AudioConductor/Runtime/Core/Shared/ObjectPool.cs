@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,9 +16,9 @@ namespace AudioConductor.Runtime.Core.Shared
     internal abstract class ObjectPool<T> : IDisposable
     {
         private bool _isDisposed;
-        private Stack<T> _pool;
+        private Stack<T>? _pool;
 #if UNITY_ASSERTIONS
-        private HashSet<T> _rentedInstances;
+        private HashSet<T>? _rentedInstances;
 #endif
 
         /// <summary>

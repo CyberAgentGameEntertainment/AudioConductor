@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -67,14 +69,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         };
 
         private static readonly object[] CueListParameters = CueParameters.Concat(TrackParameters).ToArray();
+        private readonly IAssetSaveService _assetSaveService;
 
         private readonly CueSheet _cueSheet;
         private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
 
         public OtherOperationPaneModel([NotNull] CueSheet cueSheet,
-                                       AutoIncrementHistory history,
-                                       IAssetSaveService assetSaveService)
+            AutoIncrementHistory history,
+            IAssetSaveService assetSaveService)
         {
             _cueSheet = cueSheet;
             _history = history;
@@ -90,13 +92,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             CsvUtility.AppendRowItemsLine(builder, CueListParameters.Length, nameof(CueSheetParameters));
             CsvUtility.AppendRowItemsLine(builder, CueListParameters.Length, CueSheetParameters);
             CsvUtility.AppendRowItemsLine(builder, CueListParameters.Length,
-                                          _cueSheet.name,
-                                          _cueSheet.throttleLimit,
-                                          _cueSheet.throttleType,
-                                          _cueSheet.volume,
-                                          _cueSheet.pitch,
-                                          _cueSheet.pitchInvert
-                                         );
+                _cueSheet.name,
+                _cueSheet.throttleLimit,
+                _cueSheet.throttleType,
+                _cueSheet.volume,
+                _cueSheet.pitch,
+                _cueSheet.pitchInvert
+            );
 
             builder.AppendLine();
 
@@ -105,19 +107,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             foreach (var cue in _cueSheet.cueList)
             {
                 CsvUtility.AppendRowItems(builder,
-                                          cue.name,
-                                          cue.colorId,
-                                          cue.categoryId,
-                                          cue.throttleLimit,
-                                          cue.throttleType,
-                                          cue.volume,
-                                          cue.volumeRange,
-                                          cue.pitch,
-                                          cue.pitchRange,
-                                          cue.pitchInvert,
-                                          cue.playType,
-                                          cue.trackList.Count
-                                         );
+                    cue.name,
+                    cue.colorId,
+                    cue.categoryId,
+                    cue.throttleLimit,
+                    cue.throttleType,
+                    cue.volume,
+                    cue.volumeRange,
+                    cue.pitch,
+                    cue.pitchRange,
+                    cue.pitchInvert,
+                    cue.playType,
+                    cue.trackList.Count
+                );
 
                 var preDelimiterNum = CueListParameters.Length - TrackParameters.Length;
                 var count = 0;
@@ -133,21 +135,21 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     var clipName = track.audioClip == null ? string.Empty : track.audioClip.name;
 
                     CsvUtility.AppendRowItems(builder,
-                                              track.name,
-                                              track.colorId,
-                                              clipName,
-                                              track.volume,
-                                              track.volumeRange,
-                                              track.pitch,
-                                              track.pitchRange,
-                                              track.pitchInvert,
-                                              track.startSample,
-                                              track.endSample,
-                                              track.loopStartSample,
-                                              track.isLoop,
-                                              track.randomWeight,
-                                              track.priority,
-                                              track.fadeTime);
+                        track.name,
+                        track.colorId,
+                        clipName,
+                        track.volume,
+                        track.volumeRange,
+                        track.pitch,
+                        track.pitchRange,
+                        track.pitchInvert,
+                        track.startSample,
+                        track.endSample,
+                        track.loopStartSample,
+                        track.isLoop,
+                        track.randomWeight,
+                        track.priority,
+                        track.fadeTime);
                     builder.AppendLine();
                 }
             }
@@ -201,7 +203,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             #endregion
         }
 
-        private static CueSheet ParseCsv(IReadOnlyList<string> lines)
+        private static CueSheet? ParseCsv(IReadOnlyList<string> lines)
         {
             var cueSheet = new CueSheet();
 
@@ -287,11 +289,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             var clipName = columns[index++];
 
-            if (string.IsNullOrEmpty(clipName) == false)
+            if (!string.IsNullOrEmpty(clipName))
             {
                 var clipGUIDs = AssetDatabase.FindAssets(clipName + " t:AudioClip");
                 var clipPath = clipGUIDs.Select(AssetDatabase.GUIDToAssetPath)
-                                        .FirstOrDefault(path => Path.GetFileNameWithoutExtension(path) == clipName);
+                    .FirstOrDefault(path => Path.GetFileNameWithoutExtension(path) == clipName);
 
                 if (string.IsNullOrEmpty(clipPath))
                     Debug.LogWarning($"AudioClip not found : {clipName}");

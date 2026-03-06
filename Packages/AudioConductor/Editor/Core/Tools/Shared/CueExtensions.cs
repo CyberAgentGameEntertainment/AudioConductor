@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Linq;
 using AudioConductor.Runtime.Core.Models;
@@ -9,7 +11,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 {
     internal static class CueExtensions
     {
-        public static Cue Duplicate(this Cue cue)
+        public static Cue? Duplicate(this Cue? cue)
         {
             if (cue == null)
                 return null;

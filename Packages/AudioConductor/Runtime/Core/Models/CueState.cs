@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core.Enums;
 
 namespace AudioConductor.Runtime.Core.Models
@@ -24,7 +26,7 @@ namespace AudioConductor.Runtime.Core.Models
         public uint CueSheetId { get; }
         public Cue Cue { get; }
 
-        public Track NextTrack(ITrackSelector selectorOverride = null)
+        public Track? NextTrack(ITrackSelector? selectorOverride = null)
         {
             if (Cue.trackList.Count == 0)
                 return null;
@@ -37,7 +39,7 @@ namespace AudioConductor.Runtime.Core.Models
             return Cue.trackList[index];
         }
 
-        public Track GetTrack(int index)
+        public Track? GetTrack(int index)
         {
             if (index < 0 || Cue.trackList.Count <= index)
                 return null;
@@ -45,7 +47,7 @@ namespace AudioConductor.Runtime.Core.Models
             return Cue.trackList[index];
         }
 
-        public Track GetTrack(string name)
+        public Track? GetTrack(string name)
         {
             for (var i = 0; i < Cue.trackList.Count; i++)
                 if (Cue.trackList[i].name == name)

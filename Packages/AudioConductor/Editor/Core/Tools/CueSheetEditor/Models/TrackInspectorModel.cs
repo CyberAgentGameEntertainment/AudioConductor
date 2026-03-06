@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -22,7 +24,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     internal sealed class TrackInspectorModel : ITrackInspectorModel
     {
         private readonly IAssetSaveService _assetSaveService;
-        private readonly ObservableProperty<MixedValue<AudioClip>> _audioClip;
+        private readonly ObservableProperty<MixedValue<AudioClip?>> _audioClip;
         private readonly ObservableProperty<MixedValue<string>> _color;
         private readonly ObservableProperty<MixedValue<int>> _endSample;
         private readonly ObservableProperty<MixedValue<float>> _fadeTime;
@@ -43,7 +45,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly string _tag;
         private readonly Track[] _target;
 
-        private readonly TrackPreviewModel _trackPreviewModel;
+        private readonly TrackPreviewModel? _trackPreviewModel;
         private readonly ObservableProperty<MixedValue<float>> _volume;
         private readonly ObservableProperty<MixedValue<float>> _volumeRange;
 
@@ -253,7 +255,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         track.loopStartSample = ValueRangeConst.LoopStartSample.Clamp(track.loopStartSample, samples);
                     }
 
-                    _audioClip.Value = new MixedValue<AudioClip>(value, false);
+                    _audioClip.Value = new MixedValue<AudioClip?>(value, false);
                     _startSample.Value = new MixedValue<int>(StartSample, false);
                     _endSample.Value = new MixedValue<int>(EndSample, false);
                     _loopStartSample.Value = new MixedValue<int>(LoopStartSample, false);
@@ -275,7 +277,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed[3] |= LoopStartSample != _target[i].loopStartSample;
                     }
 
-                    _audioClip.Value = new MixedValue<AudioClip>(AudioClip, mixed[0]);
+                    _audioClip.Value = new MixedValue<AudioClip?>(AudioClip, mixed[0]);
                     _startSample.Value = new MixedValue<int>(StartSample, mixed[1]);
                     _endSample.Value = new MixedValue<int>(EndSample, mixed[2]);
                     _loopStartSample.Value = new MixedValue<int>(LoopStartSample, mixed[3]);
@@ -286,7 +288,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<AudioClip>> AudioClipObservable => _audioClip;
+        public IReadOnlyObservableProperty<MixedValue<AudioClip?>> AudioClipObservable => _audioClip;
 
         #endregion
 
@@ -910,7 +912,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public TrackPreviewController PlayClip(int? sample)
+        public TrackPreviewController? PlayClip(int? sample)
         {
             return _trackPreviewModel?.Play(sample);
         }

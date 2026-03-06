@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -39,14 +41,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly ObservableProperty<MixedValue<int>> _throttleLimit;
         private readonly ObservableProperty<MixedValue<ThrottleType>> _throttleType;
 
-        private readonly CuePreviewModel _trackPreviewModel;
+        private readonly CuePreviewModel? _trackPreviewModel;
         private readonly ObservableProperty<MixedValue<float>> _volume;
         private readonly ObservableProperty<MixedValue<float>> _volumeRange;
 
         public CueInspectorModel([NotNull] ItemCue[] items,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService,
-            Func<AudioConductorSettings> settingsProvider = null)
+            Func<AudioConductorSettings>? settingsProvider = null)
         {
             Assert.IsTrue(items.Length > 0);
 

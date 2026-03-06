@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
@@ -22,7 +24,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         AudioClip AudioClip { get; set; }
 
-        IReadOnlyObservableProperty<MixedValue<AudioClip>> AudioClipObservable { get; }
+        IReadOnlyObservableProperty<MixedValue<AudioClip?>> AudioClipObservable { get; }
 
         float Volume { get; set; }
 
@@ -74,6 +76,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         void AnalyzeWaveChunk();
 
-        TrackPreviewController PlayClip(int? sample);
+        TrackPreviewController? PlayClip(int? sample);
     }
 }

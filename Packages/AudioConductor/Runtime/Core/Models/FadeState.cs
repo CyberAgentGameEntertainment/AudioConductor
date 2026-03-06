@@ -2,15 +2,17 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using UnityEngine;
 
 namespace AudioConductor.Runtime.Core.Models
 {
     internal sealed class FadeState
     {
-        private IFader _fader;
+        private IFader _fader = null!;
 
-        public IFadeable Fadeable { get; private set; }
+        public IFadeable Fadeable { get; private set; } = null!;
         public float FadeTime { get; private set; }
         public bool IsStopTarget { get; private set; }
         public float StartVolume { get; private set; }

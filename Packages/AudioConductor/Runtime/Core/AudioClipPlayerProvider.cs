@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using UnityEngine;
 
 namespace AudioConductor.Runtime.Core

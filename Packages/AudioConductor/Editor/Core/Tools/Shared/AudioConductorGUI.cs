@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using UnityEditor;
 using UnityEngine;
@@ -12,9 +14,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         internal static class ColorDefine
         {
             private static readonly int PopupHash = nameof(ColorSelectPopupWindowContent).GetHashCode();
-            private static CallbackInfo CallbackInfoInstance { get; set; }
+            private static CallbackInfo? CallbackInfoInstance { get; set; }
 
-            public static string Popup(Rect rect, string colorId, bool showMixedValue = false)
+            public static string? Popup(Rect rect, string colorId, bool showMixedValue = false)
             {
                 var controlId = GUIUtility.GetControlID(PopupHash, FocusType.Passive, rect);
 
@@ -23,13 +25,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
                 var selectedIndex = GetSelectedValueForControl(controlId, oldIndex);
                 EditorGUI.showMixedValue = showMixedValue;
-                var push = EditorGUI.DropdownButton(rect, contents[oldIndex], FocusType.Passive);
+                var push = EditorGUI.DropdownButton(rect, contents![oldIndex], FocusType.Passive);
                 EditorGUI.showMixedValue = false;
                 if (push)
                 {
                     CallbackInfoInstance = new CallbackInfo(controlId);
                     PopupWindow.Show(rect,
-                                     new ColorSelectPopupWindowContent(rect, oldIndex, CallbackInfoInstance.SetValue));
+                        new ColorSelectPopupWindowContent(rect, oldIndex, CallbackInfoInstance.SetValue));
                 }
 
                 return ColorDefineListRepository.instance.ToColorId(selectedIndex);
@@ -43,7 +45,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 if (CallbackInfoInstance.ControlId != controlID)
                     return selected;
 
-                if (CallbackInfoInstance.Value.HasValue == false)
+                if (!CallbackInfoInstance.Value.HasValue)
                     return selected;
 
                 GUI.changed = selected != CallbackInfoInstance.Value;
