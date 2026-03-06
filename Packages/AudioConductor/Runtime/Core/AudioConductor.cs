@@ -415,7 +415,7 @@ namespace AudioConductor.Runtime.Core
         /// </summary>
         public List<CueSheetInfo> GetCueSheetInfos()
         {
-            var list = new List<CueSheetInfo>(_cueSheets.Count);
+            var list = new List<CueSheetInfo>();
             GetCueSheetInfos(list);
             return list;
         }
@@ -428,6 +428,8 @@ namespace AudioConductor.Runtime.Core
         public void GetCueSheetInfos(List<CueSheetInfo> result)
         {
             result.Clear();
+            if (result.Capacity < _cueSheets.Count)
+                result.Capacity = _cueSheets.Count;
             foreach (var kv in _cueSheets)
                 result.Add(new CueSheetInfo(new CueSheetHandle(kv.Key), kv.Value.Asset.cueSheet.name));
         }
@@ -439,13 +441,8 @@ namespace AudioConductor.Runtime.Core
         /// <returns>Cue information list, or an empty collection if the handle is invalid.</returns>
         public List<CueInfo> GetCueInfos(CueSheetHandle sheetHandle)
         {
-            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
-                return new List<CueInfo>();
-
-            var cueList = registration.Asset.cueSheet.cueList;
-            var list = new List<CueInfo>(cueList.Count);
-            for (var i = 0; i < cueList.Count; i++)
-                list.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
+            var list = new List<CueInfo>();
+            GetCueInfos(sheetHandle, list);
             return list;
         }
 
@@ -462,6 +459,8 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             var cueList = registration.Asset.cueSheet.cueList;
+            if (result.Capacity < cueList.Count)
+                result.Capacity = cueList.Count;
             for (var i = 0; i < cueList.Count; i++)
                 result.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
         }
@@ -474,18 +473,8 @@ namespace AudioConductor.Runtime.Core
         /// <returns>Track information list, or an empty collection if the handle or cue name is invalid.</returns>
         public List<TrackInfo> GetTrackInfos(CueSheetHandle sheetHandle, string cueName)
         {
-            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
-                return new List<TrackInfo>();
-
-            var cue = registration.FindCue(cueName);
-            if (cue == null)
-                return new List<TrackInfo>();
-
-            var trackList = cue.trackList;
-            var list = new List<TrackInfo>(trackList.Count);
-            for (var i = 0; i < trackList.Count; i++)
-                list.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
-                    trackList[i].priority));
+            var list = new List<TrackInfo>();
+            GetTrackInfos(sheetHandle, cueName, list);
             return list;
         }
 
@@ -507,6 +496,8 @@ namespace AudioConductor.Runtime.Core
                 return;
 
             var trackList = cue.trackList;
+            if (result.Capacity < trackList.Count)
+                result.Capacity = trackList.Count;
             for (var i = 0; i < trackList.Count; i++)
                 result.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
                     trackList[i].priority));
@@ -819,8 +810,8 @@ namespace AudioConductor.Runtime.Core
 
         private sealed class CueSheetRegistration
         {
-            private readonly Dictionary<Cue, CueState> _cueStateCache = new();
             private readonly Dictionary<string, Cue> _cueNameLookup;
+            private readonly Dictionary<Cue, CueState> _cueStateCache = new();
 
             internal CueSheetRegistration(CueSheetAsset asset)
             {
