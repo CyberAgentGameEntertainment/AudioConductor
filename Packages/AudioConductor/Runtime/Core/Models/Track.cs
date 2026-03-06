@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Runtime.Core.Shared;
@@ -14,23 +16,15 @@ namespace AudioConductor.Runtime.Core.Models
     [Serializable]
     public sealed class Track
     {
-#if UNITY_EDITOR
-        [SerializeField]
-        private string id = IdentifierFactory.Create();
-        public string Id => id;
-        
-        public string colorId;
-#endif
-        
         /// <summary>
         ///     Track name.
         /// </summary>
-        public string name;
+        public string name = null!;
 
         /// <summary>
         ///     Audio clip.
         /// </summary>
-        public AudioClip audioClip;
+        public AudioClip? audioClip;
 
         /// <summary>
         ///     Volume of the audio.
@@ -91,5 +85,12 @@ namespace AudioConductor.Runtime.Core.Models
         ///     Fade-in/fade-out time.
         /// </summary>
         public float fadeTime;
+#if UNITY_EDITOR
+        [SerializeField] private string id = IdentifierFactory.Create();
+
+        public string Id => id;
+
+        public string? colorId;
+#endif
     }
 }

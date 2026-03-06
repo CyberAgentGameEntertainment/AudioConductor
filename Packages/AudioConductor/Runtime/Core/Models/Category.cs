@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Runtime.Core.Enums;
@@ -22,7 +24,7 @@ namespace AudioConductor.Runtime.Core.Models
         /// <summary>
         ///     Category name.
         /// </summary>
-        public string name;
+        public string name = null!;
 
         /// <summary>
         ///     <see cref="Enums.ThrottleType" />.
@@ -37,6 +39,6 @@ namespace AudioConductor.Runtime.Core.Models
         /// <summary>
         ///     Output AudioMixerGroup.
         /// </summary>
-        public AudioMixerGroup audioMixerGroup;
+        public AudioMixerGroup? audioMixerGroup;
     }
 }

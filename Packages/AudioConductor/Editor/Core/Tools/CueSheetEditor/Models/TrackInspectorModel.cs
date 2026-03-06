@@ -25,7 +25,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     {
         private readonly IAssetSaveService _assetSaveService;
         private readonly ObservableProperty<MixedValue<AudioClip?>> _audioClip;
-        private readonly ObservableProperty<MixedValue<string>> _color;
+        private readonly ObservableProperty<MixedValue<string?>> _color;
         private readonly ObservableProperty<MixedValue<int>> _endSample;
         private readonly ObservableProperty<MixedValue<float>> _fadeTime;
         private readonly AutoIncrementHistory _history;
@@ -114,7 +114,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private readonly struct AudioClipAndDependencyValueBackup
         {
-            public readonly AudioClip audioClip;
+            public readonly AudioClip? audioClip;
             public readonly int startSample;
             public readonly int endSample;
             public readonly int loopStartSample;
@@ -189,7 +189,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region Color
 
-        public string Color
+        public string? Color
         {
             get => TypicalTarget.colorId;
             set
@@ -203,7 +203,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 {
                     foreach (var track in _target)
                         track.colorId = value;
-                    _color.Value = new MixedValue<string>(value, false);
+                    _color.Value = new MixedValue<string?>(value, false);
                     _assetSaveService.Save();
                 }
 
@@ -216,7 +216,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed |= Color != _target[i].colorId;
                     }
 
-                    _color.Value = new MixedValue<string>(Color, mixed);
+                    _color.Value = new MixedValue<string?>(Color, mixed);
                     _assetSaveService.Save();
                 }
 
@@ -224,19 +224,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<string>> ColorObservable => _color;
+        public IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable => _color;
 
         #endregion
 
         #region AudioClip
 
-        public AudioClip AudioClip
+        public AudioClip? AudioClip
         {
             get => TypicalTarget.audioClip;
             set
             {
                 var actionTypeId = value == null
-                    ? $"{_tag} Unset Track {nameof(AudioClip)} {AudioClip.GetInstanceID()}"
+                    ? $"{_tag} Unset Track {nameof(AudioClip)} {(AudioClip == null ? 0 : AudioClip.GetInstanceID())}"
                     : $"{_tag} Set Track {nameof(AudioClip)} {value.GetInstanceID()}";
 
                 var old = _target.Select(track => new AudioClipAndDependencyValueBackup(track)).ToArray();

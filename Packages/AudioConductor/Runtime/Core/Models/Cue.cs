@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -16,18 +18,10 @@ namespace AudioConductor.Runtime.Core.Models
     [Serializable]
     public sealed class Cue
     {
-#if UNITY_EDITOR
-        [SerializeField]
-        private string id = IdentifierFactory.Create();
-        public string Id => id;
-        
-        public string colorId;
-#endif
-        
         /// <summary>
         ///     Cue name.
         /// </summary>
-        public string name;
+        public string name = null!;
 
         /// <summary>
         ///     <see cref="Category" /> id.
@@ -78,5 +72,12 @@ namespace AudioConductor.Runtime.Core.Models
         ///     List of <see cref="Track" />.
         /// </summary>
         public List<Track> trackList = new();
+#if UNITY_EDITOR
+        [SerializeField] private string id = IdentifierFactory.Create();
+
+        public string Id => id;
+
+        public string? colorId;
+#endif
     }
 }

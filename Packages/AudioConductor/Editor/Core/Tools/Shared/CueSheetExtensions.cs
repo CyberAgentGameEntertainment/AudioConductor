@@ -24,7 +24,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 volume = cueSheet.volume,
                 pitch = cueSheet.pitch,
                 pitchInvert = cueSheet.pitchInvert,
-                cueList = cueSheet.cueList.Select(cue => cue.Duplicate()).ToList()
+                cueList = cueSheet.cueList.Select(cue => cue.Duplicate()!).ToList()
             };
         }
     }

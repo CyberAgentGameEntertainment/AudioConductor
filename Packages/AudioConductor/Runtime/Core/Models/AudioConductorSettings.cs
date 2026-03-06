@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
 using AudioConductor.Runtime.Core.Enums;
 using UnityEngine;

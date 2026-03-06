@@ -1,12 +1,11 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
 
 using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 
@@ -28,7 +27,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public override ItemType Type => ItemType.Cue;
         public override string TargetId => RawData.Id;
         public override string Name => RawData.name;
-        public override string ColorId => RawData.colorId;
+        public override string? ColorId => RawData.colorId;
         public override int? CategoryId => RawData.categoryId;
         public override ThrottleType? ThrottleType => RawData.throttleType;
         public override int? ThrottleLimit => RawData.throttleLimit;

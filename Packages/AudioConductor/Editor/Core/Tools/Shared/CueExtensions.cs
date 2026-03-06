@@ -28,7 +28,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 pitchRange = cue.pitchRange,
                 pitchInvert = cue.pitchInvert,
                 playType = cue.playType,
-                trackList = cue.trackList.Select(track => track.Duplicate()).ToList()
+                trackList = cue.trackList.Select(track => track.Duplicate()!).ToList()
             };
         }
     }

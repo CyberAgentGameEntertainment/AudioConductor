@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
@@ -26,7 +26,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public override ItemType Type => ItemType.Track;
         public override string TargetId => RawData.Id;
         public override string Name => RawData.name;
-        public override string ColorId => RawData.colorId;
+        public override string? ColorId => RawData.colorId;
         public override int? CategoryId => null;
         public override ThrottleType? ThrottleType => null;
         public override int? ThrottleLimit => null;

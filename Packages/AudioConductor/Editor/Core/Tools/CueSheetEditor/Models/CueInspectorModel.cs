@@ -25,7 +25,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     {
         private readonly IAssetSaveService _assetSaveService;
         private readonly ObservableProperty<MixedValue<int>> _categoryId;
-        private readonly ObservableProperty<MixedValue<string>> _color;
+        private readonly ObservableProperty<MixedValue<string?>> _color;
         private readonly AutoIncrementHistory _history;
         private readonly HashSet<int> _itemIds;
 
@@ -148,7 +148,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region Color
 
-        public string Color
+        public string? Color
         {
             get => TypicalTarget.colorId;
             set
@@ -162,7 +162,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 {
                     foreach (var cue in _target)
                         cue.colorId = value;
-                    _color.Value = new MixedValue<string>(value, false);
+                    _color.Value = new MixedValue<string?>(value, false);
                     _assetSaveService.Save();
                 }
 
@@ -175,7 +175,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed |= Color != _target[i].colorId;
                     }
 
-                    _color.Value = new MixedValue<string>(Color, mixed);
+                    _color.Value = new MixedValue<string?>(Color, mixed);
                     _assetSaveService.Save();
                 }
 
@@ -183,7 +183,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<string>> ColorObservable => _color;
+        public IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable => _color;
 
         #endregion
 

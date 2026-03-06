@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
 using AudioConductor.Runtime.Core.Enums;
@@ -16,9 +18,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<MixedValue<string>> NameObservable { get; }
 
-        string Color { get; set; }
+        string? Color { get; set; }
 
-        IReadOnlyObservableProperty<MixedValue<string>> ColorObservable { get; }
+        IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable { get; }
 
         int CategoryId { get; set; }
 

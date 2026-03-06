@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
@@ -33,8 +35,8 @@ namespace AudioConductor.Runtime.Core
 
         private int _nextPlayAudioSourceIndex;
 
-        private Action _onEnd;
-        private Action _onStop;
+        private Action? _onEnd;
+        private Action? _onStop;
         private double _pauseEndTime;
         private double _pauseStartTime;
         private int _pausedIndex;
@@ -76,7 +78,7 @@ namespace AudioConductor.Runtime.Core
         public bool IsPaused { get; private set; }
 
         /// <inheritdoc />
-        public void Setup(AudioMixerGroup audioMixerGroup,
+        public void Setup(AudioMixerGroup? audioMixerGroup,
             AudioClip clip,
             int categoryId,
             float volume,
@@ -487,7 +489,7 @@ namespace AudioConductor.Runtime.Core
             _onStop = _onEnd = null;
         }
 
-        private AudioSource GetPlayingSource()
+        private AudioSource? GetPlayingSource()
         {
             var playing0 = _source[0] != null && _source[0].isPlaying;
             var playing1 = _source[1] != null && _source[1].isPlaying;

@@ -18,11 +18,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<MixedValue<string>> NameObservable { get; }
 
-        string Color { get; set; }
+        string? Color { get; set; }
 
-        IReadOnlyObservableProperty<MixedValue<string>> ColorObservable { get; }
+        IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable { get; }
 
-        AudioClip AudioClip { get; set; }
+        AudioClip? AudioClip { get; set; }
 
         IReadOnlyObservableProperty<MixedValue<AudioClip?>> AudioClipObservable { get; }
 
