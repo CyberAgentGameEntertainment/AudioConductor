@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Runtime.CompilerServices;
 using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -63,15 +64,8 @@ namespace AudioConductor.Runtime.Core
         /// <inheritdoc />
         public bool IsPlaying
         {
-            get
-            {
-                bool IsPlaying(AudioSource source)
-                {
-                    return source != null && source.isPlaying;
-                }
-
-                return IsPlaying(_source[0]) || IsPlaying(_source[1]);
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _source[0] != null && _source[0].isPlaying || _source[1] != null && _source[1].isPlaying;
         }
 
         /// <inheritdoc />
