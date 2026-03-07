@@ -1,8 +1,9 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using UnityEditor.UIElements;
+#nullable enable
+
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Foundation

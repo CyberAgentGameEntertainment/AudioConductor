@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Linq;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;

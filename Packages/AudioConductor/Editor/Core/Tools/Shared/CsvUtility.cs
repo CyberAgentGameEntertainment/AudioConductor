@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Text;
 
@@ -15,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             builder.Append(new string(Delimiter, num));
         }
 
-        public static void AppendRowItems(StringBuilder builder, params object[] items)
+        public static void AppendRowItems(StringBuilder builder, params object?[] items)
         {
             for (var i = 0; i < items.Length; ++i)
             {
@@ -26,7 +28,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
         }
 
-        public static void AppendRowItemsLine(StringBuilder builder, int maxRowNum, params object[] items)
+        public static void AppendRowItemsLine(StringBuilder builder, int maxRowNum, params object?[] items)
         {
             AppendRowItems(builder, items);
             AppendDelimiter(builder, maxRowNum - items.Length);

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Linq;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
@@ -21,13 +23,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         private const KeyCode RedoKey = KeyCode.Y;
         private const string SelectedSettingsGuidPrefKey = "AudioConductor.SelectedSettingsGuid";
 
-        [SerializeField] private CueSheetAssetEditorWindowModel _target;
-        [SerializeField] private string _selectedSettingsGuid;
+        [SerializeField] private CueSheetAssetEditorWindowModel _target = null!;
+        [SerializeField] private string _selectedSettingsGuid = null!;
 
         private readonly CompositeDisposable _disposable = new();
 
-        private CueSheetEditorPresenter _cueSheetEditorPresenter;
-        private DropdownField _settingsDropdown;
+        private CueSheetEditorPresenter _cueSheetEditorPresenter = null!;
+        private DropdownField? _settingsDropdown;
 
         private void OnEnable()
         {
@@ -91,7 +93,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             ColorDefineListRepository.instance.Update();
         }
 
-        private AudioConductorSettings GetSelectedSettings()
+        private AudioConductorSettings? GetSelectedSettings()
         {
             return AudioConductorSettingsRepository.instance.GetByGuid(_selectedSettingsGuid);
         }

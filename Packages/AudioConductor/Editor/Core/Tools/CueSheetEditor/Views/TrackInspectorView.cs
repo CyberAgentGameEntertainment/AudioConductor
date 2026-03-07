@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
@@ -16,45 +18,45 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
     internal sealed partial class TrackInspectorView : VisualElement, IDisposable
     {
-        private readonly TextField _nameField;
-        private readonly ColorDefinePopupField _colorDefinePopupField;
-        private readonly ObjectField _audioClipField;
-        private readonly SliderAndFloatField _volumeField;
-        private readonly SliderAndFloatField _volumeRangeField;
-        private readonly SliderAndFloatField _pitchField;
-        private readonly SliderAndFloatField _pitchRangeField;
-        private readonly Toggle _pitchInvertField;
-        private readonly IntegerField _randomWeightField;
-        private readonly IntegerField _priorityField;
-        private readonly FloatField _fadeTimeField;
-        private readonly SliderAndIntegerField _startSampleField;
-        private readonly SliderAndIntegerField _endSampleField;
-        private readonly Toggle _isLoopField;
-        private readonly SliderAndIntegerField _loopStartSampleField;
         private readonly Button _analyzeButton;
-        private readonly Button _playButton;
-        private readonly Button _stopButton;
-        private readonly IMGUIContainer _previewAreaContainer;
-
-        private readonly Subject<string> _nameChangedSubject = new();
-        private readonly Subject<string> _colorChangedSubject = new();
-        private readonly Subject<float> _volumeChangedSubject = new();
-        private readonly Subject<float> _volumeRangeChangedSubject = new();
-        private readonly Subject<float> _pitchChangedSubject = new();
-        private readonly Subject<float> _pitchRangeChangedSubject = new();
-        private readonly Subject<bool> _pitchInvertChangedSubject = new();
-        private readonly Subject<int> _randomWeightChangedSubject = new();
-        private readonly Subject<int> _priorityChangedSubject = new();
-        private readonly Subject<float> _fadeTimeChangedSubject = new();
-        private readonly Subject<int> _startSampleChangedSubject = new();
-        private readonly Subject<int> _endSampleChangedSubject = new();
-        private readonly Subject<bool> _isLoopChangedSubject = new();
-        private readonly Subject<int> _loopStartSampleChangedSubject = new();
         private readonly Subject<Empty> _analyzeClickedSubject = new();
         private readonly Subject<AudioClip> _audioClipChangedSubject = new();
-        private readonly Subject<int?> _playRequestedSubject = new();
+        private readonly ObjectField _audioClipField;
+        private readonly Subject<string?> _colorChangedSubject = new();
+        private readonly ColorDefinePopupField _colorDefinePopupField;
+        private readonly Subject<int> _endSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _endSampleField;
+        private readonly Subject<float> _fadeTimeChangedSubject = new();
+        private readonly FloatField _fadeTimeField;
+        private readonly Subject<bool> _isLoopChangedSubject = new();
+        private readonly Toggle _isLoopField;
+        private readonly Subject<int> _loopStartSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _loopStartSampleField;
 
-        private TrackPreviewController _previewController;
+        private readonly Subject<string> _nameChangedSubject = new();
+        private readonly TextField _nameField;
+        private readonly Subject<float> _pitchChangedSubject = new();
+        private readonly SliderAndFloatField _pitchField;
+        private readonly Subject<bool> _pitchInvertChangedSubject = new();
+        private readonly Toggle _pitchInvertField;
+        private readonly Subject<float> _pitchRangeChangedSubject = new();
+        private readonly SliderAndFloatField _pitchRangeField;
+        private readonly Button _playButton;
+        private readonly Subject<int?> _playRequestedSubject = new();
+        private readonly IMGUIContainer _previewAreaContainer;
+        private readonly Subject<int> _priorityChangedSubject = new();
+        private readonly IntegerField _priorityField;
+        private readonly Subject<int> _randomWeightChangedSubject = new();
+        private readonly IntegerField _randomWeightField;
+        private readonly Subject<int> _startSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _startSampleField;
+        private readonly Button _stopButton;
+        private readonly Subject<float> _volumeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeField;
+        private readonly Subject<float> _volumeRangeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeRangeField;
+
+        private TrackPreviewController? _previewController;
 
         public TrackInspectorView()
         {
@@ -95,7 +97,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         }
 
         internal IObservable<string> NameChangedAsObservable => _nameChangedSubject;
-        internal IObservable<string> ColorChangedAsObservable => _colorChangedSubject;
+        internal IObservable<string?> ColorChangedAsObservable => _colorChangedSubject;
         internal IObservable<AudioClip> AudioClipChangedAsObservable => _audioClipChangedSubject;
         internal IObservable<float> VolumeChangedAsObservable => _volumeChangedSubject;
         internal IObservable<float> VolumeRangeChangedAsObservable => _volumeRangeChangedSubject;
@@ -186,7 +188,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.UnregisterValueChangedCallback(OnNameChanged);
         }
 
-        internal void SetController(TrackPreviewController controller)
+        internal void SetController(TrackPreviewController? controller)
         {
             Stop();
             _previewController = controller;
@@ -214,14 +216,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetColor(MixedValue<string> value)
+        internal void SetColor(MixedValue<string?> value)
         {
             _colorDefinePopupField.showMixedValue = false;
             _colorDefinePopupField.SetValueWithoutNotify(value.Value);
             _colorDefinePopupField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetAudioClip(MixedValue<AudioClip> value)
+        internal void SetAudioClip(MixedValue<AudioClip?> value)
         {
             _audioClipField.showMixedValue = false;
             _audioClipField.SetValueWithoutNotify(value.Value);
@@ -312,7 +314,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetSampleRange(MixedValue<AudioClip> value)
+        internal void SetSampleRange(MixedValue<AudioClip?> value)
         {
             var audioClip = value.Value;
             var samples = audioClip != null ? audioClip.samples : 0;
@@ -338,56 +340,90 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameChangedSubject.OnNext(evt.newValue);
         }
 
-        private void OnColorChanged(ChangeEvent<string> evt)
-            => _colorChangedSubject.OnNext(evt.newValue);
+        private void OnColorChanged(ChangeEvent<string?> evt)
+        {
+            _colorChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnAudioClipChanged(ChangeEvent<Object> evt)
-            => _audioClipChangedSubject.OnNext((AudioClip)evt.newValue);
+        {
+            _audioClipChangedSubject.OnNext((AudioClip)evt.newValue);
+        }
 
         private void OnVolumeChanged(ChangeEvent<float> evt)
-            => _volumeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeRangeChanged(ChangeEvent<float> evt)
-            => _volumeRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchChanged(ChangeEvent<float> evt)
-            => _pitchChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchRangeChanged(ChangeEvent<float> evt)
-            => _pitchRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchInvertChanged(ChangeEvent<bool> evt)
-            => _pitchInvertChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchInvertChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnRandomWeightChanged(ChangeEvent<int> evt)
-            => _randomWeightChangedSubject.OnNext(evt.newValue);
+        {
+            _randomWeightChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPriorityChanged(ChangeEvent<int> evt)
-            => _priorityChangedSubject.OnNext(evt.newValue);
+        {
+            _priorityChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnFadeTimeChanged(ChangeEvent<float> evt)
-            => _fadeTimeChangedSubject.OnNext(evt.newValue);
+        {
+            _fadeTimeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnStartSampleChanged(ChangeEvent<int> evt)
-            => _startSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _startSampleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnEndSampleChanged(ChangeEvent<int> evt)
-            => _endSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _endSampleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnIsLoopChanged(ChangeEvent<bool> evt)
-            => _isLoopChangedSubject.OnNext(evt.newValue);
+        {
+            _isLoopChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnLoopStartSampleChanged(ChangeEvent<int> evt)
-            => _loopStartSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _loopStartSampleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnAnalyzeButtonClicked(ClickEvent _)
-            => _analyzeClickedSubject.OnNext(Empty.Default);
+        {
+            _analyzeClickedSubject.OnNext(Empty.Default);
+        }
 
         private void OnPlayButtonClicked(ClickEvent _)
-            => _playRequestedSubject.OnNext(null);
+        {
+            _playRequestedSubject.OnNext(null);
+        }
 
         private void OnStopButtonClicked(ClickEvent _)
-            => Stop();
+        {
+            Stop();
+        }
 
         #endregion
 

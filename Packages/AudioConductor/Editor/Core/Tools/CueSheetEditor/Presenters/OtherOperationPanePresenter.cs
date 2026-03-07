@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.IO;
@@ -40,12 +42,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void SetupViewEventHandlers()
         {
             _view.ExportClickedAsObservable
-                 .Subscribe(_ => Export())
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_ => Export())
+                .DisposeWith(_viewEventDisposable);
 
             _view.ImportClickedAsObservable
-                 .Subscribe(_ => Import())
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_ => Import())
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

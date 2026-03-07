@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections;
@@ -13,12 +15,11 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableCollection
 {
     [Serializable]
     public abstract class ObservableDictionaryBase<TKey, TValue> : IObservableDictionary<TKey, TValue>,
-                                                                   IReadOnlyObservableDictionary<TKey, TValue>,
-                                                                   IDisposable,
-                                                                   ISerializationCallbackReceiver
+        IReadOnlyObservableDictionary<TKey, TValue>,
+        IDisposable,
+        ISerializationCallbackReceiver
     {
-        [SerializeField]
-        private TKey[] _keys;
+        [SerializeField] private TKey[] _keys = null!;
 
         private readonly Subject<DictionaryAddEvent<TKey, TValue>> _subjectAdd = new();
 
@@ -83,7 +84,10 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableCollection
 
         public ICollection<TValue> Values => _internalDictionary.Values;
 
-        public bool TryGetValue(TKey key, out TValue value) => _internalDictionary.TryGetValue(key, out value);
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return _internalDictionary.TryGetValue(key, out value);
+        }
 
         public void Add(TKey key, TValue value)
         {
@@ -148,9 +152,15 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableCollection
             ((ICollection<KeyValuePair<TKey, TValue>>)_internalDictionary).CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _internalDictionary.GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            return _internalDictionary.GetEnumerator();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
 

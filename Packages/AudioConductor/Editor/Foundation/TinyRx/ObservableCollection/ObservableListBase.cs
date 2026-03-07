@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections;
@@ -139,9 +141,15 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableCollection
             InternalList.CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<T> GetEnumerator() => InternalList.GetEnumerator();
+        public IEnumerator<T> GetEnumerator()
+        {
+            return InternalList.GetEnumerator();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => InternalList.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return InternalList.GetEnumerator();
+        }
 
         private static void DisposeSubject<TSubjectValue>(Subject<TSubjectValue> subject)
         {

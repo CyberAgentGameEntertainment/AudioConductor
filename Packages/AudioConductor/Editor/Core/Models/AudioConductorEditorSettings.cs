@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,8 +10,8 @@ using UnityEngine;
 namespace AudioConductor.Editor.Core.Models
 {
     [CreateAssetMenu(fileName = nameof(AudioConductorEditorSettings),
-                     menuName = "Audio Conductor/" + "EditorSettings",
-                     order = 1)]
+        menuName = "Audio Conductor/" + "EditorSettings",
+        order = 1)]
     internal sealed class AudioConductorEditorSettings : ScriptableObject
     {
         /// <summary>

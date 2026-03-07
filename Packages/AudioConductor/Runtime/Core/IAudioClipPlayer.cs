@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using UnityEngine;
@@ -45,15 +47,15 @@ namespace AudioConductor.Runtime.Core
         /// <param name="startSample">The play start position.</param>
         /// <param name="loopStartSample">The loop start position.</param>
         /// <param name="endSample">The play end position.</param>
-        public void Setup(AudioMixerGroup audioMixerGroup,
-                          AudioClip clip,
-                          int categoryId,
-                          float volume,
-                          float pitch,
-                          bool isLoop,
-                          int startSample,
-                          int loopStartSample,
-                          int endSample);
+        void Setup(AudioMixerGroup? audioMixerGroup,
+            AudioClip clip,
+            int categoryId,
+            float volume,
+            float pitch,
+            bool isLoop,
+            int startSample,
+            int loopStartSample,
+            int endSample);
 
         /// <summary>
         ///     Play the AudioClip.

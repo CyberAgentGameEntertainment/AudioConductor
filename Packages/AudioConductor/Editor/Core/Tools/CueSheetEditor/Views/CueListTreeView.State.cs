@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Linq;
@@ -14,8 +16,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         [Serializable]
         public sealed class State : TreeViewState
         {
-            [SerializeField]
-            private MultiColumnHeaderState _multiColumnHeaderState;
+            [SerializeField] private MultiColumnHeaderState? _multiColumnHeaderState;
 
             public MultiColumnHeaderState MultiColumnHeaderState =>
                 _multiColumnHeaderState ??= CreateMultiColumnHeaderState();
@@ -23,9 +24,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             private MultiColumnHeaderState CreateMultiColumnHeaderState()
             {
                 var columns = Enum.GetValues(typeof(ColumnType))
-                                  .OfType<ColumnType>()
-                                  .Select(columnType => columnType.CreateColumn())
-                                  .ToArray();
+                    .OfType<ColumnType>()
+                    .Select(columnType => columnType.CreateColumn())
+                    .ToArray();
                 return new MultiColumnHeaderState(columns);
             }
         }

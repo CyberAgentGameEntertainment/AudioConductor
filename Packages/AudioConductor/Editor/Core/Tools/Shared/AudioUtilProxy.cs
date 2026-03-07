@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
@@ -37,9 +37,15 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public static AudioImporter? GetImporterFromClip(AudioClip clip)
-            => InvokeMethod("GetImporterFromClip", clip) as AudioImporter;
+        {
+            return InvokeMethod("GetImporterFromClip", clip) as AudioImporter;
+        }
 
-        public static float[]? GetMinMaxData(AudioImporter importer)
-            => InvokeMethod("GetMinMaxData", importer) as float[];
+        public static float[]? GetMinMaxData(AudioImporter? importer)
+        {
+            if (importer == null)
+                return null;
+            return InvokeMethod("GetMinMaxData", importer) as float[];
+        }
     }
 }

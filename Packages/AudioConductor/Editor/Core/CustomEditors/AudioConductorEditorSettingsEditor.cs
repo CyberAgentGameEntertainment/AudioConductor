@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -13,7 +15,7 @@ namespace AudioConductor.Editor.Core.CustomEditors
     [CustomEditor(typeof(AudioConductorEditorSettings))]
     internal sealed class AudioConductorEditorSettingsEditor : UnityEditor.Editor
     {
-        private AudioConductorEditorSettings _settings;
+        private AudioConductorEditorSettings _settings = null!;
 
         private void OnEnable()
         {
@@ -40,8 +42,8 @@ namespace AudioConductor.Editor.Core.CustomEditors
             sizeField.SetVisible(false);
 
             container.schedule
-                     .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
-                     .Every(1000);
+                .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
+                .Every(1000);
 
             return container;
         }

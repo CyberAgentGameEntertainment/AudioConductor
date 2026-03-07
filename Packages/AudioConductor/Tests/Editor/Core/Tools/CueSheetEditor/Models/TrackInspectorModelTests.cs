@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Linq;
@@ -29,26 +31,82 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Utility.RandomString
         };
 
-        private static string CreateDefaultName(int index) => $"defaultName-{index}";
-        private static string CreateDefaultColor(int index) => $"defaultColor-{index}";
+        private static string CreateDefaultName(int index)
+        {
+            return $"defaultName-{index}";
+        }
+
+        private static string CreateDefaultColor(int index)
+        {
+            return $"defaultColor-{index}";
+        }
 
         private static AudioClip CreateDefaultAudioClip(int index)
-            => index % 2 == 0
+        {
+            return index % 2 == 0
                 ? AssetDatabase.LoadAssetAtPath<AudioClip>(TestAssetPaths.CreateAbsoluteAssetPath("testClip1.wav"))
                 : AssetDatabase.LoadAssetAtPath<AudioClip>(TestAssetPaths.CreateAbsoluteAssetPath("testClip2.wav"));
+        }
 
-        private static float CreateDefaultVolume(int index) => -index * 11.1f;
-        private static float CreateDefaultVolumeRange(int index) => index * 22.2f;
-        private static float CreateDefaultPitch(int index) => -index * 33.3f;
-        private static float CreateDefaultPitchRange(int index) => index * 44.4f;
-        private static bool CreateDefaultPitchInvert(int index) => index % 2 != 0;
-        private static int CreateDefaultStartSample(int index) => index * 1000000;
-        private static int CreateDefaultEndSample(int index) => index * -1000000;
-        private static int CreateDefaultLoopStartSample(int index) => index * index * 1000000;
-        private static bool CreateDefaultIsLoop(int index) => index % 2 == 0;
-        private static int CreateDefaultRandomWeight(int index) => index * index;
-        private static int CreateDefaultPriority(int index) => index + index;
-        private static float CreateDefaultFadeTime(int index) => index * 55.5f;
+        private static float CreateDefaultVolume(int index)
+        {
+            return -index * 11.1f;
+        }
+
+        private static float CreateDefaultVolumeRange(int index)
+        {
+            return index * 22.2f;
+        }
+
+        private static float CreateDefaultPitch(int index)
+        {
+            return -index * 33.3f;
+        }
+
+        private static float CreateDefaultPitchRange(int index)
+        {
+            return index * 44.4f;
+        }
+
+        private static bool CreateDefaultPitchInvert(int index)
+        {
+            return index % 2 != 0;
+        }
+
+        private static int CreateDefaultStartSample(int index)
+        {
+            return index * 1000000;
+        }
+
+        private static int CreateDefaultEndSample(int index)
+        {
+            return index * -1000000;
+        }
+
+        private static int CreateDefaultLoopStartSample(int index)
+        {
+            return index * index * 1000000;
+        }
+
+        private static bool CreateDefaultIsLoop(int index)
+        {
+            return index % 2 == 0;
+        }
+
+        private static int CreateDefaultRandomWeight(int index)
+        {
+            return index * index;
+        }
+
+        private static int CreateDefaultPriority(int index)
+        {
+            return index + index;
+        }
+
+        private static float CreateDefaultFadeTime(int index)
+        {
+            return index * 55.5f;
+        }
 
         private static Track[] CreateTestTargetTracks()
         {
@@ -82,7 +140,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].name, Is.EqualTo(CreateDefaultName(i)));
@@ -113,7 +171,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Name = testValue;
@@ -154,7 +212,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].colorId, Is.EqualTo(CreateDefaultColor(i)));
@@ -185,7 +243,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Color = testValue;
@@ -227,7 +285,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             var testValue = assetPath == null
                 ? null
@@ -242,10 +300,10 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             using (model.AudioClipObservable.Skip(1).Subscribe(v => { Assert.That(v.Value, Is.EqualTo(testValue)); }))
             using (model.StartSampleObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.InRange(0, startMax)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.InRange(0, startMax)); }))
             using (model.EndSampleObservable.Skip(1).Subscribe(v => { Assert.That(v.Value, Is.InRange(0, samples)); }))
             using (model.LoopStartSampleObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.InRange(0, loopStartMax)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.InRange(0, loopStartMax)); }))
             {
                 model.AudioClip = testValue;
                 Assert.That(model.AudioClip, Is.EqualTo(testValue));
@@ -284,31 +342,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeVolume_LessThanMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_EqualMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_GreaterThanMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_EqualMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_InRange(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
-            => ChangeVolume(testValue, testValue);
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
+        {
+            ChangeVolume(testValue, testValue);
+        }
 
         private void ChangeVolume(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].volume, Is.EqualTo(CreateDefaultVolume(i)));
@@ -339,7 +408,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Volume = testValue;
@@ -375,31 +444,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeVolumeRange_LessThanMin()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Min - 1, ValueRangeConst.VolumeRange.Min);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Min - 1, ValueRangeConst.VolumeRange.Min);
+        }
 
         [Test]
         public void ChangeVolumeRange_EqualMin()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Min);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Min);
+        }
 
         [Test]
         public void ChangeVolumeRange_GreaterThanMax()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Max + 1, ValueRangeConst.VolumeRange.Max);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Max + 1, ValueRangeConst.VolumeRange.Max);
+        }
 
         [Test]
         public void ChangeVolumeRange_EqualMax()
-            => ChangeVolumeRange(ValueRangeConst.VolumeRange.Max, ValueRangeConst.VolumeRange.Max);
+        {
+            ChangeVolumeRange(ValueRangeConst.VolumeRange.Max, ValueRangeConst.VolumeRange.Max);
+        }
 
         [Test]
         public void ChangeVolumeRange_InRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
-            => ChangeVolumeRange(testValue, testValue);
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
+        {
+            ChangeVolumeRange(testValue, testValue);
+        }
 
         private static void ChangeVolumeRange(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].volumeRange, Is.EqualTo(CreateDefaultVolumeRange(i)));
@@ -430,7 +510,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.VolumeRange = testValue;
@@ -466,31 +546,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangePitch_LessThanMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_EqualMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_GreaterThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_EqualThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_InRange(
-            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)] float testValue)
-            => ChangePitch(testValue, testValue);
+            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)]
+            float testValue)
+        {
+            ChangePitch(testValue, testValue);
+        }
 
         private static void ChangePitch(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].pitch, Is.EqualTo(CreateDefaultPitch(i)));
@@ -521,7 +612,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Pitch = testValue;
@@ -557,31 +648,42 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangePitchRange_LessThanMin()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Min - 1, ValueRangeConst.PitchRange.Min);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Min - 1, ValueRangeConst.PitchRange.Min);
+        }
 
         [Test]
         public void ChangePitchRange_EqualMin()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Min);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Min);
+        }
 
         [Test]
         public void ChangePitchRange_GreaterThanMax()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Max + 1, ValueRangeConst.PitchRange.Max);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Max + 1, ValueRangeConst.PitchRange.Max);
+        }
 
         [Test]
         public void ChangePitchRange_EqualMax()
-            => ChangePitchRange(ValueRangeConst.PitchRange.Max, ValueRangeConst.PitchRange.Max);
+        {
+            ChangePitchRange(ValueRangeConst.PitchRange.Max, ValueRangeConst.PitchRange.Max);
+        }
 
         [Test]
         public void ChangePitchRange_InRange(
-            [Random(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Max, 3)] float testValue)
-            => ChangePitchRange(testValue, testValue);
+            [Random(ValueRangeConst.PitchRange.Min, ValueRangeConst.PitchRange.Max, 3)]
+            float testValue)
+        {
+            ChangePitchRange(testValue, testValue);
+        }
 
         private static void ChangePitchRange(float testValue, float expected)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].pitchRange, Is.EqualTo(CreateDefaultPitchRange(i)));
@@ -612,7 +714,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.PitchRange = testValue;
@@ -652,7 +754,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].pitchInvert, Is.EqualTo(CreateDefaultPitchInvert(i)));
@@ -683,7 +785,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.PitchInvert = testValue;
@@ -725,7 +827,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].startSample, Is.EqualTo(CreateDefaultStartSample(i)));
@@ -734,14 +836,14 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             using (model.StartSampleObservable.Skip(1).Subscribe(v =>
                    {
                        Assert.That(v.Value,
-                                   Is.InRange(0, tracks[0].audioClip.samples));
+                           Is.InRange(0, tracks[0].audioClip!.samples));
                    }))
             {
                 model.StartSample = testValue;
                 Assert.That(model.StartSample, Is.EqualTo(tracks[0].startSample));
                 foreach (var track in tracks)
                 {
-                    var startMax = ValueRangeConst.StartSample.Clamp(int.MaxValue, track.audioClip.samples);
+                    var startMax = ValueRangeConst.StartSample.Clamp(int.MaxValue, track.audioClip!.samples);
                     if (testValue < 0)
                         Assert.That(track.startSample, Is.EqualTo(0));
                     else if (startMax < testValue)
@@ -769,7 +871,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.StartSample = testValue;
@@ -811,7 +913,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].endSample, Is.EqualTo(CreateDefaultEndSample(i)));
@@ -820,15 +922,15 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             using (model.EndSampleObservable.Skip(1).Subscribe(v =>
                    {
                        Assert.That(v.Value,
-                                   Is.InRange(0,
-                                              tracks[0].audioClip.samples));
+                           Is.InRange(0,
+                               tracks[0].audioClip!.samples));
                    }))
             {
                 model.EndSample = testValue;
                 Assert.That(model.EndSample, Is.EqualTo(tracks[0].endSample));
                 foreach (var track in tracks)
                 {
-                    var samples = track.audioClip.samples;
+                    var samples = track.audioClip!.samples;
                     if (testValue < 0)
                         Assert.That(track.endSample, Is.EqualTo(0));
                     else if (samples < testValue)
@@ -856,7 +958,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.EndSample = testValue;
@@ -898,7 +1000,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].loopStartSample, Is.EqualTo(CreateDefaultLoopStartSample(i)));
@@ -907,16 +1009,16 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             using (model.LoopStartSampleObservable.Skip(1).Subscribe(v =>
                    {
                        Assert.That(v.Value,
-                                   Is.InRange(0,
-                                              tracks[0].audioClip
-                                                       .samples));
+                           Is.InRange(0,
+                               tracks[0].audioClip!
+                                   .samples));
                    }))
             {
                 model.LoopStartSample = testValue;
                 Assert.That(model.LoopStartSample, Is.EqualTo(tracks[0].loopStartSample));
                 foreach (var track in tracks)
                 {
-                    var startMax = ValueRangeConst.LoopStartSample.Clamp(int.MaxValue, track.audioClip.samples);
+                    var startMax = ValueRangeConst.LoopStartSample.Clamp(int.MaxValue, track.audioClip!.samples);
                     if (testValue < 0)
                         Assert.That(track.loopStartSample, Is.EqualTo(0));
                     else if (startMax < testValue)
@@ -944,7 +1046,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.LoopStartSample = testValue;
@@ -984,7 +1086,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].isLoop, Is.EqualTo(CreateDefaultIsLoop(i)));
@@ -1015,7 +1117,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.IsLoop = testValue;
@@ -1051,34 +1153,43 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeRandomWeight_LessThanMin()
-            => ChangeRandomWeight(ValueRangeConst.RandomWeight.Min - 1, ValueRangeConst.RandomWeight.Min);
+        {
+            ChangeRandomWeight(ValueRangeConst.RandomWeight.Min - 1, ValueRangeConst.RandomWeight.Min);
+        }
 
         [Test]
         public void ChangeRandomWeight_EqualMin()
-            => ChangeRandomWeight(ValueRangeConst.RandomWeight.Min, ValueRangeConst.RandomWeight.Min);
+        {
+            ChangeRandomWeight(ValueRangeConst.RandomWeight.Min, ValueRangeConst.RandomWeight.Min);
+        }
 
         [Test]
         public void ChangeRandomWeight_EqualMax()
-            => ChangeRandomWeight(ValueRangeConst.RandomWeight.Max, ValueRangeConst.RandomWeight.Max);
+        {
+            ChangeRandomWeight(ValueRangeConst.RandomWeight.Max, ValueRangeConst.RandomWeight.Max);
+        }
 
         [Test]
         public void ChangeRandomWeight_InRange(
-            [Random(ValueRangeConst.RandomWeight.Min, ValueRangeConst.RandomWeight.Max, 3)] int testValue)
-            => ChangeRandomWeight(testValue, testValue);
+            [Random(ValueRangeConst.RandomWeight.Min, ValueRangeConst.RandomWeight.Max, 3)]
+            int testValue)
+        {
+            ChangeRandomWeight(testValue, testValue);
+        }
 
         private static void ChangeRandomWeight(int testValue, int expectedValue)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].randomWeight, Is.EqualTo(CreateDefaultRandomWeight(i)));
             Assert.True(model.RandomWeightObservable.Value.HasMultipleDifferentValues);
 
             using (model.RandomWeightObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(expectedValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(expectedValue)); }))
             {
                 model.RandomWeight = testValue;
                 Assert.That(model.RandomWeight, Is.EqualTo(expectedValue));
@@ -1103,7 +1214,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.RandomWeight = testValue;
@@ -1143,7 +1254,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].priority, Is.EqualTo(CreateDefaultPriority(i)));
@@ -1174,7 +1285,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.Priority = testValue;
@@ -1210,34 +1321,43 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeFadeTime_LessThanMin()
-            => ChangeFadeTime(ValueRangeConst.FadeTime.Min - 1, ValueRangeConst.FadeTime.Min);
+        {
+            ChangeFadeTime(ValueRangeConst.FadeTime.Min - 1, ValueRangeConst.FadeTime.Min);
+        }
 
         [Test]
         public void ChangeFadeTime_EqualMin()
-            => ChangeFadeTime(ValueRangeConst.FadeTime.Min, ValueRangeConst.FadeTime.Min);
+        {
+            ChangeFadeTime(ValueRangeConst.FadeTime.Min, ValueRangeConst.FadeTime.Min);
+        }
 
         [Test]
         public void ChangeFadeTime_EqualMax()
-            => ChangeFadeTime(ValueRangeConst.FadeTime.Max, ValueRangeConst.FadeTime.Max);
+        {
+            ChangeFadeTime(ValueRangeConst.FadeTime.Max, ValueRangeConst.FadeTime.Max);
+        }
 
         [Test]
         public void ChangeFadeTime_InRange(
-            [Random(ValueRangeConst.FadeTime.Min, ValueRangeConst.FadeTime.Max, 3)] float testValue)
-            => ChangeFadeTime(testValue, testValue);
+            [Random(ValueRangeConst.FadeTime.Min, ValueRangeConst.FadeTime.Max, 3)]
+            float testValue)
+        {
+            ChangeFadeTime(testValue, testValue);
+        }
 
         private static void ChangeFadeTime(float testValue, float expectedValue)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].fadeTime, Is.EqualTo(CreateDefaultFadeTime(i)));
             Assert.True(model.FadeTimeObservable.Value.HasMultipleDifferentValues);
 
             using (model.FadeTimeObservable.Skip(1)
-                        .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(expectedValue)); }))
+                       .Subscribe(v => { Assert.That(v.Value, Is.EqualTo(expectedValue)); }))
             {
                 model.FadeTime = testValue;
                 Assert.That(model.FadeTime, Is.EqualTo(expectedValue));
@@ -1262,7 +1382,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             foreach (var testValue in testValues)
                 model.FadeTime = testValue;
@@ -1302,7 +1422,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(itemId, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             Assert.True(model.Contains(itemId));
             Assert.False(model.Contains(itemId + 1));
@@ -1316,7 +1436,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].name, Is.EqualTo(CreateDefaultName(i)));
@@ -1339,7 +1459,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].colorId, Is.EqualTo(CreateDefaultColor(i)));
@@ -1357,12 +1477,13 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_Volume(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].volume, Is.EqualTo(CreateDefaultVolume(i)));
@@ -1380,12 +1501,13 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeValue_VolumeRange(
-            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)] float testValue)
+            [Random(ValueRangeConst.VolumeRange.Min, ValueRangeConst.VolumeRange.Max, 3)]
+            float testValue)
         {
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             for (var i = 0; i < tracks.Length; ++i)
                 Assert.That(tracks[i].volumeRange, Is.EqualTo(CreateDefaultVolumeRange(i)));
@@ -1405,14 +1527,14 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         public void ChangeValue_Exception([Values] CueListTreeView.ColumnType columnType)
         {
             if (columnType is CueListTreeView.ColumnType.Name or CueListTreeView.ColumnType.Color
-                                                              or CueListTreeView.ColumnType.Volume
-                                                              or CueListTreeView.ColumnType.VolumeRange)
+                or CueListTreeView.ColumnType.Volume
+                or CueListTreeView.ColumnType.VolumeRange)
                 Assert.Pass();
 
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             Assert.Throws<ArgumentOutOfRangeException>(() => model.ChangeValue(columnType, 0));
         }
@@ -1423,7 +1545,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             var history = new AutoIncrementHistory();
             var tracks = CreateTestTargetTracks();
             var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
-                                                new AssetSaveService());
+                new AssetSaveService());
 
             Assert.IsNull(model.PlayClip(0));
         }
@@ -1450,7 +1572,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var controller = model.PlayClip(0);
             Assert.IsNotNull(controller);
-            controller.Dispose();
+            controller!.Dispose();
         }
     }
 }

@@ -835,10 +835,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
                 void Apply(Track track)
                 {
+                    var audioClip = track.audioClip;
+                    if (audioClip == null)
+                        return;
+
                     var waveChunkReader = new WaveChunkReader.WaveChunkReader();
                     try
                     {
-                        waveChunkReader.Execute(track.audioClip);
+                        waveChunkReader.Execute(audioClip);
                     }
                     catch (WaveParseException ex)
                     {

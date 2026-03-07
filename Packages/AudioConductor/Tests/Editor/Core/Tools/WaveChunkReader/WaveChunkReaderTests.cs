@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.IO;
 using AudioConductor.Editor.Core.Tools.WaveChunkReader;
 using NUnit.Framework;
@@ -12,7 +14,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
     {
         // Builds a minimal valid WAV: RIFF header + FMT chunk + DATA chunk
         private static MemoryStream BuildWav(short channels = 2, int samplingRate = 44100, short bitsPerSample = 16,
-            byte[] dataPayload = null)
+            byte[]? dataPayload = null)
         {
             dataPayload ??= new byte[channels * (bitsPerSample / 8) * 4]; // 4 sample frames
             var fmtSize = 16u;

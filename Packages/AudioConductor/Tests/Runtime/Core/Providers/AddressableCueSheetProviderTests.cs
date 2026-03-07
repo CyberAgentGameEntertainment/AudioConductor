@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 #if AUDIOCONDUCTOR_ADDRESSABLES
 using System;
 using System.Collections;
@@ -25,7 +27,7 @@ namespace AudioConductor.Tests.Runtime.Core.Providers
         private const string TestAddress = "TestCueSheetAddress";
         private const string RootFolder = "Assets/gen/AddressableCueSheetProviderTests";
 
-        private AddressableCueSheetProvider _provider;
+        private AddressableCueSheetProvider _provider = null!;
 
         void IPostBuildCleanup.Cleanup()
         {

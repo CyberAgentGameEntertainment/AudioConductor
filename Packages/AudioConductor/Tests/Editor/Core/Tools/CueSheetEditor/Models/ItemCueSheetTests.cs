@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;

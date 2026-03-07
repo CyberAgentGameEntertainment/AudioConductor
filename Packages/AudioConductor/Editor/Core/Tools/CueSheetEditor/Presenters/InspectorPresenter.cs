@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
@@ -12,11 +14,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
     internal sealed class InspectorPresenter : IDisposable
     {
-        private readonly InspectorView _view;
+        private readonly CueInspectorPresenter _cueInspectorPresenter;
 
         private readonly CueTrackInspectorPresenter _cueTrackInspectorPresenter;
-        private readonly CueInspectorPresenter _cueInspectorPresenter;
         private readonly TrackInspectorPresenter _trackInspectorPresenter;
+        private readonly InspectorView _view;
 
         public InspectorPresenter(InspectorView view)
         {
@@ -52,10 +54,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                     OpenCueTrackInspector();
                     break;
                 case InspectorType.Cue:
-                    OpenCueInspector(model.CueInspectorModel);
+                    OpenCueInspector(model.CueInspectorModel!);
                     break;
                 case InspectorType.Track:
-                    OpenTrackInspector(model.TrackInspectorModel);
+                    OpenTrackInspector(model.TrackInspectorModel!);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model.InspectorType), model.InspectorType, null);

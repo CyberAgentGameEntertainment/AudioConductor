@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Providers;
@@ -17,7 +19,7 @@ namespace AudioConductor.Tests.Runtime.Core.Providers
         private const string ResourcesPath = "Assets/AudioConductorTestResources/Resources";
         private const string AssetFileName = "TestCueSheet.asset";
 
-        private ResourcesCueSheetProvider _provider;
+        private ResourcesCueSheetProvider _provider = null!;
 
         [SetUp]
         public void SetUp()
@@ -33,7 +35,7 @@ namespace AudioConductor.Tests.Runtime.Core.Providers
         [TearDown]
         public void TearDown()
         {
-            _provider = null;
+            _provider = null!;
 
             if (AssetDatabase.IsValidFolder("Assets/AudioConductorTestResources"))
             {
@@ -173,7 +175,7 @@ namespace AudioConductor.Tests.Runtime.Core.Providers
             while (!task.IsCompleted)
                 yield return null;
 
-            // null is returned on failure; Release(null) must be safe
+            // null is returned on failure; Release(null)must be safe
             Assert.That(() => _provider.Release(task.Result), Throws.Nothing);
         }
 

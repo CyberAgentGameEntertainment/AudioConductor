@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -11,10 +13,10 @@ namespace AudioConductor.Editor.Foundation.TinyRx
     /// </summary>
     internal class Disposable : IDisposable
     {
-        private readonly Action _disposed;
+        private readonly Action? _disposed;
         private bool _didDispose;
 
-        public Disposable(Action disposed)
+        public Disposable(Action? disposed)
         {
             _disposed = disposed;
         }

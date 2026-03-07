@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Collections.Generic;
 using AudioConductor.Runtime.Core.Models;
@@ -33,9 +35,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         private static void OnPostprocessAllAssets(string[] importedAssets,
-                                                   string[] deletedAssets,
-                                                   string[] movedAssets,
-                                                   string[] movedFromAssetPaths)
+            string[] deletedAssets,
+            string[] movedAssets,
+            string[] movedFromAssetPaths)
         {
             DeleteAssets(deletedAssets);
             MoveAssets(movedAssets, movedFromAssetPaths);
@@ -49,7 +51,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
             foreach (var deletedAsset in deletedAssets)
             {
-                if (CueSheetAssets.TryGetValue(deletedAsset, out var asset) == false)
+                if (!CueSheetAssets.TryGetValue(deletedAsset, out var asset))
                     continue;
 
                 CueSheetAssets.Remove(deletedAsset);
@@ -66,7 +68,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             for (var i = 0; i < movedFromAssetPaths.Count; i++)
             {
                 var originalAssetPath = movedFromAssetPaths[i];
-                if (CueSheetAssets.TryGetValue(originalAssetPath, out var asset) == false)
+                if (!CueSheetAssets.TryGetValue(originalAssetPath, out var asset))
                     continue;
 
                 CueSheetAssets.Remove(originalAssetPath);
@@ -88,7 +90,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 if (asset == null)
                     continue; // not CueSheetAsset
 
-                if (CueSheetIds.Contains(asset.cueSheet.Id) == false)
+                if (!CueSheetIds.Contains(asset.cueSheet.Id))
                 {
                     // create new
                     CueSheetAssets.Add(importedAsset, asset);
@@ -97,7 +99,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 }
 
                 // duplicate
-                asset.cueSheet = asset.cueSheet.Duplicate();
+                asset.cueSheet = asset.cueSheet.Duplicate()!;
                 EditorUtility.SetDirty(asset);
                 AssetDatabase.SaveAssets();
                 CueSheetAssets.Add(importedAsset, asset);

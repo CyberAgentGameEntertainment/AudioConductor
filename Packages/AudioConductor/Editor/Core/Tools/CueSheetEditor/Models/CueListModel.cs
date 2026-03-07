@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -26,17 +28,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly Subject<Empty> _moveSubject = new();
         private readonly Subject<CueListItem> _removeSubject = new();
         private readonly ItemCueSheet _root;
-        private readonly Func<AudioConductorSettings> _settingsProvider;
+        private readonly Func<AudioConductorSettings?>? _settingsProvider;
 
         private int _currentItemId;
 
-        private InspectorModel _latestInspectorModel;
+        private InspectorModel? _latestInspectorModel;
 
         public CueListModel([NotNull] CueSheet cueSheet,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService,
             CueListTreeView.State cueListTreeViewState,
-            Func<AudioConductorSettings> settingsProvider = null)
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             _history = history;
             _assetSaveService = assetSaveService;

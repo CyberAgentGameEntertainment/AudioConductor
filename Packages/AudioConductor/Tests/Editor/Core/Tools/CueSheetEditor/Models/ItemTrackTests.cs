@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;

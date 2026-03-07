@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
@@ -13,8 +15,8 @@ namespace AudioConductor.Tests.Runtime.Core
 {
     public class AudioConductorVolumeTests
     {
-        private CueSheetAsset _cueSheetAsset;
-        private AudioConductorSettings _settings;
+        private CueSheetAsset _cueSheetAsset = null!;
+        private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()

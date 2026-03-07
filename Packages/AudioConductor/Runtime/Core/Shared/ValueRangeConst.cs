@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -22,7 +24,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static int Clamp(int value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -35,7 +39,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float Clamp(float value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -48,7 +54,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float Clamp(float value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -61,7 +69,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float Clamp(float value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -74,7 +84,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float Clamp(float value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -86,7 +98,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static int Clamp(int value, int audioClipSamples)
-                => Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples - 1, Min));
+            {
+                return Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples - 1, Min));
+            }
         }
 
         /// <summary>
@@ -98,7 +112,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static int Clamp(int value, int audioClipSamples)
-                => Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples, Min));
+            {
+                return Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples, Min));
+            }
         }
 
         /// <summary>
@@ -110,7 +126,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static int Clamp(int value, int audioClipSamples)
-                => Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples - 1, Min));
+            {
+                return Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples - 1, Min));
+            }
         }
 
         /// <summary>
@@ -123,7 +141,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static int Clamp(int value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
 
         /// <summary>
@@ -136,7 +156,9 @@ namespace AudioConductor.Runtime.Core.Shared
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float Clamp(float value)
-                => Mathf.Clamp(value, Min, Max);
+            {
+                return Mathf.Clamp(value, Min, Max);
+            }
         }
     }
 }

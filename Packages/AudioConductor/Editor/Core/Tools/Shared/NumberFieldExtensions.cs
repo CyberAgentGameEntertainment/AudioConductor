@@ -1,12 +1,14 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+
+using UnityEngine.UIElements;
 #if UNITY_2022_1_OR_NEWER
 using System.Reflection;
 #endif
-using UnityEditor.UIElements;
-using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
@@ -23,7 +25,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 #endif
             field.SetValueWithoutNotify(value);
         }
-        
+
         public static void ForceSetValueWithoutNotify(this FloatField field, float value)
         {
             // NOTE: Unity 2022.1 or newer

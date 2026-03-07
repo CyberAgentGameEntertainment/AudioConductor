@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -13,8 +15,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
     internal sealed class CueListPresenter : IDisposable
     {
-        private readonly ICueListModel _model;
         private readonly CompositeDisposable _bindEventDisposable = new();
+        private readonly ICueListModel _model;
 
         private readonly CueListView _view;
         private readonly CompositeDisposable _viewEventDisposable = new();
@@ -32,7 +34,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.Dispose();
         }
 
-        public event Action<IInspectorModel> OnSelectionItemChanged;
+        public event Action<IInspectorModel> OnSelectionItemChanged = null!;
 
         public void Setup()
         {
@@ -46,16 +48,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void Bind()
         {
             _model.MoveAsObservable
-                  .Subscribe(_ => _view.Refresh())
-                  .DisposeWith(_bindEventDisposable);
+                .Subscribe(_ => _view.Refresh())
+                .DisposeWith(_bindEventDisposable);
 
             _model.AddAsObservable
-                  .Subscribe(_view.OnItemAdded)
-                  .DisposeWith(_bindEventDisposable);
+                .Subscribe(_view.OnItemAdded)
+                .DisposeWith(_bindEventDisposable);
 
             _model.RemoveAsObservable
-                  .Subscribe(_view.OnItemRemoved)
-                  .DisposeWith(_bindEventDisposable);
+                .Subscribe(_view.OnItemRemoved)
+                .DisposeWith(_bindEventDisposable);
         }
 
         private void Unbind()
@@ -69,46 +71,56 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         }
 
         public void OnVolumeToggleChanged(bool active)
-            => _view.ToggleColumnGroupVisible(active, CueListTreeView.VolumeColumnGroup);
+        {
+            _view.ToggleColumnGroupVisible(active, CueListTreeView.VolumeColumnGroup);
+        }
 
         public void OnPlayInfoToggleChanged(bool active)
-            => _view.ToggleColumnGroupVisible(active, CueListTreeView.PlayInfoColumnGroup);
+        {
+            _view.ToggleColumnGroupVisible(active, CueListTreeView.PlayInfoColumnGroup);
+        }
 
         public void OnThrottleToggleChanged(bool active)
-            => _view.ToggleColumnGroupVisible(active, CueListTreeView.ThrottleColumnGroup);
+        {
+            _view.ToggleColumnGroupVisible(active, CueListTreeView.ThrottleColumnGroup);
+        }
 
         public void OnMemoToggleChanged(bool active)
-            => _view.ToggleColumnGroupVisible(active, CueListTreeView.MemoColumnGroup);
+        {
+            _view.ToggleColumnGroupVisible(active, CueListTreeView.MemoColumnGroup);
+        }
 
         public void OnSearchFieldChanged(string text)
-            => _view.Search(text);
+        {
+            _view.Search(text);
+        }
 
         private void SetupViewEventHandlers()
         {
             _view.SelectionChangedAsObservable
-                 .Subscribe(OnListItemSelected)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(OnListItemSelected)
+                .DisposeWith(_viewEventDisposable);
             _view.ItemMoveOperationRequestedAsObservable
-                 .Subscribe(_model.MoveItem)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.MoveItem)
+                .DisposeWith(_viewEventDisposable);
             _view.CueAddOperationRequestedAsObservable
-                 .Subscribe(_model.AddCue)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.AddCue)
+                .DisposeWith(_viewEventDisposable);
             _view.TrackAddOperationRequestedAsObservable
-                 .Subscribe(_model.AddTrack)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.AddTrack)
+                .DisposeWith(_viewEventDisposable);
             _view.ItemRemoveOperationRequestedAsObservable
-                 .Subscribe(_model.RemoveItem)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.RemoveItem)
+                .DisposeWith(_viewEventDisposable);
             _view.ItemDuplicateOperationRequestedAsObservable
-                 .Subscribe(_model.DuplicateItem)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.DuplicateItem)
+                .DisposeWith(_viewEventDisposable);
             _view.AssetAddOperationRequestedAsObservable
-                 .Subscribe(_model.AddAsset)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.AddAsset)
+                .DisposeWith(_viewEventDisposable);
             _view.ColumnValueChangedAsObservable
-                 .Subscribe(_model.ChangeValue)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_model.ChangeValue)
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

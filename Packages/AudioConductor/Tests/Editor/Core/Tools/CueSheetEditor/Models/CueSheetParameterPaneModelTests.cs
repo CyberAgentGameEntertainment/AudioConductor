@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -114,24 +116,35 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeThrottleLimit_LessThanMin()
-            => ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Min - 1, ValueRangeConst.ThrottleLimit.Min);
+        {
+            ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Min - 1, ValueRangeConst.ThrottleLimit.Min);
+        }
 
         [Test]
         public void ChangeThrottleLimit_EqualMin()
-            => ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Min);
+        {
+            ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Min);
+        }
 
         [Test]
         public void ChangeThrottleLimit_GreaterThanMax()
-            => ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Max + 1, ValueRangeConst.ThrottleLimit.Max);
+        {
+            ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Max + 1, ValueRangeConst.ThrottleLimit.Max);
+        }
 
         [Test]
         public void ChangeThrottleLimit_EqualThanMax()
-            => ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Max, ValueRangeConst.ThrottleLimit.Max);
+        {
+            ChangeThrottleLimit(ValueRangeConst.ThrottleLimit.Max, ValueRangeConst.ThrottleLimit.Max);
+        }
 
         [Test]
         public void ChangeThrottleLimit_InRange(
-            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)] int testValue)
-            => ChangeThrottleLimit(testValue, testValue);
+            [Random(ValueRangeConst.ThrottleLimit.Min, ValueRangeConst.ThrottleLimit.Max, 3)]
+            int testValue)
+        {
+            ChangeThrottleLimit(testValue, testValue);
+        }
 
         private static void ChangeThrottleLimit(int testValue, int expected)
         {
@@ -198,24 +211,35 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangeVolume_LessThanMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min - 1, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_EqualMin()
-            => ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Min);
+        }
 
         [Test]
         public void ChangeVolume_GreaterThanMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max + 1, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_EqualMax()
-            => ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        {
+            ChangeVolume(ValueRangeConst.Volume.Max, ValueRangeConst.Volume.Max);
+        }
 
         [Test]
         public void ChangeVolume_InRange(
-            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)] float testValue)
-            => ChangeVolume(testValue, testValue);
+            [Random(ValueRangeConst.Volume.Min, ValueRangeConst.Volume.Max, 3)]
+            float testValue)
+        {
+            ChangeVolume(testValue, testValue);
+        }
 
         private static void ChangeVolume(float testValue, float expected)
         {
@@ -282,24 +306,35 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
         [Test]
         public void ChangePitch_LessThanMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min - 1, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_EqualMin()
-            => ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Min);
+        }
 
         [Test]
         public void ChangePitch_GreaterThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max + 1, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_EqualThanMax()
-            => ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        {
+            ChangePitch(ValueRangeConst.Pitch.Max, ValueRangeConst.Pitch.Max);
+        }
 
         [Test]
         public void ChangePitch_InRange(
-            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)] float testValue)
-            => ChangePitch(testValue, testValue);
+            [Random(ValueRangeConst.Pitch.Min, ValueRangeConst.Pitch.Max, 3)]
+            float testValue)
+        {
+            ChangePitch(testValue, testValue);
+        }
 
         private static void ChangePitch(float testValue, float expected)
         {

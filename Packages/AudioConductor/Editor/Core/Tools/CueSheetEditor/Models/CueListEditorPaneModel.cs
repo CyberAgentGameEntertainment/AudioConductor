@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -21,7 +23,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             [NotNull] IAssetSaveService assetSaveService,
             IObservableProperty<bool> inspectorUnCollapsed,
             CueListTreeView.State cueListTreeViewState,
-            Func<AudioConductorSettings> settingsProvider = null)
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             CueListModel =
                 new CueListModel(cueSheet, history, assetSaveService, cueListTreeViewState, settingsProvider);

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -16,13 +18,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class InspectorModel : IInspectorModel
     {
-        private readonly CueInspectorModel _cueInspectorModel;
-        private readonly TrackInspectorModel _trackInspectorModel;
+        private readonly CueInspectorModel? _cueInspectorModel;
+        private readonly TrackInspectorModel? _trackInspectorModel;
 
         public InspectorModel([NotNull] CueListItem[] items,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService,
-            Func<AudioConductorSettings> settingsProvider = null)
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             var cueItems = items.OfType<ItemCue>().ToArray();
             var trackItems = items.OfType<ItemTrack>().ToArray();
@@ -49,9 +51,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public InspectorType InspectorType { get; }
 
-        public ICueInspectorModel CueInspectorModel => _cueInspectorModel;
+        public ICueInspectorModel? CueInspectorModel => _cueInspectorModel;
 
-        public ITrackInspectorModel TrackInspectorModel => _trackInspectorModel;
+        public ITrackInspectorModel? TrackInspectorModel => _trackInspectorModel;
 
         public bool Contains(int itemId)
         {

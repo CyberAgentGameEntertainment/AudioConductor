@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using NUnit.Framework;
 using UnityEngine;
@@ -10,7 +12,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal class TrackPreviewControllerTests
     {
-        private AudioClip _clip;
+        private AudioClip _clip = null!;
 
         [SetUp]
         public void SetUp()

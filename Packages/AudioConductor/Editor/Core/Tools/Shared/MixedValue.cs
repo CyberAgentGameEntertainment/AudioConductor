@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -17,9 +19,15 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         public T Value { get; }
         public bool HasMultipleDifferentValues { get; }
 
-        public static bool operator ==(MixedValue<T> left, MixedValue<T> right) => Equals(left, right);
+        public static bool operator ==(MixedValue<T> left, MixedValue<T> right)
+        {
+            return Equals(left, right);
+        }
 
-        public static bool operator !=(MixedValue<T> left, MixedValue<T> right) => !Equals(left, right);
+        public static bool operator !=(MixedValue<T> left, MixedValue<T> right)
+        {
+            return !Equals(left, right);
+        }
 
         public bool Equals(MixedValue<T> other)
         {
@@ -32,7 +40,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             if (valueIsNull || otherValueIsNull)
                 return false;
 
-            return Value.Equals(other.Value) && HasMultipleDifferentValues == other.HasMultipleDifferentValues;
+            return Value!.Equals(other.Value) && HasMultipleDifferentValues == other.HasMultipleDifferentValues;
         }
 
         public override bool Equals(object other)
@@ -44,9 +52,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public override int GetHashCode()
-            => (Value?.GetHashCode() ?? 0) ^ HasMultipleDifferentValues.GetHashCode();
+        {
+            return (Value?.GetHashCode() ?? 0) ^ HasMultipleDifferentValues.GetHashCode();
+        }
 
         public override string ToString()
-            => $"{Value}:{HasMultipleDifferentValues}";
+        {
+            return $"{Value}:{HasMultipleDifferentValues}";
+        }
     }
 }

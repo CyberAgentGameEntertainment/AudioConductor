@@ -1,32 +1,32 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Shared;
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
     internal sealed class CueSheetParameterPaneView : VisualElement, IDisposable
     {
-        private readonly TextField _nameField;
-        private readonly ThrottleTypeField _throttleTypeField;
-        private readonly IntegerField _throttleLimitField;
-        private readonly SliderAndFloatField _volumeField;
-        private readonly SliderAndFloatField _pitchField;
-        private readonly Toggle _pitchInvertFiled;
-
         private readonly Subject<string> _nameChangedSubject = new();
-        private readonly Subject<ThrottleType> _throttleTypeChangedSubject = new();
-        private readonly Subject<int> _throttleLimitChangedSubject = new();
-        private readonly Subject<float> _volumeChangedSubject = new();
+        private readonly TextField _nameField;
         private readonly Subject<float> _pitchChangedSubject = new();
+        private readonly SliderAndFloatField _pitchField;
         private readonly Subject<bool> _pitchInvertChangedSubject = new();
+        private readonly Toggle _pitchInvertFiled;
+        private readonly Subject<int> _throttleLimitChangedSubject = new();
+        private readonly IntegerField _throttleLimitField;
+        private readonly Subject<ThrottleType> _throttleTypeChangedSubject = new();
+        private readonly ThrottleTypeField _throttleTypeField;
+        private readonly Subject<float> _volumeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeField;
 
         public CueSheetParameterPaneView()
         {
@@ -96,44 +96,68 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         #region Methods - ValueSetters
 
         internal void SetName(string value)
-            => _nameField.SetValueWithoutNotify(value);
+        {
+            _nameField.SetValueWithoutNotify(value);
+        }
 
         internal void SetThrottleType(ThrottleType value)
-            => _throttleTypeField.SetValueWithoutNotify(value);
+        {
+            _throttleTypeField.SetValueWithoutNotify(value);
+        }
 
         internal void SetThrottleLimit(int value)
-            => _throttleLimitField.SetValueWithoutNotify(value);
+        {
+            _throttleLimitField.SetValueWithoutNotify(value);
+        }
 
         internal void SetVolume(float value)
-            => _volumeField.SetValueWithoutNotify(value);
+        {
+            _volumeField.SetValueWithoutNotify(value);
+        }
 
         internal void SetPitch(float value)
-            => _pitchField.SetValueWithoutNotify(value);
+        {
+            _pitchField.SetValueWithoutNotify(value);
+        }
 
         internal void SetPitchInvert(bool value)
-            => _pitchInvertFiled.SetValueWithoutNotify(value);
+        {
+            _pitchInvertFiled.SetValueWithoutNotify(value);
+        }
 
         #endregion
 
         #region Methods - EventHandler
 
         private void OnNameChanged(ChangeEvent<string> evt)
-            => _nameChangedSubject.OnNext(evt.newValue);
+        {
+            _nameChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnThrottleTypeChanged(ChangeEvent<Enum> evt)
-            => _throttleTypeChangedSubject.OnNext((ThrottleType)evt.newValue);
+        {
+            _throttleTypeChangedSubject.OnNext((ThrottleType)evt.newValue);
+        }
 
         private void OnThrottleLimitChanged(ChangeEvent<int> evt)
-            => _throttleLimitChangedSubject.OnNext(evt.newValue);
+        {
+            _throttleLimitChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeChanged(ChangeEvent<float> evt)
-            => _volumeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchChanged(ChangeEvent<float> evt)
-            => _pitchChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchInvertChanged(ChangeEvent<bool> evt)
-            => _pitchInvertChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchInvertChangedSubject.OnNext(evt.newValue);
+        }
 
         #endregion
 

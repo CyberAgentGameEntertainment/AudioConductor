@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using NUnit.Framework;
 using UnityEngine;
 using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
@@ -12,7 +14,7 @@ namespace AudioConductor.Tests.Runtime.Core
 {
     public class AudioConductorTests
     {
-        private AudioConductorSettings _settings;
+        private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()

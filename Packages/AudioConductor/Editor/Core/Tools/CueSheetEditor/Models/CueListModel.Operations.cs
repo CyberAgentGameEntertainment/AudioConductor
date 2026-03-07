@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.DataTransferObjects;
@@ -290,6 +292,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         {
             var actionTypeId = $"Duplicate Cue {Time.frameCount}";
             var newCue = cue.RawData.Duplicate();
+            if (newCue == null)
+                return;
             var newItem = new ItemCue(CreateNewId, newCue);
             foreach (var track in newCue.trackList)
                 newItem.AddChild(new ItemTrack(CreateNewId, track));
@@ -298,7 +302,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void DuplicateTrack(int index, ItemCue parent, ItemTrack track)
         {
-            var newItem = new ItemTrack(CreateNewId, track.RawData.Duplicate());
+            var duplicated = track.RawData.Duplicate();
+            if (duplicated == null)
+                return;
+            var newItem = new ItemTrack(CreateNewId, duplicated);
             AddTrack(index, parent, newItem, $"Duplicate Track {Time.frameCount}");
         }
 

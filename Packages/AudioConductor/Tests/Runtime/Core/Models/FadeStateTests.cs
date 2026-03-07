@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
@@ -17,7 +19,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     [Serializable]
     internal sealed class CueSheetAssetEditorWindowModel
     {
-        [SerializeField] private CueSheetAsset _target;
+        [SerializeField] private CueSheetAsset _target = null!;
 
         [SerializeField]
         private ObservableProperty<CueSheetEditorPresenter.Pane> _paneState = new(CueSheetEditorPresenter.Pane.Default);
@@ -41,9 +43,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public string CueSheetId => _target.cueSheet.Id;
 
-        public ICueSheetEditorModel CueSheetEditorModel { get; private set; }
+        public ICueSheetEditorModel CueSheetEditorModel { get; private set; } = null!;
 
-        public void Setup(Func<AudioConductorSettings> settingsProvider = null)
+        public void Setup(Func<AudioConductorSettings?>? settingsProvider = null)
         {
             _assetSaveService.SetAsset(_target);
             CueSheetEditorModel = new CueSheetEditorModel(_target.cueSheet, _history, _assetSaveService, _paneState,

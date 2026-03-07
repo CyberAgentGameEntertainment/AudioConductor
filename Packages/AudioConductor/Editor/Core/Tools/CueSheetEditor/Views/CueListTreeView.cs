@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,42 +41,42 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         /// <summary>
         ///     Callback for when the selected items are changed.
         /// </summary>
-        public event Action<SelectionChangedEvent> OnSelectionChanged;
+        public event Action<SelectionChangedEvent> OnSelectionChanged = null!;
 
         /// <summary>
         ///     Callback for when the item move operation requested.
         /// </summary>
-        public event Action<ItemMoveOperationRequestedEvent> OnItemMoveOperationRequested;
+        public event Action<ItemMoveOperationRequestedEvent> OnItemMoveOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the cue add operation requested.
         /// </summary>
-        public event Action<CueAddOperationRequestedEvent> OnCueAddOperationRequested;
+        public event Action<CueAddOperationRequestedEvent> OnCueAddOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the track add operation requested.
         /// </summary>
-        public event Action<TrackAddOperationRequestedEvent> OnTrackAddOperationRequested;
+        public event Action<TrackAddOperationRequestedEvent> OnTrackAddOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the item remove operation requested.
         /// </summary>
-        public event Action<ItemRemoveOperationRequestedEvent> OnItemRemoveOperationRequested;
+        public event Action<ItemRemoveOperationRequestedEvent> OnItemRemoveOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the item duplicate operation requested.
         /// </summary>
-        public event Action<ItemDuplicateOperationRequestedEvent> OnItemDuplicateOperationRequested;
+        public event Action<ItemDuplicateOperationRequestedEvent> OnItemDuplicateOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the asset add operation requested.
         /// </summary>
-        public event Action<AssetAddOperationRequestedEvent> OnAssetAddOperationRequested;
+        public event Action<AssetAddOperationRequestedEvent> OnAssetAddOperationRequested = null!;
 
         /// <summary>
         ///     Callback for when the column value changed;
         /// </summary>
-        public event Action<ColumnValueChangedEvent> OnColumnValueChanged;
+        public event Action<ColumnValueChangedEvent> OnColumnValueChanged = null!;
 
         public override void OnGUI(Rect rect)
         {
@@ -110,7 +112,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             #region LocalMethods
 
-            object DrawCellGUI()
+            object? DrawCellGUI()
             {
                 var item = (CueListItem)args.item;
                 switch ((ColumnType)columnIndex)
@@ -351,13 +353,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             var type = draggedItems[0].Type;
             var dropParentIsRoot = args.parentItem == rootItem || args.parentItem == null;
-            var insertAtIndex = args.dragAndDropPosition == DragAndDropPosition.UponItem
-                ? args.parentItem.children.Count
+            var parentItem = args.parentItem as CueListItem;
+            var insertAtIndex = args.dragAndDropPosition == DragAndDropPosition.UponItem && parentItem != null
+                ? parentItem.children.Count
                 : args.insertAtIndex;
 
             if (insertAtIndex < 0
                 || type == ItemType.Cue && !dropParentIsRoot
-                || type == ItemType.Track && dropParentIsRoot)
+                || type == ItemType.Track && dropParentIsRoot
+                || parentItem == null)
                 return DragAndDropVisualMode.Rejected;
 
             if (IsPressingAltKey ||
@@ -365,7 +369,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             {
                 foreach (var item in draggedItems.Reverse())
                     OnItemDuplicateOperationRequested?.Invoke(new ItemDuplicateOperationRequestedEvent(insertAtIndex,
-                        (CueListItem)args.parentItem, item));
+                        parentItem, item));
                 return DragAndDropVisualMode.Copy;
             }
 
@@ -376,7 +380,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     insertAtIndex--;
                 OnItemMoveOperationRequested?.Invoke(new ItemMoveOperationRequestedEvent(oldIndex,
                     insertAtIndex,
-                    (CueListItem)args.parentItem,
+                    parentItem,
                     item));
             }
 

@@ -48,7 +48,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public CueInspectorModel([NotNull] ItemCue[] items,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService,
-            Func<AudioConductorSettings>? settingsProvider = null)
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             Assert.IsTrue(items.Length > 0);
 

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Threading.Tasks;
 using AudioConductor.Runtime.Core;
@@ -16,8 +18,8 @@ namespace AudioConductor.Tests.Runtime.Core
 {
     public class AudioConductorCueSheetTests
     {
-        private CueSheetAsset _cueSheetAsset;
-        private AudioConductorSettings _settings;
+        private CueSheetAsset _cueSheetAsset = null!;
+        private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
@@ -149,20 +151,20 @@ namespace AudioConductor.Tests.Runtime.Core
 
         private sealed class FakeProvider : ICueSheetProvider
         {
-            internal CueSheetAsset AssetToReturn { get; set; }
+            internal CueSheetAsset AssetToReturn { get; set; } = null!;
             internal int ReleaseCallCount { get; private set; }
 
-            public CueSheetAsset Load(string key)
+            public CueSheetAsset? Load(string key)
             {
                 return AssetToReturn;
             }
 
-            public Task<CueSheetAsset> LoadAsync(string key)
+            public Task<CueSheetAsset?> LoadAsync(string key)
             {
-                return Task.FromResult(AssetToReturn);
+                return Task.FromResult<CueSheetAsset?>(AssetToReturn);
             }
 
-            public void Release(CueSheetAsset asset)
+            public void Release(CueSheetAsset? asset)
             {
                 ReleaseCallCount++;
             }

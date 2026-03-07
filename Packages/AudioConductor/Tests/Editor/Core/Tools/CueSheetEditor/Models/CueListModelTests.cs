@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,7 +96,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             Assert.IsNotNull(model.Root);
             Assert.IsNull(model.CueListTreeViewState);
@@ -111,7 +113,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
             var expected = cueSheet.cueList.ToList();
@@ -119,7 +121,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             expected.Remove(target);
             expected.Insert(newIndex, target);
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex, null,
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, newIndex, null!,
                 (CueListItem)model.Root.children[targetIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(expected));
@@ -142,7 +144,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
@@ -175,7 +177,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var fromInitial = cueSheet.cueList[fromCueIndex].trackList.ToList();
@@ -207,7 +209,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
 
@@ -229,7 +231,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
@@ -254,7 +256,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
             var expected = cueSheet.cueList.ToList();
@@ -277,7 +279,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
@@ -304,11 +306,11 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
 
-            model.DuplicateItem(new ItemDuplicateOperationRequestedEvent(insertIndex, null,
+            model.DuplicateItem(new ItemDuplicateOperationRequestedEvent(insertIndex, null!,
                 (ItemCue)model.Root.children[cueIndex]));
 
             Assert.That(cueSheet.cueList.Count, Is.EqualTo(initial.Count + 1));
@@ -335,7 +337,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
@@ -366,7 +368,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var beforeCueList = cueSheet.cueList.ToList();
             var fromInitial = cueSheet.cueList[cueIndex].trackList.ToList();
@@ -401,7 +403,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
 
@@ -429,7 +431,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
             var parentInitial = cueSheet.cueList[parentIndex].trackList.ToList();
@@ -454,7 +456,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue0 = (CueListItem)model.Root.children[0];
             var initial0 = targetCue0.Name;
@@ -487,7 +489,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].name;
@@ -516,7 +518,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].colorId;
@@ -544,7 +546,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].categoryId;
@@ -568,7 +570,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].throttleType;
@@ -594,7 +596,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].throttleLimit;
@@ -620,7 +622,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].volume;
@@ -645,7 +647,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].volumeRange;
@@ -669,7 +671,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetCue = (ItemCue)model.Root.children[cueIndex];
             var initial = cueSheet.cueList[cueIndex].playType;
@@ -695,7 +697,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetTrack = (ItemTrack)model.Root.children[cueIndex].children[trackIndex];
             var initial = targetTrack.Name;
@@ -724,7 +726,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetTrack = (ItemTrack)model.Root.children[cueIndex].children[trackIndex];
             var initial = targetTrack.ColorId;
@@ -754,7 +756,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetTrack = (ItemTrack)model.Root.children[cueIndex].children[trackIndex];
             var initial = targetTrack.Volume;
@@ -785,7 +787,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetTrack = (ItemTrack)model.Root.children[cueIndex].children[trackIndex];
             var initial = targetTrack.VolumeRange;
@@ -817,7 +819,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var targetTrack = model.Root.children[0].children[0];
 
@@ -835,11 +837,11 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, targetIndex, null,
+            model.MoveItem(new ItemMoveOperationRequestedEvent(targetIndex, targetIndex, null!,
                 (CueListItem)model.Root.children[targetIndex]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(initial));
@@ -857,7 +859,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
 
@@ -878,11 +880,11 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(-1, 0, null,
+            model.MoveItem(new ItemMoveOperationRequestedEvent(-1, 0, null!,
                 (CueListItem)model.Root.children[0]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(initial));
@@ -897,12 +899,12 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList.ToList();
             var outOfRangeIndex = cueSheet.cueList.Count;
 
-            model.MoveItem(new ItemMoveOperationRequestedEvent(0, outOfRangeIndex, null,
+            model.MoveItem(new ItemMoveOperationRequestedEvent(0, outOfRangeIndex, null!,
                 (CueListItem)model.Root.children[0]));
 
             Assert.That(cueSheet.cueList, Is.EqualTo(initial));
@@ -919,7 +921,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
 
@@ -941,7 +943,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
 
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
-            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null);
+            var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
             var initial = cueSheet.cueList[cueIndex].trackList.ToList();
             var outOfRangeIndex = cueSheet.cueList[cueIndex].trackList.Count + 1;

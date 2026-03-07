@@ -53,7 +53,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return _colorDefines[index].id;
         }
 
-        public int ToIndex(string colorId)
+        public int ToIndex(string? colorId)
         {
             if (_colorDefines == null)
                 return 0;
@@ -65,7 +65,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return 0;
         }
 
-        public string GetName(string colorId)
+        public string GetName(string? colorId)
         {
             return _colorDefines?.FirstOrDefault(colorDefine => colorDefine.id == colorId)?.name ?? string.Empty;
         }

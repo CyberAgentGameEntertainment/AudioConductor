@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -15,13 +17,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueSheetParameterPaneModel : ICueSheetParameterPaneModel
     {
-        private readonly ObservableCueSheet _target;
-        private readonly AutoIncrementHistory _history;
         private readonly IAssetSaveService _assetSaveService;
+        private readonly AutoIncrementHistory _history;
+        private readonly ObservableCueSheet _target;
 
         public CueSheetParameterPaneModel([NotNull] CueSheet cueSheet,
-                                          [NotNull] AutoIncrementHistory history,
-                                          [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService)
         {
             _target = new ObservableCueSheet(cueSheet);
             _history = history;

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
@@ -16,15 +18,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueSheetEditorModel : ICueSheetEditorModel
     {
-        private readonly OtherOperationPaneModel _otherOperationPaneModel;
-
         public CueSheetEditorModel([NotNull] CueSheet cueSheet,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService,
             IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
             IObservableProperty<bool> inspectorUnCollapsed,
             CueListTreeView.State cueListTreeViewState,
-            Func<AudioConductorSettings> settingsProvider = null
+            Func<AudioConductorSettings?>? settingsProvider = null
         )
         {
             CueSheetParameterPaneModel =

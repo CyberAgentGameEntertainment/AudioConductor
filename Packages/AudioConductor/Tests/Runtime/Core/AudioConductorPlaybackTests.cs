@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Enums;
@@ -16,8 +18,8 @@ namespace AudioConductor.Tests.Runtime.Core
 {
     public class AudioConductorPlaybackTests
     {
-        private CueSheetAsset _cueSheetAsset;
-        private AudioConductorSettings _settings;
+        private CueSheetAsset _cueSheetAsset = null!;
+        private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()

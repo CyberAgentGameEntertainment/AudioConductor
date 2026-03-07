@@ -16,7 +16,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             private static readonly int PopupHash = nameof(ColorSelectPopupWindowContent).GetHashCode();
             private static CallbackInfo? CallbackInfoInstance { get; set; }
 
-            public static string? Popup(Rect rect, string colorId, bool showMixedValue = false)
+            public static string? Popup(Rect rect, string? colorId, bool showMixedValue = false)
             {
                 var controlId = GUIUtility.GetControlID(PopupHash, FocusType.Passive, rect);
 

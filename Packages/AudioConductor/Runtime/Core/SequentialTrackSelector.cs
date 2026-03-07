@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 namespace AudioConductor.Runtime.Core
 {
     internal sealed class SequentialTrackSelector : ITrackSelector

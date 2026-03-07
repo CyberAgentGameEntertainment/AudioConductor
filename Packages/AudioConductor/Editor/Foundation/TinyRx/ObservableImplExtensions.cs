@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -9,8 +11,10 @@ namespace AudioConductor.Editor.Foundation.TinyRx
     internal static class ObservableImplExtensions
     {
         public static IDisposable Subscribe<T>(this IObservable<T> self, Action<T> onNext,
-                                               Action<Exception> onError = null, Action onCompleted = null)
-            => self.Subscribe(new Observer<T>(onNext, onError, onCompleted));
+            Action<Exception>? onError = null, Action? onCompleted = null)
+        {
+            return self.Subscribe(new Observer<T>(onNext, onError, onCompleted));
+        }
 
         /// <summary>
         ///     Suppress the first n items emitted by the Observable.
@@ -52,11 +56,11 @@ namespace AudioConductor.Editor.Foundation.TinyRx
                 var oldValue = initialValue;
                 var disposables = new CompositeDisposable();
                 var disposable = self.Subscribe(x =>
-                                                {
-                                                    observer.OnNext((oldValue, x));
-                                                    oldValue = x;
-                                                }, observer.OnError,
-                                                observer.OnCompleted);
+                    {
+                        observer.OnNext((oldValue, x));
+                        oldValue = x;
+                    }, observer.OnError,
+                    observer.OnCompleted);
                 disposables.Add(disposable);
                 return disposables;
             });

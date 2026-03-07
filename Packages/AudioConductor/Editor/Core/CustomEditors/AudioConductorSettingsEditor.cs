@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -16,8 +18,8 @@ namespace AudioConductor.Editor.Core.CustomEditors
     [CustomEditor(typeof(AudioConductorSettings))]
     internal sealed class AudioConductorSettingsEditor : UnityEditor.Editor
     {
-        private HashSet<int> _existIds;
-        private AudioConductorSettings _settings;
+        private HashSet<int> _existIds = null!;
+        private AudioConductorSettings _settings = null!;
 
         private void OnEnable()
         {

@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
@@ -12,14 +14,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
     internal sealed class CueListEditorPanePresenter : IDisposable
     {
-        private readonly ICueListEditorPaneModel _model;
         private readonly CompositeDisposable _bindDisposable = new();
-
-        private readonly CueListEditorPaneView _view;
-        private readonly CompositeDisposable _viewEventDisposable = new();
 
         private readonly CueListPresenter _cueListPresenter;
         private readonly InspectorPresenter _inspectorPresenter;
+        private readonly ICueListEditorPaneModel _model;
+
+        private readonly CueListEditorPaneView _view;
+        private readonly CompositeDisposable _viewEventDisposable = new();
 
         public CueListEditorPanePresenter(ICueListEditorPaneModel model, CueListEditorPaneView view)
         {
@@ -57,8 +59,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void Bind()
         {
             _model.ObservableInspectorUnCollapsed
-                  .Subscribe(_view.SetInspector)
-                  .DisposeWith(_bindDisposable);
+                .Subscribe(_view.SetInspector)
+                .DisposeWith(_bindDisposable);
         }
 
         private void Unbind()
@@ -69,23 +71,23 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void SetupViewEventHandlers()
         {
             _view.InspectorToggleChangedAsObservable
-                 .Subscribe(unCollapsed => { _model.ObservableInspectorUnCollapsed.Value = unCollapsed; })
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(unCollapsed => { _model.ObservableInspectorUnCollapsed.Value = unCollapsed; })
+                .DisposeWith(_viewEventDisposable);
             _view.VolumeToggleChangedAsObservable
-                 .Subscribe(_cueListPresenter.OnVolumeToggleChanged)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_cueListPresenter.OnVolumeToggleChanged)
+                .DisposeWith(_viewEventDisposable);
             _view.PlayInfoToggleChangedAsObservable
-                 .Subscribe(_cueListPresenter.OnPlayInfoToggleChanged)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_cueListPresenter.OnPlayInfoToggleChanged)
+                .DisposeWith(_viewEventDisposable);
             _view.ThrottleToggleChangedAsObservable
-                 .Subscribe(_cueListPresenter.OnThrottleToggleChanged)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_cueListPresenter.OnThrottleToggleChanged)
+                .DisposeWith(_viewEventDisposable);
             _view.MemoToggleChangedAsObservable
-                 .Subscribe(_cueListPresenter.OnMemoToggleChanged)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_cueListPresenter.OnMemoToggleChanged)
+                .DisposeWith(_viewEventDisposable);
             _view.SearchFieldChangedAsObservable
-                 .Subscribe(_cueListPresenter.OnSearchFieldChanged)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_cueListPresenter.OnSearchFieldChanged)
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

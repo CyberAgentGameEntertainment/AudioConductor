@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.IO;
@@ -11,7 +13,7 @@ namespace AudioConductor.Tests.Editor
 {
     internal static class TestAssetPaths
     {
-        private static string _folder;
+        private static string? _folder;
 
         private static string AssemblyName { get; } =
             Path.GetFileNameWithoutExtension(typeof(TestAssetPaths).Assembly.Location);
@@ -21,7 +23,7 @@ namespace AudioConductor.Tests.Editor
             get
             {
                 if (!string.IsNullOrEmpty(_folder))
-                    return _folder;
+                    return _folder!;
 
                 var asmdefGuid = AssetDatabase.FindAssets(AssemblyName).First();
                 var asmdefPath = AssetDatabase.GUIDToAssetPath(asmdefGuid);
@@ -31,6 +33,9 @@ namespace AudioConductor.Tests.Editor
             }
         }
 
-        public static string CreateAbsoluteAssetPath(string relativeAssetPath) => $"{Folder}/{relativeAssetPath}";
+        public static string CreateAbsoluteAssetPath(string relativeAssetPath)
+        {
+            return $"{Folder}/{relativeAssetPath}";
+        }
     }
 }

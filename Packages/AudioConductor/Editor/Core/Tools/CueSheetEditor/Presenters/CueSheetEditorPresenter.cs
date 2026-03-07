@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
@@ -20,15 +22,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             Default = CueList
         }
 
-        private readonly ICueSheetEditorModel _model;
         private readonly CompositeDisposable _bindDisposable = new();
+        private readonly CueListEditorPanePresenter _cueListEditorPanePresenter;
+
+        private readonly CueSheetParameterPanePresenter _cueSheetParameterPanePresenter;
+
+        private readonly ICueSheetEditorModel _model;
+        private readonly OtherOperationPanePresenter _otherOperationPanePresenter;
 
         private readonly CueSheetEditorView _view;
         private readonly CompositeDisposable _viewEventDisposable = new();
-
-        private readonly CueSheetParameterPanePresenter _cueSheetParameterPanePresenter;
-        private readonly CueListEditorPanePresenter _cueListEditorPanePresenter;
-        private readonly OtherOperationPanePresenter _otherOperationPanePresenter;
 
         public CueSheetEditorPresenter(ICueSheetEditorModel model, CueSheetEditorView view)
         {
@@ -37,14 +40,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
             _cueSheetParameterPanePresenter =
                 new CueSheetParameterPanePresenter(model.CueSheetParameterPaneModel,
-                                                   _view.Q<CueSheetParameterPaneView>());
+                    _view.Q<CueSheetParameterPaneView>());
             _cueListEditorPanePresenter =
                 new CueListEditorPanePresenter(model.CueListEditorPaneModel,
-                                               _view.Q<CueListEditorPaneView>());
+                    _view.Q<CueListEditorPaneView>());
 
             _otherOperationPanePresenter =
                 new OtherOperationPanePresenter(model.OtherOperationPaneModel,
-                                                _view.Q<OtherOperationPaneView>());
+                    _view.Q<OtherOperationPaneView>());
         }
 
         public void Dispose()
@@ -72,11 +75,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void Bind()
         {
             _model.ObservablePaneState
-                  .Subscribe(value => _view.SelectTab((int)value))
-                  .DisposeWith(_bindDisposable);
+                .Subscribe(value => _view.SelectTab((int)value))
+                .DisposeWith(_bindDisposable);
             _model.ObservablePaneState
-                  .Subscribe(OnSelectPane)
-                  .DisposeWith(_bindDisposable);
+                .Subscribe(OnSelectPane)
+                .DisposeWith(_bindDisposable);
         }
 
         private void Unbind()
@@ -87,8 +90,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void SetupViewEventHandlers()
         {
             _view.TabSelectedAsObservable
-                 .Subscribe(index => { _model.ObservablePaneState.Value = (Pane)index; })
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(index => { _model.ObservablePaneState.Value = (Pane)index; })
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

@@ -1,8 +1,9 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using UnityEditor.UIElements;
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -119,12 +120,19 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
-            private readonly UxmlStringAttributeDescription _label = new(){ name = "label", defaultValue = "Label Name"};
-            private readonly UxmlIntAttributeDescription _value = new(){ name = "value", defaultValue = 0 };
-            private readonly UxmlIntAttributeDescription _lowValue = new(){ name = "low-value", defaultValue = 0 };
-            private readonly UxmlIntAttributeDescription _highValue = new(){ name = "high-value", defaultValue = 100 };
-            private readonly UxmlIntAttributeDescription _fieldWidth = new() { name = "field-width", defaultValue = 70 };
-            private readonly UxmlBoolAttributeDescription _isDelayed = new() { name = "is-delayed", defaultValue = true };
+            private readonly UxmlIntAttributeDescription
+                _fieldWidth = new() { name = "field-width", defaultValue = 70 };
+
+            private readonly UxmlIntAttributeDescription _highValue = new() { name = "high-value", defaultValue = 100 };
+
+            private readonly UxmlBoolAttributeDescription _isDelayed = new()
+                { name = "is-delayed", defaultValue = true };
+
+            private readonly UxmlStringAttributeDescription _label = new()
+                { name = "label", defaultValue = "Label Name" };
+
+            private readonly UxmlIntAttributeDescription _lowValue = new() { name = "low-value", defaultValue = 0 };
+            private readonly UxmlIntAttributeDescription _value = new() { name = "value", defaultValue = 0 };
 
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
             {

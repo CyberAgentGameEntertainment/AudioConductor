@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -11,14 +13,29 @@ namespace AudioConductor.Editor.Foundation.TinyRx
     {
         public static Empty Default { get; } = new();
 
-        public bool Equals(Empty other) => true;
+        public bool Equals(Empty other)
+        {
+            return true;
+        }
 
-        public static bool operator ==(Empty first, Empty second) => true;
+        public static bool operator ==(Empty first, Empty second)
+        {
+            return true;
+        }
 
-        public static bool operator !=(Empty first, Empty second) => false;
+        public static bool operator !=(Empty first, Empty second)
+        {
+            return false;
+        }
 
-        public override bool Equals(object obj) => obj is Empty;
+        public override bool Equals(object obj)
+        {
+            return obj is Empty;
+        }
 
-        public override int GetHashCode() => 0;
+        public override int GetHashCode()
+        {
+            return 0;
+        }
     }
 }

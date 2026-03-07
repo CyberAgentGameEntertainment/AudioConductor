@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
@@ -14,7 +16,7 @@ namespace AudioConductor.Tests.Runtime.Core
 {
     public class AudioConductorMetaInfoTests
     {
-        private AudioConductorSettings _settings;
+        private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()

@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -11,8 +13,7 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableCollection
     [Serializable]
     public class ObservableList<T> : ObservableListBase<T>
     {
-        [SerializeField]
-        private List<T> _internalList = new();
+        [SerializeField] private List<T> _internalList = new();
 
         protected override List<T> InternalList => _internalList;
     }

@@ -2,6 +2,8 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
 using UnityEngine;
@@ -14,8 +16,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     /// </summary>
     internal sealed class TrackPreviewController : IDisposable
     {
-        private AudioSource _audioSource;
-        private GameObject _gameObject;
+        private AudioSource? _audioSource;
+        private GameObject? _gameObject;
 
         public TrackPreviewController(AudioClip clip,
             int categoryId,
@@ -53,12 +55,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public void Play()
         {
-            _audioSource?.Play();
+            if (_audioSource != null)
+                _audioSource.Play();
         }
 
         public void Stop()
         {
-            _audioSource?.Stop();
+            if (_audioSource != null)
+                _audioSource.Stop();
         }
 
         public void SetCurrentSample(int sample)

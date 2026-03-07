@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -14,9 +16,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
     internal sealed class CueSheetEditorView : IDisposable
     {
         private readonly VisualElement _root;
+        private readonly Subject<int> _tabSelectedSubject = new();
 
         private readonly TabView _tabView;
-        private readonly Subject<int> _tabSelectedSubject = new();
 
         public CueSheetEditorView(VisualElement root)
         {
@@ -39,10 +41,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _tabView.Dispose();
         }
 
-        public T Q<T>(string name = null, params string[] classes) where T : VisualElement => _root.Q<T>(name, classes);
+        public T Q<T>(string? name = null, params string[] classes) where T : VisualElement
+        {
+            return _root.Q<T>(name, classes);
+        }
 
         public void SelectTab(int tabIndex)
-            => _tabView.SelectTab(tabIndex);
+        {
+            _tabView.SelectTab(tabIndex);
+        }
 
         public void Setup()
         {
@@ -63,7 +70,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         #region Methods - EventHandlers
 
         private void OnTabSelected(int index)
-            => _tabSelectedSubject.OnNext(index);
+        {
+            _tabSelectedSubject.OnNext(index);
+        }
 
         #endregion
     }
