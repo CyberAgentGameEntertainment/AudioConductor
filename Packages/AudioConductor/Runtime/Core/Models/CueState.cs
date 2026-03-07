@@ -4,7 +4,9 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Runtime.Core.Enums;
+using UnityEngine;
 
 namespace AudioConductor.Runtime.Core.Models
 {
@@ -12,6 +14,7 @@ namespace AudioConductor.Runtime.Core.Models
     {
         private readonly TrackSelectionContext _context;
         private readonly ITrackSelector _trackSelector;
+        private Dictionary<string, int>? _trackNameLookup;
 
         public CueState(uint cueSheetId, Cue cue)
         {
@@ -49,10 +52,18 @@ namespace AudioConductor.Runtime.Core.Models
 
         public Track? GetTrack(string name)
         {
-            for (var i = 0; i < Cue.trackList.Count; i++)
-                if (Cue.trackList[i].name == name)
-                    return Cue.trackList[i];
-            return null;
+            if (_trackNameLookup == null)
+            {
+                _trackNameLookup = new Dictionary<string, int>(Cue.trackList.Count);
+                for (var i = 0; i < Cue.trackList.Count; i++)
+                {
+                    var trackName = Cue.trackList[i].name;
+                    var added = _trackNameLookup.TryAdd(trackName, i);
+                    Debug.Assert(added, $"Duplicate track name detected: {trackName}");
+                }
+            }
+
+            return _trackNameLookup.TryGetValue(name, out var index) ? Cue.trackList[index] : null;
         }
     }
 }

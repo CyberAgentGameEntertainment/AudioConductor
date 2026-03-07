@@ -50,5 +50,54 @@ namespace AudioConductor.Tests.Runtime.Core.Models
 
             Assert.That(track, Is.Null);
         }
+
+        [Test]
+        public void GetTrackByName_WithMatchingName_ReturnsTrack()
+        {
+            var expectedTrack = new Track { name = "TrackA" };
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { new() { name = "TrackB" }, expectedTrack }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track = cueState.GetTrack("TrackA");
+
+            Assert.That(track, Is.EqualTo(expectedTrack));
+        }
+
+        [Test]
+        public void GetTrackByName_WithNonMatchingName_ReturnsNull()
+        {
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { new() { name = "TrackA" } }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track = cueState.GetTrack("NonExistent");
+
+            Assert.That(track, Is.Null);
+        }
+
+        [Test]
+        public void GetTrackByName_CalledMultipleTimes_ReturnsSameResult()
+        {
+            var expectedTrack = new Track { name = "TrackA" };
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { expectedTrack, new() { name = "TrackB" } }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track1 = cueState.GetTrack("TrackA");
+            var track2 = cueState.GetTrack("TrackA");
+
+            Assert.That(track1, Is.EqualTo(expectedTrack));
+            Assert.That(track2, Is.EqualTo(expectedTrack));
+        }
     }
 }
