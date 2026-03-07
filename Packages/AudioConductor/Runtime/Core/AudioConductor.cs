@@ -549,23 +549,12 @@ namespace AudioConductor.Runtime.Core
         /// <param name="fader">Custom fader curve for Managed fade-out. When null, <see cref="Faders.Linear" /> is used.</param>
         public void StopAll(float? fadeTime = null, IFader? fader = null)
         {
-            _stopAllKeyBuffer.Clear();
-            foreach (var id in _playbacks.Keys)
-                _stopAllKeyBuffer.Add(id);
-            for (var i = 0; i < _stopAllKeyBuffer.Count; i++)
-                Stop(new PlaybackHandle(_stopAllKeyBuffer[i]), fadeTime, fader);
+            if (fadeTime > 0f)
+                StopAllPlaybacksWithFade(fadeTime.Value, fader);
+            else
+                StopAllPlaybacksImmediate();
 
-            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
-            {
-                var state = _oneShotStates[i];
-                if (state.Player != null)
-                {
-                    state.Player.Stop();
-                    _oneShotProvider.Return(state.Player);
-                }
-            }
-
-            _oneShotStates.Clear();
+            StopAllOneShots();
         }
 
         /// <summary>
@@ -698,6 +687,37 @@ namespace AudioConductor.Runtime.Core
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void StopAllPlaybacksImmediate()
+        {
+            foreach (var playback in _playbacks.Values)
+                StopPlayback(playback);
+            _playbacks.Clear();
+        }
+
+        private void StopAllPlaybacksWithFade(float fadeTime, IFader? fader)
+        {
+            _stopAllKeyBuffer.Clear();
+            foreach (var id in _playbacks.Keys)
+                _stopAllKeyBuffer.Add(id);
+            for (var i = 0; i < _stopAllKeyBuffer.Count; i++)
+                Stop(new PlaybackHandle(_stopAllKeyBuffer[i]), fadeTime, fader);
+        }
+
+        private void StopAllOneShots()
+        {
+            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
+            {
+                var state = _oneShotStates[i];
+                if (state.Player != null)
+                {
+                    state.Player.Stop();
+                    _oneShotProvider.Return(state.Player);
+                }
+            }
+
+            _oneShotStates.Clear();
         }
 
         private void StopPlayback(PlaybackState playback)
