@@ -27,6 +27,7 @@ namespace AudioConductor.Runtime.Core
         private const int FadePoolInitialCapacity = 8;
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
+        private readonly HashSet<IFadeable> _fadeOutTargets = new(FadePoolInitialCapacity);
         private readonly Stack<FadeState> _fadePool = new(FadePoolInitialCapacity);
         private readonly List<FadeState> _fadeStates = new();
         private readonly AudioClipPlayerProvider _oneShotProvider;
@@ -98,6 +99,7 @@ namespace AudioConductor.Runtime.Core
 
             _oneShotStates.Clear();
             _fadeStates.Clear();
+            _fadeOutTargets.Clear();
 
             foreach (var registration in _cueSheets.Values)
                 _provider?.Release(registration.Asset);
@@ -258,21 +260,14 @@ namespace AudioConductor.Runtime.Core
             if (fadeTime > 0f)
             {
                 // Do not add a duplicate fade-out entry for the same player.
-                var hasDuplicateFade = false;
-                for (var i = 0; i < _fadeStates.Count; i++)
-                    if (_fadeStates[i].IsStopTarget && ReferenceEquals(_fadeStates[i].Fadeable, state.Player))
-                    {
-                        hasDuplicateFade = true;
-                        break;
-                    }
-
-                if (hasDuplicateFade)
+                if (_fadeOutTargets.Contains(state.Player))
                     return;
 
                 var effectiveFader = fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
                 fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value, true);
                 state.Player.IsFading = true;
+                _fadeOutTargets.Add(state.Player);
                 _fadeStates.Add(fadeState);
                 return;
             }
@@ -369,6 +364,8 @@ namespace AudioConductor.Runtime.Core
                 if (finished)
                 {
                     ((AudioClipPlayer)fade.Fadeable).IsFading = false;
+                    if (fade.IsStopTarget)
+                        _fadeOutTargets.Remove(fade.Fadeable);
                     _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
                     _fadeStates.RemoveAt(_fadeStates.Count - 1);
                     _fadePool.Push(fade);
