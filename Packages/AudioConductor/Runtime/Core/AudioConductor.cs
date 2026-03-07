@@ -361,16 +361,18 @@ namespace AudioConductor.Runtime.Core
 
         internal void Update(float deltaTime)
         {
-            // Process active fade states (reverse iteration for safe removal).
-            for (var i = _fadeStates.Count - 1; i >= 0; i--)
+            // Process active fade states (swap-remove for O(1) removal).
+            for (var i = 0; i < _fadeStates.Count; i++)
             {
                 var fade = _fadeStates[i];
                 var finished = fade.Elapsed(deltaTime);
                 if (finished)
                 {
                     ((AudioClipPlayer)fade.Fadeable).IsFading = false;
-                    _fadeStates.RemoveAt(i);
+                    _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
+                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
                     _fadePool.Push(fade);
+                    i--;
                 }
             }
 
@@ -393,8 +395,8 @@ namespace AudioConductor.Runtime.Core
             for (var i = 0; i < _removeKeyBuffer.Count; i++)
                 _playbacks.Remove(_removeKeyBuffer[i]);
 
-            // Process one-shot states (reverse iteration for safe removal).
-            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
+            // Process one-shot states (swap-remove for O(1) removal).
+            for (var i = 0; i < _oneShotStates.Count; i++)
             {
                 var state = _oneShotStates[i];
                 if (state.Player == null)
@@ -405,7 +407,9 @@ namespace AudioConductor.Runtime.Core
                 if (!state.Player.IsPlaying && !state.Player.IsPaused)
                 {
                     _oneShotProvider.Return(state.Player);
-                    _oneShotStates.RemoveAt(i);
+                    _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
+                    _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
+                    i--;
                 }
             }
         }
@@ -803,7 +807,8 @@ namespace AudioConductor.Runtime.Core
             for (var i = 0; i < _oneShotStates.Count; i++)
                 if (_oneShotStates[i].Id == id)
                 {
-                    _oneShotStates.RemoveAt(i);
+                    _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
+                    _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
                     return;
                 }
         }
