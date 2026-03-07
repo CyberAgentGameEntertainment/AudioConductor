@@ -629,44 +629,51 @@ namespace AudioConductor.Runtime.Core
                 globalThrottleLimit <= 0)
                 return true;
 
-            // Single pass: count playing states for all scopes at once.
+            // Single pass: count playing states and track oldest per scope at once.
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            PlaybackState? cueOldestManaged = null, sheetOldestManaged = null,
+                catOldestManaged = null, globalOldestManaged = null;
+            OneShotState? cueOldestOneShot = null, sheetOldestOneShot = null,
+                catOldestOneShot = null, globalOldestOneShot = null;
 
             foreach (var p in _playbacks.Values)
-                AccumulateAllScopes(p.Player, p.CueSheetId, p.Cue, p.Priority,
-                    cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref sheetCount, ref sheetMin,
-                    ref catCount, ref catMin, ref globalCount, ref globalMin);
+                AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
+                    ref cueCount, ref cueMin, ref cueOldestManaged,
+                    ref sheetCount, ref sheetMin, ref sheetOldestManaged,
+                    ref catCount, ref catMin, ref catOldestManaged,
+                    ref globalCount, ref globalMin, ref globalOldestManaged);
 
             foreach (var s in _oneShotStates)
-                AccumulateAllScopes(s.Player, s.CueSheetId, s.Cue, s.Priority,
-                    cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref sheetCount, ref sheetMin,
-                    ref catCount, ref catMin, ref globalCount, ref globalMin);
+                AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
+                    ref cueCount, ref cueMin, ref cueOldestOneShot,
+                    ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
+                    ref catCount, ref catMin, ref catOldestOneShot,
+                    ref globalCount, ref globalMin, ref globalOldestOneShot);
 
             // Check each scope.
-            if (!ApplyThrottle(LimitCheckType.Cue, cueThrottleType, cueThrottleLimit,
-                    cueCount, cueMin, track.priority, cueSheetId, cue))
+            if (!ApplyThrottle(cueThrottleType, cueThrottleLimit,
+                    cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot))
                 return false;
 
-            if (!ApplyThrottle(LimitCheckType.CueSheet, sheetThrottleType, sheetThrottleLimit,
-                    sheetCount, sheetMin, track.priority, cueSheetId, cue))
+            if (!ApplyThrottle(sheetThrottleType, sheetThrottleLimit,
+                    sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot))
                 return false;
 
-            if (!ApplyThrottle(LimitCheckType.Category, catThrottleType, catThrottleLimit,
-                    catCount, catMin, track.priority, cueSheetId, cue))
+            if (!ApplyThrottle(catThrottleType, catThrottleLimit,
+                    catCount, catMin, track.priority, catOldestManaged, catOldestOneShot))
                 return false;
 
-            if (!ApplyThrottle(LimitCheckType.Global, globalThrottleType, globalThrottleLimit,
-                    globalCount, globalMin, track.priority, cueSheetId, cue))
+            if (!ApplyThrottle(globalThrottleType, globalThrottleLimit,
+                    globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot))
                 return false;
 
             return true;
         }
 
-        private bool ApplyThrottle(LimitCheckType type, ThrottleType throttleType, int throttleLimit,
-            int playNum, int minPriority, int trackPriority, uint cueSheetId, Cue cue)
+        private bool ApplyThrottle(ThrottleType throttleType, int throttleLimit,
+            int playNum, int minPriority, int trackPriority,
+            PlaybackState? oldestManaged, OneShotState? oldestOneShot)
         {
             if (throttleLimit <= 0 || playNum < throttleLimit)
                 return true;
@@ -680,7 +687,7 @@ namespace AudioConductor.Runtime.Core
             switch (throttleType)
             {
                 case ThrottleType.PriorityOrder:
-                    StopOldest(type, cueSheetId, cue, cue.categoryId, minPriority);
+                    StopOldestCandidate(oldestManaged, oldestOneShot);
                     return true;
                 case ThrottleType.FirstComeFirstServed:
                     return false;
@@ -734,72 +741,102 @@ namespace AudioConductor.Runtime.Core
             return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
         }
 
-        private static bool MatchesScope(LimitCheckType type, uint itemCueSheetId, Cue itemCue, int itemCategoryId,
-            uint targetCueSheetId, Cue targetCue, int targetCategoryId)
-        {
-            return type switch
-            {
-                LimitCheckType.Cue => itemCue == targetCue,
-                LimitCheckType.CueSheet => itemCueSheetId == targetCueSheetId,
-                LimitCheckType.Category => itemCategoryId == targetCategoryId,
-                LimitCheckType.Global => true,
-                _ => false
-            };
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AccumulateAllScopes(AudioClipPlayer player, uint itemCueSheetId, Cue itemCue,
-            int itemPriority, uint targetCueSheetId, Cue targetCue, int targetCategoryId,
-            ref int cueCount, ref int cueMin, ref int sheetCount, ref int sheetMin,
-            ref int catCount, ref int catMin, ref int globalCount, ref int globalMin)
+        private static void AccumulateAllScopes(in PlaybackState p, uint targetCueSheetId, Cue targetCue,
+            int targetCategoryId,
+            ref int cueCount, ref int cueMin, ref PlaybackState? cueOldest,
+            ref int sheetCount, ref int sheetMin, ref PlaybackState? sheetOldest,
+            ref int catCount, ref int catMin, ref PlaybackState? catOldest,
+            ref int globalCount, ref int globalMin, ref PlaybackState? globalOldest)
         {
-            if (player == null || !player.IsPlaying)
+            if (p.Player == null || !p.Player.IsPlaying)
                 return;
 
             globalCount++;
-            if (itemPriority < globalMin)
-                globalMin = itemPriority;
+            if (p.Priority < globalMin || (p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id)))
+            {
+                globalMin = p.Priority;
+                globalOldest = p;
+            }
 
-            if (itemCueSheetId == targetCueSheetId)
+            if (p.CueSheetId == targetCueSheetId)
             {
                 sheetCount++;
-                if (itemPriority < sheetMin)
-                    sheetMin = itemPriority;
+                if (p.Priority < sheetMin || (p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id)))
+                {
+                    sheetMin = p.Priority;
+                    sheetOldest = p;
+                }
             }
 
-            if (itemCue == targetCue)
+            if (p.Cue == targetCue)
             {
                 cueCount++;
-                if (itemPriority < cueMin)
-                    cueMin = itemPriority;
+                if (p.Priority < cueMin || (p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id)))
+                {
+                    cueMin = p.Priority;
+                    cueOldest = p;
+                }
             }
 
-            if (itemCue.categoryId == targetCategoryId)
+            if (p.Cue.categoryId == targetCategoryId)
             {
                 catCount++;
-                if (itemPriority < catMin)
-                    catMin = itemPriority;
+                if (p.Priority < catMin || (p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id)))
+                {
+                    catMin = p.Priority;
+                    catOldest = p;
+                }
             }
         }
 
-        // Stops the oldest (lowest Id) managed or one-shot playback in scope matching the given priority.
-        private void StopOldest(LimitCheckType type, uint cueSheetId, Cue cue, int categoryId, int minPriority)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AccumulateAllScopes(in OneShotState s, uint targetCueSheetId, Cue targetCue,
+            int targetCategoryId,
+            ref int cueCount, ref int cueMin, ref OneShotState? cueOldest,
+            ref int sheetCount, ref int sheetMin, ref OneShotState? sheetOldest,
+            ref int catCount, ref int catMin, ref OneShotState? catOldest,
+            ref int globalCount, ref int globalMin, ref OneShotState? globalOldest)
         {
-            PlaybackState? oldestManaged = null;
-            foreach (var p in _playbacks.Values)
-                if (p.Player != null && p.Player.IsPlaying && p.Priority == minPriority
-                    && MatchesScope(type, p.CueSheetId, p.Cue, p.Cue.categoryId, cueSheetId, cue, categoryId)
-                    && (!oldestManaged.HasValue || p.Id < oldestManaged.Value.Id))
-                    oldestManaged = p;
+            if (s.Player == null || !s.Player.IsPlaying)
+                return;
 
-            OneShotState? oldestOneShot = null;
-            foreach (var s in _oneShotStates)
-                if (s.Player != null && s.Player.IsPlaying && s.Priority == minPriority
-                    && MatchesScope(type, s.CueSheetId, s.Cue, s.Cue.categoryId, cueSheetId, cue, categoryId)
-                    && (!oldestOneShot.HasValue || s.Id < oldestOneShot.Value.Id))
-                    oldestOneShot = s;
+            globalCount++;
+            if (s.Priority < globalMin || (s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id)))
+            {
+                globalMin = s.Priority;
+                globalOldest = s;
+            }
 
-            StopOldestCandidate(oldestManaged, oldestOneShot);
+            if (s.CueSheetId == targetCueSheetId)
+            {
+                sheetCount++;
+                if (s.Priority < sheetMin || (s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id)))
+                {
+                    sheetMin = s.Priority;
+                    sheetOldest = s;
+                }
+            }
+
+            if (s.Cue == targetCue)
+            {
+                cueCount++;
+                if (s.Priority < cueMin || (s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id)))
+                {
+                    cueMin = s.Priority;
+                    cueOldest = s;
+                }
+            }
+
+            if (s.Cue.categoryId == targetCategoryId)
+            {
+                catCount++;
+                if (s.Priority < catMin || (s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id)))
+                {
+                    catMin = s.Priority;
+                    catOldest = s;
+                }
+            }
         }
 
         private void StopOldestCandidate(PlaybackState? oldestManaged, OneShotState? oldestOneShot)
@@ -900,14 +937,5 @@ namespace AudioConductor.Runtime.Core
             internal int Priority { get; }
         }
 
-        private enum LimitCheckType
-        {
-            Cue,
-            CueSheet,
-            Category,
-            Global,
-
-            Count
-        }
     }
 }
