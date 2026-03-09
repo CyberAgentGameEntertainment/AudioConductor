@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -20,12 +19,9 @@ namespace AudioConductor.Runtime.Core
     public sealed partial class Conductor : IDisposable
     {
         private const int BufferInitialCapacity = 64;
-        private const int FadePoolInitialCapacity = 8;
         private readonly Dictionary<int, Category> _categories = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
-        private readonly HashSet<IFadeable> _fadeOutTargets = new(FadePoolInitialCapacity);
-        private readonly Stack<FadeState> _fadePool = new(FadePoolInitialCapacity);
-        private readonly List<FadeState> _fadeStates = new();
+        private readonly FadeManager _fadeManager = new();
         private readonly IPlayerProvider _oneShotProvider;
         private readonly List<OneShotState> _oneShotStates = new();
         private readonly Dictionary<uint, PlaybackState> _playbacks = new();
@@ -36,7 +32,6 @@ namespace AudioConductor.Runtime.Core
         private readonly List<uint> _stopAllKeyBuffer = new(BufferInitialCapacity);
         private ConductorBehaviour? _behaviour;
         private uint _cueSheetHandleCounter;
-        private uint _fadeIdCounter;
         private float _masterVolume = 1f;
         private uint _playStateCounter;
         private GameObject? _rootObject;
@@ -72,9 +67,6 @@ namespace AudioConductor.Runtime.Core
 
             _playerProvider.Prewarm(settings.managedPoolCapacity);
             _oneShotProvider.Prewarm(settings.oneShotPoolCapacity);
-
-            for (var i = 0; i < FadePoolInitialCapacity; i++)
-                _fadePool.Push(new FadeState());
         }
 
         /// <summary>
@@ -109,8 +101,7 @@ namespace AudioConductor.Runtime.Core
                 }
 
             _oneShotStates.Clear();
-            _fadeStates.Clear();
-            _fadeOutTargets.Clear();
+            _fadeManager.Dispose();
 
             foreach (var registration in _cueSheets.Values)
                 _provider?.Release(registration.Asset);

@@ -10,32 +10,7 @@ namespace AudioConductor.Runtime.Core
     {
         internal void Update(float deltaTime)
         {
-            // Process active fade states (swap-remove for O(1) removal).
-            for (var i = 0; i < _fadeStates.Count; i++)
-            {
-                var fade = _fadeStates[i];
-
-                // Stale check: the fade was invalidated by CancelFade.
-                if (fade.Fadeable.ActiveFadeId != fade.Id)
-                {
-                    _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
-                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
-                    _fadePool.Push(fade);
-                    i--;
-                    continue;
-                }
-
-                var finished = fade.Elapsed(deltaTime);
-                if (finished)
-                {
-                    fade.Fadeable.IsFading = false;
-                    fade.Fadeable.ActiveFadeId = 0;
-                    _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
-                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
-                    _fadePool.Push(fade);
-                    i--;
-                }
-            }
+            _fadeManager.Update(deltaTime);
 
             // Iterate _playbacks.Values directly; collect removal keys in _removeKeyBuffer.
             _removeKeyBuffer.Clear();
@@ -44,10 +19,10 @@ namespace AudioConductor.Runtime.Core
                 if (playback.Player == null)
                     continue;
 
-                if (!playback.Player.IsFading && _fadeOutTargets.Contains(playback.Player))
+                if (!playback.Player.IsFading && _fadeManager.IsFadingOut(playback.Player))
                 {
                     playback.Player.Stop();
-                    _fadeOutTargets.Remove(playback.Player);
+                    _fadeManager.RemoveFadeOutTarget(playback.Player);
                     _playerProvider.Return(playback.Player);
                     _removeKeyBuffer.Add(playback.Id);
                     continue;

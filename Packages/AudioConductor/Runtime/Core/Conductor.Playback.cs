@@ -75,14 +75,9 @@ namespace AudioConductor.Runtime.Core
 
             if (options?.FadeTime > 0f)
             {
-                var fadeId = NextFadeId();
-                var fader = options.Value.Fader ?? Faders.Linear;
-                var fadeState = RentFadeState();
-                fadeState.Setup(fadeId, player, fader, 0f, 1f, options.Value.FadeTime.Value);
                 player.SetVolumeFade(0f);
-                player.ActiveFadeId = fadeId;
-                player.IsFading = true;
-                _fadeStates.Add(fadeState);
+                _fadeManager.StartFade(player, options.Value.Fader ?? Faders.Linear, 0f, 1f,
+                    options.Value.FadeTime.Value);
             }
 
             return new PlaybackHandle(id);
@@ -107,17 +102,12 @@ namespace AudioConductor.Runtime.Core
             if (fadeTime > 0f)
             {
                 // Do not add a duplicate fade-out entry for the same player.
-                if (_fadeOutTargets.Contains(state.Player))
+                if (_fadeManager.IsFadingOut(state.Player))
                     return;
 
-                var fadeId = NextFadeId();
-                var effectiveFader = fader ?? Faders.Linear;
-                var fadeState = RentFadeState();
-                fadeState.Setup(fadeId, state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value);
-                state.Player.ActiveFadeId = fadeId;
-                state.Player.IsFading = true;
-                _fadeOutTargets.Add(state.Player);
-                _fadeStates.Add(fadeState);
+                _fadeManager.StartFade(state.Player, fader ?? Faders.Linear, state.Player.VolumeFade, 0f,
+                    fadeTime.Value);
+                _fadeManager.MarkFadeOut(state.Player);
                 return;
             }
 
@@ -332,7 +322,7 @@ namespace AudioConductor.Runtime.Core
                 var state = _oneShotStates[i];
                 if (state.Player != null)
                 {
-                    CancelFade(state.Player);
+                    _fadeManager.CancelFade(state.Player);
                     state.Player.Stop();
                     _oneShotProvider.Return(state.Player);
                 }
@@ -346,30 +336,9 @@ namespace AudioConductor.Runtime.Core
             if (playback.Player == null)
                 return;
 
-            CancelFade(playback.Player);
+            _fadeManager.CancelFade(playback.Player);
             playback.Player.Stop();
             _playerProvider.Return(playback.Player);
-        }
-
-        private FadeState RentFadeState()
-        {
-            return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
-        }
-
-        private uint NextFadeId()
-        {
-            var id = ++_fadeIdCounter;
-            // 0 is the sentinel value meaning "no active fade".
-            if (id == 0)
-                id = ++_fadeIdCounter;
-            return id;
-        }
-
-        private void CancelFade(IFadeable fadeable)
-        {
-            fadeable.ActiveFadeId = 0;
-            fadeable.IsFading = false;
-            _fadeOutTargets.Remove(fadeable);
         }
 
         private void ExecuteEviction(in EvictionResult eviction)
@@ -389,7 +358,7 @@ namespace AudioConductor.Runtime.Core
             {
                 if (RemoveOneShotById(eviction.Id, out var player))
                 {
-                    CancelFade(player);
+                    _fadeManager.CancelFade(player);
                     player.Stop();
                     _oneShotProvider.Return(player);
                 }
