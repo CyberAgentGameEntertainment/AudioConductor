@@ -15,7 +15,7 @@ namespace AudioConductor.Runtime.Core
     /// <summary>
     ///     Provide functions for AudioClip playing.
     /// </summary>
-    internal sealed class AudioClipPlayer : MonoBehaviour, IAudioClipPlayer, IFadeable
+    internal sealed class AudioClipPlayer : MonoBehaviour, IInternalPlayer
     {
         private const int AudioSourceNum = 2;
         private const float MinimumDuration = 1.0f;
@@ -53,7 +53,9 @@ namespace AudioConductor.Runtime.Core
 
         internal float PitchInternal { get; private set; }
 
-        internal bool IsFading { get; set; }
+        public uint ActiveFadeId { get; set; }
+
+        public bool IsFading { get; set; }
 
         /// <inheritdoc />
         public int ClipSamples { get; private set; }
@@ -318,10 +320,52 @@ namespace AudioConductor.Runtime.Core
             UpdateVolume();
         }
 
-        internal void SetMasterVolume(float volume)
+        public void SetMasterVolume(float volume)
         {
             _volumeMaster = volume;
             UpdateVolume();
+        }
+
+        public void ManualUpdate(float _)
+        {
+            if (!IsPlaying && !IsPaused)
+                return;
+
+            UpdateVolume();
+
+            if (IsPaused)
+                return;
+
+            if (AudioSettings.dspTime < _nextEventTime)
+                return;
+
+            if (_isLoop)
+            {
+                PlayLoop();
+            }
+            else
+            {
+                _onEnd?.Invoke();
+                Stop();
+            }
+        }
+
+        public void ResetState()
+        {
+            if (_source[0] != null)
+                _source[0].Stop();
+
+            if (_source[1] != null)
+                _source[1].Stop();
+
+            _startSample = _endSample = 0;
+            _volumeMaster = 1f;
+            VolumeFade = 1f;
+            _lastAppliedVolumeScaled = -1;
+            ActiveFadeId = 0;
+            IsFading = false;
+
+            _onStop = _onEnd = null;
         }
 
         internal static AudioClipPlayer Create(Transform parent)
@@ -436,51 +480,10 @@ namespace AudioConductor.Runtime.Core
                 _source[1].pitch = pitch;
         }
 
-        internal void ManualUpdate(float _)
-        {
-            if (!IsPlaying && !IsPaused)
-                return;
-
-            UpdateVolume();
-
-            if (IsPaused)
-                return;
-
-            if (AudioSettings.dspTime < _nextEventTime)
-                return;
-
-            if (_isLoop)
-            {
-                PlayLoop();
-            }
-            else
-            {
-                _onEnd?.Invoke();
-                Stop();
-            }
-        }
-
         private void InvokeStopAction()
         {
             _onStop?.Invoke();
             _onStop = null;
-        }
-
-        public void ResetState()
-        {
-            if (_source[0] != null)
-                _source[0].Stop();
-
-            if (_source[1] != null)
-                _source[1].Stop();
-
-            _startSample = _endSample = 0;
-            _volumeMaster = 1f;
-            VolumeFade = 1f;
-            _lastAppliedVolumeScaled = -1;
-            IsFading = false;
-
-            _onStop = _onEnd = null;
         }
 
         private AudioSource? GetPlayingSource()

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace AudioConductor.Runtime.Core
 {
-    internal sealed class AudioClipPlayerProvider
+    internal sealed class AudioClipPlayerProvider : IPlayerProvider
     {
         private readonly AudioClipPlayerPool _pool;
 
@@ -22,18 +22,19 @@ namespace AudioConductor.Runtime.Core
             _pool.Prewarm(count);
         }
 
-        public AudioClipPlayer Rent()
+        public IInternalPlayer Rent()
         {
             return _pool.Rent();
         }
 
-        public void Return(AudioClipPlayer player)
+        public void Return(IInternalPlayer player)
         {
             if (player == null)
                 return;
 
-            player.ResetState();
-            _pool.Return(player);
+            var clipPlayer = (AudioClipPlayer)player;
+            clipPlayer.ResetState();
+            _pool.Return(clipPlayer);
         }
     }
 }

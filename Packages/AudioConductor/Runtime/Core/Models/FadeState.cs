@@ -12,24 +12,23 @@ namespace AudioConductor.Runtime.Core.Models
     {
         private IFader _fader = null!;
 
+        public uint Id { get; private set; }
         public IFadeable Fadeable { get; private set; } = null!;
         public float FadeTime { get; private set; }
-        public bool IsStopTarget { get; private set; }
         public float StartVolume { get; private set; }
         public float TargetVolume { get; private set; }
         public float ElapsedTime { get; private set; }
         public bool IsFinished { get; private set; }
 
-        public void Setup(IFadeable fadeable, IFader fader, float startVolume, float targetVolume, float time,
-            bool isStopTarget)
+        public void Setup(uint id, IFadeable fadeable, IFader fader, float startVolume, float targetVolume, float time)
         {
+            Id = id;
             Fadeable = fadeable;
             _fader = fader;
             StartVolume = startVolume;
             TargetVolume = targetVolume;
             FadeTime = time;
             ElapsedTime = 0f;
-            IsStopTarget = isStopTarget;
             IsFinished = false;
         }
 
@@ -39,8 +38,6 @@ namespace AudioConductor.Runtime.Core.Models
             {
                 Fadeable.SetVolumeFade(TargetVolume);
                 IsFinished = true;
-                if (IsStopTarget)
-                    Fadeable.Stop();
                 return true;
             }
 
@@ -51,8 +48,6 @@ namespace AudioConductor.Runtime.Core.Models
             Fadeable.SetVolumeFade(volume);
 
             IsFinished = elapsedRate >= 1f;
-            if (IsFinished && IsStopTarget)
-                Fadeable.Stop();
 
             return IsFinished;
         }

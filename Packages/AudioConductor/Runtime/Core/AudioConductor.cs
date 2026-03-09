@@ -30,16 +30,17 @@ namespace AudioConductor.Runtime.Core
         private readonly HashSet<IFadeable> _fadeOutTargets = new(FadePoolInitialCapacity);
         private readonly Stack<FadeState> _fadePool = new(FadePoolInitialCapacity);
         private readonly List<FadeState> _fadeStates = new();
-        private readonly AudioClipPlayerProvider _oneShotProvider;
+        private readonly IPlayerProvider _oneShotProvider;
         private readonly List<OneShotState> _oneShotStates = new();
         private readonly Dictionary<uint, PlaybackState> _playbacks = new();
-        private readonly AudioClipPlayerProvider _playerProvider;
+        private readonly IPlayerProvider _playerProvider;
         private readonly ICueSheetProvider? _provider;
         private readonly List<uint> _removeKeyBuffer = new(BufferInitialCapacity);
         private readonly AudioConductorSettings _settings;
         private readonly List<uint> _stopAllKeyBuffer = new(BufferInitialCapacity);
         private ConductorBehaviour? _behaviour;
         private uint _cueSheetHandleCounter;
+        private uint _fadeIdCounter;
         private float _masterVolume = 1f;
         private uint _playStateCounter;
         private GameObject? _rootObject;
@@ -78,6 +79,20 @@ namespace AudioConductor.Runtime.Core
 
             for (var i = 0; i < FadePoolInitialCapacity; i++)
                 _fadePool.Push(new FadeState());
+        }
+
+        /// <summary>
+        ///     Test-only constructor that bypasses GameObject/MonoBehaviour creation.
+        /// </summary>
+        internal AudioConductor(AudioConductorSettings settings, IPlayerProvider managedProvider,
+            IPlayerProvider oneShotProvider)
+        {
+            _settings = settings;
+            _provider = null;
+            _playerProvider = managedProvider;
+            _oneShotProvider = oneShotProvider;
+            foreach (var category in settings.categoryList)
+                _categories[category.id] = category;
         }
 
         /// <summary>
@@ -230,10 +245,12 @@ namespace AudioConductor.Runtime.Core
 
             if (options?.FadeTime > 0f)
             {
+                var fadeId = NextFadeId();
                 var fader = options.Value.Fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
-                fadeState.Setup(player, fader, 0f, 1f, options.Value.FadeTime.Value, false);
+                fadeState.Setup(fadeId, player, fader, 0f, 1f, options.Value.FadeTime.Value);
                 player.SetVolumeFade(0f);
+                player.ActiveFadeId = fadeId;
                 player.IsFading = true;
                 _fadeStates.Add(fadeState);
             }
@@ -263,9 +280,11 @@ namespace AudioConductor.Runtime.Core
                 if (_fadeOutTargets.Contains(state.Player))
                     return;
 
+                var fadeId = NextFadeId();
                 var effectiveFader = fader ?? Faders.Linear;
                 var fadeState = RentFadeState();
-                fadeState.Setup(state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value, true);
+                fadeState.Setup(fadeId, state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value);
+                state.Player.ActiveFadeId = fadeId;
                 state.Player.IsFading = true;
                 _fadeOutTargets.Add(state.Player);
                 _fadeStates.Add(fadeState);
@@ -360,12 +379,22 @@ namespace AudioConductor.Runtime.Core
             for (var i = 0; i < _fadeStates.Count; i++)
             {
                 var fade = _fadeStates[i];
+
+                // Stale check: the fade was invalidated by CancelFade.
+                if (fade.Fadeable.ActiveFadeId != fade.Id)
+                {
+                    _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
+                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
+                    _fadePool.Push(fade);
+                    i--;
+                    continue;
+                }
+
                 var finished = fade.Elapsed(deltaTime);
                 if (finished)
                 {
-                    ((AudioClipPlayer)fade.Fadeable).IsFading = false;
-                    if (fade.IsStopTarget)
-                        _fadeOutTargets.Remove(fade.Fadeable);
+                    fade.Fadeable.IsFading = false;
+                    fade.Fadeable.ActiveFadeId = 0;
                     _fadeStates[i] = _fadeStates[_fadeStates.Count - 1];
                     _fadeStates.RemoveAt(_fadeStates.Count - 1);
                     _fadePool.Push(fade);
@@ -379,6 +408,15 @@ namespace AudioConductor.Runtime.Core
             {
                 if (playback.Player == null)
                     continue;
+
+                if (!playback.Player.IsFading && _fadeOutTargets.Contains(playback.Player))
+                {
+                    playback.Player.Stop();
+                    _fadeOutTargets.Remove(playback.Player);
+                    _playerProvider.Return(playback.Player);
+                    _removeKeyBuffer.Add(playback.Id);
+                    continue;
+                }
 
                 playback.Player.ManualUpdate(deltaTime);
 
@@ -632,10 +670,14 @@ namespace AudioConductor.Runtime.Core
             // Single pass: count playing states and track oldest per scope at once.
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            PlaybackState? cueOldestManaged = null, sheetOldestManaged = null,
-                catOldestManaged = null, globalOldestManaged = null;
-            OneShotState? cueOldestOneShot = null, sheetOldestOneShot = null,
-                catOldestOneShot = null, globalOldestOneShot = null;
+            PlaybackState? cueOldestManaged = null,
+                sheetOldestManaged = null,
+                catOldestManaged = null,
+                globalOldestManaged = null;
+            OneShotState? cueOldestOneShot = null,
+                sheetOldestOneShot = null,
+                catOldestOneShot = null,
+                globalOldestOneShot = null;
 
             foreach (var p in _playbacks.Values)
                 AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
@@ -651,30 +693,52 @@ namespace AudioConductor.Runtime.Core
                     ref catCount, ref catMin, ref catOldestOneShot,
                     ref globalCount, ref globalMin, ref globalOldestOneShot);
 
-            // Check each scope.
-            if (!ApplyThrottle(cueThrottleType, cueThrottleLimit,
-                    cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot))
+            // Phase 1: Resolve eviction candidates per scope without executing.
+            // AdjustCountsAfterEviction updates local counts so subsequent scopes
+            // see the effect of prior evictions. Actual stop is deferred to Phase 2
+            // to ensure no side effects when a later scope rejects the play.
+            if (!ResolveThrottle(cueThrottleType, cueThrottleLimit,
+                    cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot,
+                    out var cueEviction))
+                return false;
+            AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
+                    sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot,
+                    out var sheetEviction))
+                return false;
+            AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(catThrottleType, catThrottleLimit,
+                    catCount, catMin, track.priority, catOldestManaged, catOldestOneShot,
+                    out var catEviction))
+                return false;
+            AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(globalThrottleType, globalThrottleLimit,
+                    globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot,
+                    out var globalEviction))
                 return false;
 
-            if (!ApplyThrottle(sheetThrottleType, sheetThrottleLimit,
-                    sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot))
-                return false;
-
-            if (!ApplyThrottle(catThrottleType, catThrottleLimit,
-                    catCount, catMin, track.priority, catOldestManaged, catOldestOneShot))
-                return false;
-
-            if (!ApplyThrottle(globalThrottleType, globalThrottleLimit,
-                    globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot))
-                return false;
+            // Phase 2: All scopes passed — execute deferred evictions.
+            ExecuteEviction(cueEviction);
+            ExecuteEviction(sheetEviction);
+            ExecuteEviction(catEviction);
+            ExecuteEviction(globalEviction);
 
             return true;
         }
 
-        private bool ApplyThrottle(ThrottleType throttleType, int throttleLimit,
+        private static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
             int playNum, int minPriority, int trackPriority,
-            PlaybackState? oldestManaged, OneShotState? oldestOneShot)
+            PlaybackState? oldestManaged, OneShotState? oldestOneShot,
+            out EvictionResult eviction)
         {
+            eviction = default;
+
             if (throttleLimit <= 0 || playNum < throttleLimit)
                 return true;
 
@@ -687,13 +751,30 @@ namespace AudioConductor.Runtime.Core
             switch (throttleType)
             {
                 case ThrottleType.PriorityOrder:
-                    StopOldestCandidate(oldestManaged, oldestOneShot);
-                    return true;
+                    eviction = SelectEvictionCandidate(oldestManaged, oldestOneShot);
+                    return eviction.Id != 0;
                 case ThrottleType.FirstComeFirstServed:
                     return false;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AdjustCountsAfterEviction(in EvictionResult eviction,
+            uint targetCueSheetId, Cue targetCue, int targetCategoryId,
+            ref int cueCount, ref int sheetCount, ref int catCount, ref int globalCount)
+        {
+            if (eviction.Id == 0)
+                return;
+
+            globalCount--;
+            if (eviction.CueSheetId == targetCueSheetId)
+                sheetCount--;
+            if (eviction.Cue == targetCue)
+                cueCount--;
+            if (eviction.Cue.categoryId == targetCategoryId)
+                catCount--;
         }
 
         private void StopAllPlaybacksImmediate()
@@ -719,6 +800,7 @@ namespace AudioConductor.Runtime.Core
                 var state = _oneShotStates[i];
                 if (state.Player != null)
                 {
+                    CancelFade(state.Player);
                     state.Player.Stop();
                     _oneShotProvider.Return(state.Player);
                 }
@@ -732,6 +814,7 @@ namespace AudioConductor.Runtime.Core
             if (playback.Player == null)
                 return;
 
+            CancelFade(playback.Player);
             playback.Player.Stop();
             _playerProvider.Return(playback.Player);
         }
@@ -739,6 +822,22 @@ namespace AudioConductor.Runtime.Core
         private FadeState RentFadeState()
         {
             return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
+        }
+
+        private uint NextFadeId()
+        {
+            var id = ++_fadeIdCounter;
+            // 0 is the sentinel value meaning "no active fade".
+            if (id == 0)
+                id = ++_fadeIdCounter;
+            return id;
+        }
+
+        private void CancelFade(IFadeable fadeable)
+        {
+            fadeable.ActiveFadeId = 0;
+            fadeable.IsFading = false;
+            _fadeOutTargets.Remove(fadeable);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -749,11 +848,12 @@ namespace AudioConductor.Runtime.Core
             ref int catCount, ref int catMin, ref PlaybackState? catOldest,
             ref int globalCount, ref int globalMin, ref PlaybackState? globalOldest)
         {
-            if (p.Player == null || !p.Player.IsPlaying)
+            if (p.Player == null || !p.Player.IsPlaying && !p.Player.IsPaused)
                 return;
 
             globalCount++;
-            if (p.Priority < globalMin || (p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id)))
+            if (p.Priority < globalMin ||
+                p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id))
             {
                 globalMin = p.Priority;
                 globalOldest = p;
@@ -762,7 +862,8 @@ namespace AudioConductor.Runtime.Core
             if (p.CueSheetId == targetCueSheetId)
             {
                 sheetCount++;
-                if (p.Priority < sheetMin || (p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id)))
+                if (p.Priority < sheetMin ||
+                    p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id))
                 {
                     sheetMin = p.Priority;
                     sheetOldest = p;
@@ -772,7 +873,7 @@ namespace AudioConductor.Runtime.Core
             if (p.Cue == targetCue)
             {
                 cueCount++;
-                if (p.Priority < cueMin || (p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id)))
+                if (p.Priority < cueMin || p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id))
                 {
                     cueMin = p.Priority;
                     cueOldest = p;
@@ -782,7 +883,7 @@ namespace AudioConductor.Runtime.Core
             if (p.Cue.categoryId == targetCategoryId)
             {
                 catCount++;
-                if (p.Priority < catMin || (p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id)))
+                if (p.Priority < catMin || p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id))
                 {
                     catMin = p.Priority;
                     catOldest = p;
@@ -798,11 +899,12 @@ namespace AudioConductor.Runtime.Core
             ref int catCount, ref int catMin, ref OneShotState? catOldest,
             ref int globalCount, ref int globalMin, ref OneShotState? globalOldest)
         {
-            if (s.Player == null || !s.Player.IsPlaying)
+            if (s.Player == null || !s.Player.IsPlaying && !s.Player.IsPaused)
                 return;
 
             globalCount++;
-            if (s.Priority < globalMin || (s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id)))
+            if (s.Priority < globalMin ||
+                s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id))
             {
                 globalMin = s.Priority;
                 globalOldest = s;
@@ -811,7 +913,8 @@ namespace AudioConductor.Runtime.Core
             if (s.CueSheetId == targetCueSheetId)
             {
                 sheetCount++;
-                if (s.Priority < sheetMin || (s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id)))
+                if (s.Priority < sheetMin ||
+                    s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id))
                 {
                     sheetMin = s.Priority;
                     sheetOldest = s;
@@ -821,7 +924,7 @@ namespace AudioConductor.Runtime.Core
             if (s.Cue == targetCue)
             {
                 cueCount++;
-                if (s.Priority < cueMin || (s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id)))
+                if (s.Priority < cueMin || s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id))
                 {
                     cueMin = s.Priority;
                     cueOldest = s;
@@ -831,7 +934,7 @@ namespace AudioConductor.Runtime.Core
             if (s.Cue.categoryId == targetCategoryId)
             {
                 catCount++;
-                if (s.Priority < catMin || (s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id)))
+                if (s.Priority < catMin || s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id))
                 {
                     catMin = s.Priority;
                     catOldest = s;
@@ -839,32 +942,79 @@ namespace AudioConductor.Runtime.Core
             }
         }
 
-        private void StopOldestCandidate(PlaybackState? oldestManaged, OneShotState? oldestOneShot)
+        private static EvictionResult SelectEvictionCandidate(PlaybackState? oldestManaged,
+            OneShotState? oldestOneShot)
         {
             // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
             if (oldestManaged.HasValue &&
                 (!oldestOneShot.HasValue || oldestManaged.Value.Id <= oldestOneShot.Value.Id))
             {
-                StopPlayback(oldestManaged.Value);
-                _playbacks.Remove(oldestManaged.Value.Id);
+                var m = oldestManaged.Value;
+                return new EvictionResult(m.Id, m.CueSheetId, m.Cue, true);
             }
-            else if (oldestOneShot.HasValue)
+
+            if (oldestOneShot.HasValue)
             {
-                oldestOneShot.Value.Player.Stop();
-                _oneShotProvider.Return(oldestOneShot.Value.Player);
-                RemoveOneShotById(oldestOneShot.Value.Id);
+                var s = oldestOneShot.Value;
+                return new EvictionResult(s.Id, s.CueSheetId, s.Cue, false);
+            }
+
+            return default;
+        }
+
+        private void ExecuteEviction(in EvictionResult eviction)
+        {
+            if (eviction.Id == 0)
+                return;
+
+            if (eviction.IsManaged)
+            {
+                if (_playbacks.TryGetValue(eviction.Id, out var pb))
+                {
+                    StopPlayback(pb);
+                    _playbacks.Remove(eviction.Id);
+                }
+            }
+            else
+            {
+                if (RemoveOneShotById(eviction.Id, out var player))
+                {
+                    CancelFade(player);
+                    player.Stop();
+                    _oneShotProvider.Return(player);
+                }
             }
         }
 
-        private void RemoveOneShotById(uint id)
+        private bool RemoveOneShotById(uint id, out IInternalPlayer player)
         {
             for (var i = 0; i < _oneShotStates.Count; i++)
                 if (_oneShotStates[i].Id == id)
                 {
+                    player = _oneShotStates[i].Player;
                     _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
                     _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
-                    return;
+                    return true;
                 }
+
+            player = null!;
+            return false;
+        }
+
+        private readonly struct EvictionResult
+        {
+            public readonly uint Id;
+            public readonly uint CueSheetId;
+            public readonly Cue Cue;
+            public readonly bool IsManaged;
+
+            public EvictionResult(uint id, uint cueSheetId, Cue cue, bool isManaged)
+            {
+                Id = id;
+                CueSheetId = cueSheetId;
+                Cue = cue;
+                IsManaged = isManaged;
+            }
         }
 
         private sealed class CueSheetRegistration
@@ -903,7 +1053,7 @@ namespace AudioConductor.Runtime.Core
 
         private readonly struct PlaybackState
         {
-            internal PlaybackState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
+            internal PlaybackState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
@@ -915,13 +1065,13 @@ namespace AudioConductor.Runtime.Core
             internal uint Id { get; }
             internal uint CueSheetId { get; }
             internal Cue Cue { get; }
-            internal AudioClipPlayer Player { get; }
+            internal IInternalPlayer Player { get; }
             internal int Priority { get; }
         }
 
         private readonly struct OneShotState
         {
-            internal OneShotState(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
+            internal OneShotState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
@@ -933,9 +1083,8 @@ namespace AudioConductor.Runtime.Core
             internal uint Id { get; }
             internal uint CueSheetId { get; }
             internal Cue Cue { get; }
-            internal AudioClipPlayer Player { get; }
+            internal IInternalPlayer Player { get; }
             internal int Priority { get; }
         }
-
     }
 }

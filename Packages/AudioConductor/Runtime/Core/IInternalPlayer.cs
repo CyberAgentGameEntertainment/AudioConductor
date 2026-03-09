@@ -4,11 +4,10 @@
 
 namespace AudioConductor.Runtime.Core
 {
-    internal interface IFadeable
+    internal interface IInternalPlayer : IAudioClipPlayer, IFadeable
     {
-        uint ActiveFadeId { get; set; }
-        bool IsFading { get; set; }
-        float VolumeFade { get; }
-        void SetVolumeFade(float fade);
+        void SetMasterVolume(float volume);
+        void ManualUpdate(float deltaTime);
+        void ResetState();
     }
 }

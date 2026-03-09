@@ -17,7 +17,7 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         {
             var fadeable = new FakeIFadeable();
             var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 1f, 0f, false);
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, 0f);
 
             fadeState.Elapsed(0f);
 
@@ -29,7 +29,7 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         {
             var fadeable = new FakeIFadeable();
             var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 1f, 0f, false);
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, 0f);
 
             var result = fadeState.Elapsed(0f);
 
@@ -38,35 +38,11 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         }
 
         [Test]
-        public void Elapsed_WhenFadeTimeIsZeroAndIsStopTarget_CallsStop()
-        {
-            var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 0f, 0f, true);
-
-            fadeState.Elapsed(0f);
-
-            Assert.That(fadeable.StopCallCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Elapsed_WhenFadeTimeIsZeroAndIsNotStopTarget_DoesNotCallStop()
-        {
-            var fadeable = new FakeIFadeable();
-            var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 1f, 0f, false);
-
-            fadeState.Elapsed(0f);
-
-            Assert.That(fadeable.StopCallCount, Is.EqualTo(0));
-        }
-
-        [Test]
         public void Elapsed_WhenFadeTimeIsPositive_InterpolatesVolume()
         {
             var fadeable = new FakeIFadeable();
             var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 1f, 1f, false);
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, 1f);
 
             fadeState.Elapsed(0.5f);
 
@@ -79,7 +55,7 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         {
             var fadeable = new FakeIFadeable();
             var fadeState = new FadeState();
-            fadeState.Setup(fadeable, Faders.Linear, 0f, 1f, 1f, false);
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, 1f);
 
             var result = fadeState.Elapsed(1f);
 
@@ -89,15 +65,25 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         }
 
         [Test]
+        public void Setup_SetsId()
+        {
+            var fadeable = new FakeIFadeable();
+            var fadeState = new FadeState();
+            fadeState.Setup(42, fadeable, Faders.Linear, 0f, 1f, 1f);
+
+            Assert.That(fadeState.Id, Is.EqualTo(42u));
+        }
+
+        [Test]
         public void Setup_CanBeCalledTwice_ResetsState()
         {
             var fadeable1 = new FakeIFadeable();
             var fadeable2 = new FakeIFadeable();
             var fadeState = new FadeState();
-            fadeState.Setup(fadeable1, Faders.Linear, 0f, 1f, 1f, false);
+            fadeState.Setup(1, fadeable1, Faders.Linear, 0f, 1f, 1f);
             fadeState.Elapsed(0.5f);
 
-            fadeState.Setup(fadeable2, Faders.Linear, 0f, 0.5f, 2f, true);
+            fadeState.Setup(2, fadeable2, Faders.Linear, 0f, 0.5f, 2f);
 
             Assert.That(fadeState.Fadeable, Is.SameAs(fadeable2));
             Assert.That(fadeState.ElapsedTime, Is.EqualTo(0f));
@@ -107,19 +93,15 @@ namespace AudioConductor.Tests.Runtime.Core.Models
         private sealed class FakeIFadeable : IFadeable
         {
             public float Volume { get; private set; }
-            public int StopCallCount { get; private set; }
 
+            public uint ActiveFadeId { get; set; }
+            public bool IsFading { get; set; }
             public float VolumeFade { get; private set; } = 1f;
 
             public void SetVolumeFade(float fade)
             {
                 VolumeFade = fade;
                 Volume = fade;
-            }
-
-            public void Stop()
-            {
-                StopCallCount++;
             }
         }
     }
