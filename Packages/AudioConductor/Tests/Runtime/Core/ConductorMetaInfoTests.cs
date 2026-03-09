@@ -8,13 +8,12 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorMetaInfoTests
+    public class ConductorMetaInfoTests
     {
         private AudioConductorSettings _settings = null!;
 
@@ -33,7 +32,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueSheetInfos_WithNoRegistrations_ReturnsEmpty()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var infos = conductor.GetCueSheetInfos();
 
@@ -43,7 +42,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueSheetInfos_ReturnsRegisteredCueSheets()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var asset1 = CreateCueSheetAsset("BGM");
             var asset2 = CreateCueSheetAsset("SE");
             var handle1 = conductor.RegisterCueSheet(asset1);
@@ -64,7 +63,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueSheetInfos_AfterUnregister_ExcludesUnregistered()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var asset = CreateCueSheetAsset("BGM");
             var handle = conductor.RegisterCueSheet(asset);
             conductor.UnregisterCueSheet(handle);
@@ -79,7 +78,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueInfos_WithInvalidHandle_ReturnsEmpty()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var infos = conductor.GetCueInfos(default);
 
@@ -89,7 +88,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueInfos_ReturnsCueNamesAndCategoryIds()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var asset = CreateCueSheetAsset("Sheet");
             asset.cueSheet.cueList.Add(new Cue { name = "cue_a", categoryId = 1 });
             asset.cueSheet.cueList.Add(new Cue { name = "cue_b", categoryId = 2 });
@@ -109,7 +108,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetCueInfos_WithUnknownHandle_ReturnsEmpty()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var infos = conductor.GetCueInfos(new CueSheetHandle(999));
 
@@ -119,7 +118,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetTrackInfos_WithInvalidHandle_ReturnsEmpty()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var infos = conductor.GetTrackInfos(default, "cue");
 
@@ -129,7 +128,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetTrackInfos_WithUnknownCueName_ReturnsEmpty()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var asset = CreateCueSheetAsset("Sheet");
             var handle = conductor.RegisterCueSheet(asset);
 
@@ -143,7 +142,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetTrackInfos_ReturnsTrackDetails()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var clip = AudioClip.Create("test_clip", 1000, 1, 44100, false);
             var asset = CreateCueSheetAsset("Sheet");
             var cue = new Cue { name = "cue_a" };

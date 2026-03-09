@@ -10,13 +10,12 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorCueSheetTests
+    public class ConductorCueSheetTests
     {
         private CueSheetAsset _cueSheetAsset = null!;
         private AudioConductorSettings _settings = null!;
@@ -38,7 +37,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void RegisterCueSheet_ReturnsValidHandle()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var handle = conductor.RegisterCueSheet(_cueSheetAsset);
 
@@ -48,7 +47,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void RegisterCueSheet_CalledTwiceWithSameAsset_ReturnsDifferentHandles()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var handle1 = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle2 = conductor.RegisterCueSheet(_cueSheetAsset);
@@ -59,7 +58,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void RegisterCueSheet_MonotonicallyIncreasing()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var handle1 = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle2 = conductor.RegisterCueSheet(_cueSheetAsset);
@@ -70,7 +69,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void UnregisterCueSheet_WithValidHandle_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var handle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.UnregisterCueSheet(handle));
@@ -79,7 +78,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void UnregisterCueSheet_WithInvalidHandle_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.UnregisterCueSheet(default));
         }
@@ -87,7 +86,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void UnregisterCueSheet_WithUnknownHandle_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.UnregisterCueSheet(new CueSheetHandle(999)));
         }
@@ -95,7 +94,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void Dispose_WithoutProvider_DoesNotThrow()
         {
-            var conductor = new CoreAudioConductor(_settings);
+            var conductor = new Conductor(_settings);
             conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.Dispose());
@@ -105,7 +104,7 @@ namespace AudioConductor.Tests.Runtime.Core
         public void Dispose_CallsProviderReleaseForEachRegistration()
         {
             var provider = new FakeProvider();
-            var conductor = new CoreAudioConductor(_settings, provider);
+            var conductor = new Conductor(_settings, provider);
             conductor.RegisterCueSheet(_cueSheetAsset);
             conductor.RegisterCueSheet(_cueSheetAsset);
 
@@ -118,7 +117,7 @@ namespace AudioConductor.Tests.Runtime.Core
         public void RegisterCueSheetAsync_WithProvider_ReturnsValidHandle()
         {
             var provider = new FakeProvider { AssetToReturn = _cueSheetAsset };
-            using var conductor = new CoreAudioConductor(_settings, provider);
+            using var conductor = new Conductor(_settings, provider);
 
             var task = conductor.RegisterCueSheetAsync("test_key");
             task.Wait();
@@ -129,7 +128,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void RegisterCueSheetAsync_WithoutProvider_ThrowsInvalidOperationException()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var task = conductor.RegisterCueSheetAsync("test_key");
 
@@ -141,7 +140,7 @@ namespace AudioConductor.Tests.Runtime.Core
         public void UnregisterCueSheet_WithProvider_CallsRelease()
         {
             var provider = new FakeProvider();
-            using var conductor = new CoreAudioConductor(_settings, provider);
+            using var conductor = new Conductor(_settings, provider);
             var handle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             conductor.UnregisterCueSheet(handle);

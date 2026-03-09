@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public partial class AudioConductorThrottleTests
+    public partial class ConductorThrottleTests
     {
         [Test]
         public void Play_CueThrottle_FCFS_SamePriority_Rejected()

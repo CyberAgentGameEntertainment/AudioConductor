@@ -8,13 +8,12 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorOneShotTests
+    public class ConductorOneShotTests
     {
         private CueSheetAsset _cueSheetAsset = null!;
         private AudioConductorSettings _settings = null!;
@@ -36,7 +35,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void PlayOneShot_WithInvalidSheetHandle_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(default, "cue"));
         }
@@ -44,7 +43,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void PlayOneShot_WithUnregisteredHandle_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(new CueSheetHandle(999), "cue"));
         }
@@ -52,7 +51,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void PlayOneShot_WithNonExistentCueName_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, "nonexistent_cue"));
@@ -64,7 +63,7 @@ namespace AudioConductor.Tests.Runtime.Core
             var cue = new Cue { name = "empty_cue" };
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, "empty_cue"));
@@ -78,7 +77,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, "cue1"));
@@ -93,7 +92,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, "cue1"));
@@ -110,7 +109,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             conductor.PlayOneShot(sheetHandle, "cue1");
@@ -130,7 +129,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            var conductor = new CoreAudioConductor(_settings);
+            var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             conductor.PlayOneShot(sheetHandle, "cue1");
 

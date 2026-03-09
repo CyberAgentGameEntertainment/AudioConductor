@@ -4,16 +4,16 @@
 
 #nullable enable
 
+using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorVolumeTests
+    public class ConductorVolumeTests
     {
         private CueSheetAsset _cueSheetAsset = null!;
         private AudioConductorSettings _settings = null!;
@@ -35,7 +35,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetMasterVolume_DefaultValue_ReturnsOne()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.That(conductor.GetMasterVolume(), Is.EqualTo(1f).Within(0.0001f));
         }
@@ -43,7 +43,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void SetMasterVolume_ThenGetMasterVolume_ReturnsSameValue()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             conductor.SetMasterVolume(0.5f);
 
@@ -53,7 +53,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void SetMasterVolume_BelowZero_ClampedToZero()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             conductor.SetMasterVolume(-0.5f);
 
@@ -63,7 +63,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void SetMasterVolume_AboveOne_ClampedToOne()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             conductor.SetMasterVolume(1.5f);
 
@@ -73,7 +73,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void StopAll_WithNoPlayback_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.StopAll());
         }
@@ -87,7 +87,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle1 = conductor.Play(sheetHandle, "cue1");
             var handle2 = conductor.Play(sheetHandle, "cue1");
@@ -108,7 +108,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             conductor.Play(sheetHandle, "cue1");
 
@@ -126,7 +126,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             conductor.PlayOneShot(sheetHandle, "cue1");
 

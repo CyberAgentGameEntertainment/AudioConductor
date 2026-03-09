@@ -21,7 +21,7 @@ namespace AudioConductor.Runtime.Core
     ///     The main entry point for AudioConductor v2.
     ///     Manages audio playback lifecycle on a per-instance basis.
     /// </summary>
-    public sealed class AudioConductor : IDisposable
+    public sealed class Conductor : IDisposable
     {
         private const int BufferInitialCapacity = 64;
         private const int FadePoolInitialCapacity = 8;
@@ -46,17 +46,17 @@ namespace AudioConductor.Runtime.Core
         private GameObject? _rootObject;
 
         /// <summary>
-        ///     Initializes a new instance of <see cref="AudioConductor" /> with the specified settings.
+        ///     Initializes a new instance of <see cref="Conductor" /> with the specified settings.
         ///     Creates a DontDestroyOnLoad root GameObject and attaches a <see cref="ConductorBehaviour" />.
         /// </summary>
         /// <param name="settings">The runtime settings for this conductor instance.</param>
         /// <param name="provider">Optional provider for async CueSheet loading and releasing.</param>
-        public AudioConductor(AudioConductorSettings settings, ICueSheetProvider? provider = null)
+        public Conductor(AudioConductorSettings settings, ICueSheetProvider? provider = null)
         {
             _settings = settings;
             _provider = provider;
 
-            _rootObject = new GameObject(nameof(AudioConductor));
+            _rootObject = new GameObject(nameof(Conductor));
             if (Application.isPlaying)
                 Object.DontDestroyOnLoad(_rootObject);
 
@@ -84,7 +84,7 @@ namespace AudioConductor.Runtime.Core
         /// <summary>
         ///     Test-only constructor that bypasses GameObject/MonoBehaviour creation.
         /// </summary>
-        internal AudioConductor(AudioConductorSettings settings, IPlayerProvider managedProvider,
+        internal Conductor(AudioConductorSettings settings, IPlayerProvider managedProvider,
             IPlayerProvider oneShotProvider)
         {
             _settings = settings;

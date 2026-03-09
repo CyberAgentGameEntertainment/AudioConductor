@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public partial class AudioConductorThrottleTests
+    public partial class ConductorThrottleTests
     {
         [Test]
         public void Play_SheetThrottle_LimitZero_Unlimited()

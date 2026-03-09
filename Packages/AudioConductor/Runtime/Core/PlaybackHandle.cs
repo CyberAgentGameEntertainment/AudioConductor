@@ -9,7 +9,7 @@ using System;
 namespace AudioConductor.Runtime.Core
 {
     /// <summary>
-    ///     Identifies an active managed playback within an <see cref="AudioConductor" /> instance.
+    ///     Identifies an active managed playback within an <see cref="Conductor" /> instance.
     /// </summary>
     public readonly struct PlaybackHandle : IEquatable<PlaybackHandle>
     {

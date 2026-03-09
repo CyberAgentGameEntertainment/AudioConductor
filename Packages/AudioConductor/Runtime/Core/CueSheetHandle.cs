@@ -9,7 +9,7 @@ using System;
 namespace AudioConductor.Runtime.Core
 {
     /// <summary>
-    ///     Identifies a registered CueSheet within an <see cref="AudioConductor" /> instance.
+    ///     Identifies a registered CueSheet within an <see cref="Conductor" /> instance.
     /// </summary>
     public readonly struct CueSheetHandle : IEquatable<CueSheetHandle>
     {

@@ -4,18 +4,18 @@
 
 #nullable enable
 
+using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Tests.Runtime.Core.Fakes;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public partial class AudioConductorThrottleTests
+    public partial class ConductorThrottleTests
     {
         private FakePlayerProvider _managedProvider = null!;
         private FakePlayerProvider _oneShotProvider = null!;
@@ -35,9 +35,9 @@ namespace AudioConductor.Tests.Runtime.Core
             Object.DestroyImmediate(_settings);
         }
 
-        private CoreAudioConductor CreateConductor()
+        private Conductor CreateConductor()
         {
-            return new CoreAudioConductor(_settings, _managedProvider, _oneShotProvider);
+            return new Conductor(_settings, _managedProvider, _oneShotProvider);
         }
 
         private static AudioClip CreateClip()

@@ -8,7 +8,6 @@ using System;
 using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using UnityEngine;
-using Conductor = AudioConductor.Runtime.Core.AudioConductor;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models

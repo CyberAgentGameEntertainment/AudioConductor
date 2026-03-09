@@ -10,7 +10,7 @@ namespace AudioConductor.Runtime.Core
 {
     internal sealed class ConductorBehaviour : MonoBehaviour
     {
-        internal AudioConductor? Conductor { get; set; }
+        internal Conductor? Conductor { get; set; }
 
         private void Update()
         {

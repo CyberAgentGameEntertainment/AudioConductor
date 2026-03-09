@@ -7,7 +7,6 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using UnityEngine;
 using UnityEngine.UI;
-using Conductor = AudioConductor.Runtime.Core.AudioConductor;
 
 namespace AudioConductor.Sample
 {

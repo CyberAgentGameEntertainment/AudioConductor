@@ -4,15 +4,15 @@
 
 #nullable enable
 
+using AudioConductor.Runtime.Core;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using ConductorBehaviour = AudioConductor.Runtime.Core.ConductorBehaviour;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorTests
+    public class ConductorTests
     {
         private AudioConductorSettings _settings = null!;
 
@@ -31,18 +31,18 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void Constructor_CreatesRootGameObject()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
-            var rootObject = GameObject.Find("AudioConductor");
+            var rootObject = GameObject.Find(nameof(Conductor));
             Assert.That(rootObject, Is.Not.Null);
         }
 
         [Test]
         public void Constructor_AttachesConductorBehaviour()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
-            var rootObject = GameObject.Find("AudioConductor");
+            var rootObject = GameObject.Find(nameof(Conductor));
             Assert.That(rootObject, Is.Not.Null);
             var behaviour = rootObject.GetComponent<ConductorBehaviour>();
             Assert.That(behaviour, Is.Not.Null);
@@ -52,9 +52,9 @@ namespace AudioConductor.Tests.Runtime.Core
         public void Dispose_DestroysRootGameObject()
         {
             GameObject rootObject;
-            using (var conductor = new CoreAudioConductor(_settings))
+            using (var conductor = new Conductor(_settings))
             {
-                rootObject = GameObject.Find("AudioConductor");
+                rootObject = GameObject.Find(nameof(Conductor));
                 Assert.That(rootObject, Is.Not.Null);
             }
 
@@ -65,8 +65,8 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void Dispose_DisconnectsBehaviourDelegate()
         {
-            var conductor = new CoreAudioConductor(_settings);
-            var rootObject = GameObject.Find("AudioConductor");
+            var conductor = new Conductor(_settings);
+            var rootObject = GameObject.Find(nameof(Conductor));
             var behaviour = rootObject.GetComponent<ConductorBehaviour>();
             Assert.That(behaviour.Conductor, Is.Not.Null);
 
@@ -79,7 +79,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void GetAudioMixerGroup_WithUnknownCategoryId_ReturnsNull()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             var mixerGroup = conductor.GetAudioMixerGroup(999);
 

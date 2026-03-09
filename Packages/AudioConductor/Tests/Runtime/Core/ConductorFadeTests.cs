@@ -8,13 +8,12 @@ using AudioConductor.Runtime.Core;
 using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using CoreAudioConductor = AudioConductor.Runtime.Core.AudioConductor;
 using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Tests.Runtime.Core
 {
-    public class AudioConductorFadeTests
+    public class ConductorFadeTests
     {
         private CueSheetAsset _cueSheetAsset = null!;
         private AudioConductorSettings _settings = null!;
@@ -42,7 +41,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
 
@@ -60,7 +59,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
 
@@ -78,7 +77,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
 
@@ -94,7 +93,7 @@ namespace AudioConductor.Tests.Runtime.Core
         [Test]
         public void Stop_WithInvalidHandle_WithFadeTime_DoesNotThrow()
         {
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
 
             Assert.DoesNotThrow(() => conductor.Stop(default, 1.0f));
         }
@@ -108,7 +107,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             var handle = conductor.Play(sheetHandle, "cue1", new PlayOptions { FadeTime = 1.0f });
@@ -126,7 +125,7 @@ namespace AudioConductor.Tests.Runtime.Core
             cue.trackList.Add(track);
             _cueSheetAsset.cueSheet.cueList.Add(cue);
 
-            using var conductor = new CoreAudioConductor(_settings);
+            using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             var handle = conductor.Play(sheetHandle, "cue1",
