@@ -1,0 +1,582 @@
+// --------------------------------------------------------------
+// Copyright 2026 CyberAgent, Inc.
+// --------------------------------------------------------------
+
+#nullable enable
+
+using System;
+using System.Runtime.CompilerServices;
+using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Runtime.Core.Shared;
+
+namespace AudioConductor.Runtime.Core
+{
+    public sealed partial class Conductor
+    {
+        /// <summary>
+        ///     Plays a cue from the registered CueSheet identified by the handle.
+        ///     Returns a <see cref="PlaybackHandle" /> for controlling the playback.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue to play.</param>
+        /// <param name="options">Optional playback settings. If null, CueSheet defaults are used.</param>
+        /// <returns>A handle for controlling this playback instance.</returns>
+        public PlaybackHandle Play(CueSheetHandle sheetHandle, string cueName, PlayOptions? options = null)
+        {
+            if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
+                throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
+
+            if (options?.TrackIndex.HasValue == true && options?.Selector != null)
+                throw new ArgumentException("TrackIndex and Selector are mutually exclusive.");
+
+            if (!string.IsNullOrEmpty(options?.TrackName) && options?.Selector != null)
+                throw new ArgumentException("TrackName and Selector are mutually exclusive.");
+
+            if (!sheetHandle.IsValid)
+                return default;
+
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return default;
+
+            var cue = registration.FindCue(cueName);
+            if (cue == null)
+                return default;
+
+            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
+
+            Track? track;
+            if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
+                track = cueState.GetTrack(options.Value.TrackIndex.Value);
+            else if (!string.IsNullOrEmpty(options?.TrackName))
+                track = cueState.GetTrack(options!.Value.TrackName!);
+            else
+                track = cueState.NextTrack(options?.Selector);
+
+            if (track == null || track.audioClip == null)
+                return default;
+
+            if (!CanPlay(sheetHandle.Id, cue, track))
+                return default;
+
+            var player = _playerProvider.Rent();
+            _categories.TryGetValue(cue.categoryId, out var category);
+            var cueSheet = registration.Asset.cueSheet;
+            var volume = Calculator.CalcVolume(cueSheet, cue, track);
+            var pitch = Calculator.CalcPitch(cueSheet, cue, track);
+            var isLoop = options?.IsLoop == true || track.isLoop;
+            player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
+                track.startSample, track.loopStartSample, track.endSample);
+            player.Play();
+            player.SetMasterVolume(_masterVolume);
+
+            var id = ++_playStateCounter;
+            var state = new PlaybackState(id, sheetHandle.Id, cue, player, track.priority);
+            _playbacks[id] = state;
+
+            if (options?.FadeTime > 0f)
+            {
+                var fadeId = NextFadeId();
+                var fader = options.Value.Fader ?? Faders.Linear;
+                var fadeState = RentFadeState();
+                fadeState.Setup(fadeId, player, fader, 0f, 1f, options.Value.FadeTime.Value);
+                player.SetVolumeFade(0f);
+                player.ActiveFadeId = fadeId;
+                player.IsFading = true;
+                _fadeStates.Add(fadeState);
+            }
+
+            return new PlaybackHandle(id);
+        }
+
+        /// <summary>
+        ///     Stops the playback identified by the handle.
+        ///     When <paramref name="fadeTime" /> is greater than zero, a fade-out begins instead of an immediate stop.
+        ///     After stopping (or when fade completes), the handle remains valid but operations become no-ops.
+        /// </summary>
+        /// <param name="handle">The playback handle to stop.</param>
+        /// <param name="fadeTime">Fade-out duration in seconds. When null or zero, the stop is immediate.</param>
+        /// <param name="fader">Custom fader curve. When null, <see cref="Faders.Linear" /> is used.</param>
+        public void Stop(PlaybackHandle handle, float? fadeTime = null, IFader? fader = null)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state))
+                return;
+
+            if (fadeTime > 0f)
+            {
+                // Do not add a duplicate fade-out entry for the same player.
+                if (_fadeOutTargets.Contains(state.Player))
+                    return;
+
+                var fadeId = NextFadeId();
+                var effectiveFader = fader ?? Faders.Linear;
+                var fadeState = RentFadeState();
+                fadeState.Setup(fadeId, state.Player, effectiveFader, state.Player.VolumeFade, 0f, fadeTime.Value);
+                state.Player.ActiveFadeId = fadeId;
+                state.Player.IsFading = true;
+                _fadeOutTargets.Add(state.Player);
+                _fadeStates.Add(fadeState);
+                return;
+            }
+
+            StopPlayback(state);
+            _playbacks.Remove(handle.Id);
+        }
+
+        /// <summary>
+        ///     Pauses the playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle to pause.</param>
+        public void Pause(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.Pause();
+        }
+
+        /// <summary>
+        ///     Resumes the paused playback identified by the handle.
+        /// </summary>
+        /// <param name="handle">The playback handle to resume.</param>
+        public void Resume(PlaybackHandle handle)
+        {
+            if (!handle.IsValid)
+                return;
+
+            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+                return;
+
+            state.Player.Resume();
+        }
+
+        /// <summary>
+        ///     Stops all active Managed and OneShot playbacks under this conductor.
+        ///     When <paramref name="fadeTime" /> is greater than zero, Managed playbacks fade out instead of stopping immediately.
+        ///     OneShot playbacks are always stopped immediately.
+        /// </summary>
+        /// <param name="fadeTime">Fade-out duration in seconds for Managed playbacks. When null or zero, the stop is immediate.</param>
+        /// <param name="fader">Custom fader curve for Managed fade-out. When null, <see cref="Faders.Linear" /> is used.</param>
+        public void StopAll(float? fadeTime = null, IFader? fader = null)
+        {
+            if (fadeTime > 0f)
+                StopAllPlaybacksWithFade(fadeTime.Value, fader);
+            else
+                StopAllPlaybacksImmediate();
+
+            StopAllOneShots();
+        }
+
+        /// <summary>
+        ///     Plays a cue as a fire-and-forget OneShot.
+        ///     No handle is returned; the playback cannot be controlled after it starts.
+        ///     The AudioClipPlayer is automatically returned to the OneShot pool when playback completes.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue to play.</param>
+        public void PlayOneShot(CueSheetHandle sheetHandle, string cueName)
+        {
+            if (!sheetHandle.IsValid)
+                return;
+
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cue = registration.FindCue(cueName);
+            if (cue == null)
+                return;
+
+            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
+            var track = cueState.NextTrack();
+
+            if (track == null || track.audioClip == null)
+                return;
+
+            if (!CanPlay(sheetHandle.Id, cue, track))
+                return;
+
+            var player = _oneShotProvider.Rent();
+            _categories.TryGetValue(cue.categoryId, out var category);
+            var cueSheet = registration.Asset.cueSheet;
+            var volume = Calculator.CalcVolume(cueSheet, cue, track);
+            var pitch = Calculator.CalcPitch(cueSheet, cue, track);
+            player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, false,
+                track.startSample, track.loopStartSample, track.endSample);
+            player.Play();
+            player.SetMasterVolume(_masterVolume);
+            _oneShotStates.Add(new OneShotState(++_playStateCounter, sheetHandle.Id, cue, player, track.priority));
+        }
+
+        private bool CanPlay(uint cueSheetId, Cue cue, Track track)
+        {
+            if (_playbacks.Count == 0 && _oneShotStates.Count == 0)
+                return true;
+
+            // Gather throttle settings per scope.
+            var cueThrottleType = cue.throttleType;
+            var cueThrottleLimit = cue.throttleLimit;
+
+            ThrottleType sheetThrottleType = default;
+            var sheetThrottleLimit = 0;
+            if (_cueSheets.TryGetValue(cueSheetId, out var reg))
+            {
+                sheetThrottleType = reg.Asset.cueSheet.throttleType;
+                sheetThrottleLimit = reg.Asset.cueSheet.throttleLimit;
+            }
+
+            ThrottleType catThrottleType = default;
+            var catThrottleLimit = 0;
+            if (_categories.TryGetValue(cue.categoryId, out var cat))
+            {
+                catThrottleType = cat.throttleType;
+                catThrottleLimit = cat.throttleLimit;
+            }
+
+            var globalThrottleType = _settings.throttleType;
+            var globalThrottleLimit = _settings.throttleLimit;
+
+            if (cueThrottleLimit <= 0 && sheetThrottleLimit <= 0 && catThrottleLimit <= 0 &&
+                globalThrottleLimit <= 0)
+                return true;
+
+            // Single pass: count playing states and track oldest per scope at once.
+            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
+            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            PlaybackState? cueOldestManaged = null,
+                sheetOldestManaged = null,
+                catOldestManaged = null,
+                globalOldestManaged = null;
+            OneShotState? cueOldestOneShot = null,
+                sheetOldestOneShot = null,
+                catOldestOneShot = null,
+                globalOldestOneShot = null;
+
+            foreach (var p in _playbacks.Values)
+                AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
+                    ref cueCount, ref cueMin, ref cueOldestManaged,
+                    ref sheetCount, ref sheetMin, ref sheetOldestManaged,
+                    ref catCount, ref catMin, ref catOldestManaged,
+                    ref globalCount, ref globalMin, ref globalOldestManaged);
+
+            foreach (var s in _oneShotStates)
+                AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
+                    ref cueCount, ref cueMin, ref cueOldestOneShot,
+                    ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
+                    ref catCount, ref catMin, ref catOldestOneShot,
+                    ref globalCount, ref globalMin, ref globalOldestOneShot);
+
+            // Phase 1: Resolve eviction candidates per scope without executing.
+            // AdjustCountsAfterEviction updates local counts so subsequent scopes
+            // see the effect of prior evictions. Actual stop is deferred to Phase 2
+            // to ensure no side effects when a later scope rejects the play.
+            if (!ResolveThrottle(cueThrottleType, cueThrottleLimit,
+                    cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot,
+                    out var cueEviction))
+                return false;
+            AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
+                    sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot,
+                    out var sheetEviction))
+                return false;
+            AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(catThrottleType, catThrottleLimit,
+                    catCount, catMin, track.priority, catOldestManaged, catOldestOneShot,
+                    out var catEviction))
+                return false;
+            AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            if (!ResolveThrottle(globalThrottleType, globalThrottleLimit,
+                    globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot,
+                    out var globalEviction))
+                return false;
+
+            // Phase 2: All scopes passed — execute deferred evictions.
+            ExecuteEviction(cueEviction);
+            ExecuteEviction(sheetEviction);
+            ExecuteEviction(catEviction);
+            ExecuteEviction(globalEviction);
+
+            return true;
+        }
+
+        private static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
+            int playNum, int minPriority, int trackPriority,
+            PlaybackState? oldestManaged, OneShotState? oldestOneShot,
+            out EvictionResult eviction)
+        {
+            eviction = default;
+
+            if (throttleLimit <= 0 || playNum < throttleLimit)
+                return true;
+
+            if (minPriority > trackPriority)
+                return false;
+
+            if (minPriority < trackPriority)
+                throttleType = ThrottleType.PriorityOrder;
+
+            switch (throttleType)
+            {
+                case ThrottleType.PriorityOrder:
+                    eviction = SelectEvictionCandidate(oldestManaged, oldestOneShot);
+                    return eviction.Id != 0;
+                case ThrottleType.FirstComeFirstServed:
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AdjustCountsAfterEviction(in EvictionResult eviction,
+            uint targetCueSheetId, Cue targetCue, int targetCategoryId,
+            ref int cueCount, ref int sheetCount, ref int catCount, ref int globalCount)
+        {
+            if (eviction.Id == 0)
+                return;
+
+            globalCount--;
+            if (eviction.CueSheetId == targetCueSheetId)
+                sheetCount--;
+            if (eviction.Cue == targetCue)
+                cueCount--;
+            if (eviction.Cue.categoryId == targetCategoryId)
+                catCount--;
+        }
+
+        private void StopAllPlaybacksImmediate()
+        {
+            foreach (var playback in _playbacks.Values)
+                StopPlayback(playback);
+            _playbacks.Clear();
+        }
+
+        private void StopAllPlaybacksWithFade(float fadeTime, IFader? fader)
+        {
+            _stopAllKeyBuffer.Clear();
+            foreach (var id in _playbacks.Keys)
+                _stopAllKeyBuffer.Add(id);
+            for (var i = 0; i < _stopAllKeyBuffer.Count; i++)
+                Stop(new PlaybackHandle(_stopAllKeyBuffer[i]), fadeTime, fader);
+        }
+
+        private void StopAllOneShots()
+        {
+            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
+            {
+                var state = _oneShotStates[i];
+                if (state.Player != null)
+                {
+                    CancelFade(state.Player);
+                    state.Player.Stop();
+                    _oneShotProvider.Return(state.Player);
+                }
+            }
+
+            _oneShotStates.Clear();
+        }
+
+        private void StopPlayback(PlaybackState playback)
+        {
+            if (playback.Player == null)
+                return;
+
+            CancelFade(playback.Player);
+            playback.Player.Stop();
+            _playerProvider.Return(playback.Player);
+        }
+
+        private FadeState RentFadeState()
+        {
+            return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
+        }
+
+        private uint NextFadeId()
+        {
+            var id = ++_fadeIdCounter;
+            // 0 is the sentinel value meaning "no active fade".
+            if (id == 0)
+                id = ++_fadeIdCounter;
+            return id;
+        }
+
+        private void CancelFade(IFadeable fadeable)
+        {
+            fadeable.ActiveFadeId = 0;
+            fadeable.IsFading = false;
+            _fadeOutTargets.Remove(fadeable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AccumulateAllScopes(in PlaybackState p, uint targetCueSheetId, Cue targetCue,
+            int targetCategoryId,
+            ref int cueCount, ref int cueMin, ref PlaybackState? cueOldest,
+            ref int sheetCount, ref int sheetMin, ref PlaybackState? sheetOldest,
+            ref int catCount, ref int catMin, ref PlaybackState? catOldest,
+            ref int globalCount, ref int globalMin, ref PlaybackState? globalOldest)
+        {
+            if (p.Player == null || !p.Player.IsPlaying && !p.Player.IsPaused)
+                return;
+
+            globalCount++;
+            if (p.Priority < globalMin ||
+                p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id))
+            {
+                globalMin = p.Priority;
+                globalOldest = p;
+            }
+
+            if (p.CueSheetId == targetCueSheetId)
+            {
+                sheetCount++;
+                if (p.Priority < sheetMin ||
+                    p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id))
+                {
+                    sheetMin = p.Priority;
+                    sheetOldest = p;
+                }
+            }
+
+            if (p.Cue == targetCue)
+            {
+                cueCount++;
+                if (p.Priority < cueMin || p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id))
+                {
+                    cueMin = p.Priority;
+                    cueOldest = p;
+                }
+            }
+
+            if (p.Cue.categoryId == targetCategoryId)
+            {
+                catCount++;
+                if (p.Priority < catMin || p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id))
+                {
+                    catMin = p.Priority;
+                    catOldest = p;
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void AccumulateAllScopes(in OneShotState s, uint targetCueSheetId, Cue targetCue,
+            int targetCategoryId,
+            ref int cueCount, ref int cueMin, ref OneShotState? cueOldest,
+            ref int sheetCount, ref int sheetMin, ref OneShotState? sheetOldest,
+            ref int catCount, ref int catMin, ref OneShotState? catOldest,
+            ref int globalCount, ref int globalMin, ref OneShotState? globalOldest)
+        {
+            if (s.Player == null || !s.Player.IsPlaying && !s.Player.IsPaused)
+                return;
+
+            globalCount++;
+            if (s.Priority < globalMin ||
+                s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id))
+            {
+                globalMin = s.Priority;
+                globalOldest = s;
+            }
+
+            if (s.CueSheetId == targetCueSheetId)
+            {
+                sheetCount++;
+                if (s.Priority < sheetMin ||
+                    s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id))
+                {
+                    sheetMin = s.Priority;
+                    sheetOldest = s;
+                }
+            }
+
+            if (s.Cue == targetCue)
+            {
+                cueCount++;
+                if (s.Priority < cueMin || s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id))
+                {
+                    cueMin = s.Priority;
+                    cueOldest = s;
+                }
+            }
+
+            if (s.Cue.categoryId == targetCategoryId)
+            {
+                catCount++;
+                if (s.Priority < catMin || s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id))
+                {
+                    catMin = s.Priority;
+                    catOldest = s;
+                }
+            }
+        }
+
+        private static EvictionResult SelectEvictionCandidate(PlaybackState? oldestManaged,
+            OneShotState? oldestOneShot)
+        {
+            // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
+            if (oldestManaged.HasValue &&
+                (!oldestOneShot.HasValue || oldestManaged.Value.Id <= oldestOneShot.Value.Id))
+            {
+                var m = oldestManaged.Value;
+                return new EvictionResult(m.Id, m.CueSheetId, m.Cue, true);
+            }
+
+            if (oldestOneShot.HasValue)
+            {
+                var s = oldestOneShot.Value;
+                return new EvictionResult(s.Id, s.CueSheetId, s.Cue, false);
+            }
+
+            return default;
+        }
+
+        private void ExecuteEviction(in EvictionResult eviction)
+        {
+            if (eviction.Id == 0)
+                return;
+
+            if (eviction.IsManaged)
+            {
+                if (_playbacks.TryGetValue(eviction.Id, out var pb))
+                {
+                    StopPlayback(pb);
+                    _playbacks.Remove(eviction.Id);
+                }
+            }
+            else
+            {
+                if (RemoveOneShotById(eviction.Id, out var player))
+                {
+                    CancelFade(player);
+                    player.Stop();
+                    _oneShotProvider.Return(player);
+                }
+            }
+        }
+
+        private bool RemoveOneShotById(uint id, out IInternalPlayer player)
+        {
+            for (var i = 0; i < _oneShotStates.Count; i++)
+                if (_oneShotStates[i].Id == id)
+                {
+                    player = _oneShotStates[i].Player;
+                    _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
+                    _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
+                    return true;
+                }
+
+            player = null!;
+            return false;
+        }
+    }
+}
