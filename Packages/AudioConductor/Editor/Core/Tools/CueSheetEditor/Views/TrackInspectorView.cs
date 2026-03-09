@@ -9,6 +9,7 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
 using AudioConductor.Runtime.Core.Shared;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -35,6 +36,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private readonly Subject<string> _nameChangedSubject = new();
         private readonly TextField _nameField;
+        private readonly Button _pauseButton;
         private readonly Subject<float> _pitchChangedSubject = new();
         private readonly SliderAndFloatField _pitchField;
         private readonly Subject<bool> _pitchInvertChangedSubject = new();
@@ -80,6 +82,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField = this.Q<SliderAndIntegerField>("LoopStartSample");
             _analyzeButton = this.Q<Button>("Analyze");
             _playButton = this.Q<Button>("Play");
+            _pauseButton = this.Q<Button>("Pause");
+            _pauseButton.style.backgroundImage =
+                new StyleBackground((Texture2D)EditorGUIUtility.IconContent("PauseButton").image);
             _stopButton = this.Q<Button>("Stop");
             _previewAreaContainer = this.Q<IMGUIContainer>("Preview");
 
@@ -163,12 +168,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField.RegisterValueChangedCallback(OnLoopStartSampleChanged);
             _analyzeButton.RegisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
             _playButton.RegisterCallback<ClickEvent>(OnPlayButtonClicked);
+            _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
             _stopButton.RegisterCallback<ClickEvent>(OnStopButtonClicked);
         }
 
         private void CleanupEventHandlers()
         {
             _stopButton.UnregisterCallback<ClickEvent>(OnStopButtonClicked);
+            _pauseButton.UnregisterCallback<ClickEvent>(OnPauseButtonClicked);
             _playButton.UnregisterCallback<ClickEvent>(OnPlayButtonClicked);
             _analyzeButton.UnregisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
             _loopStartSampleField.UnregisterValueChangedCallback(OnLoopStartSampleChanged);
@@ -418,6 +425,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnPlayButtonClicked(ClickEvent _)
         {
             _playRequestedSubject.OnNext(null);
+        }
+
+        private void OnPauseButtonClicked(ClickEvent _)
+        {
+            if (_previewController == null)
+                return;
+
+            if (_previewController.IsPlaying)
+                _previewController.Pause();
+            else
+                _previewController.UnPause();
         }
 
         private void OnStopButtonClicked(ClickEvent _)

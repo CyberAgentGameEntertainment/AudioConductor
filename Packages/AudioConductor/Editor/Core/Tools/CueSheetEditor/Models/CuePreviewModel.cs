@@ -21,6 +21,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private Conductor? _conductor;
         private AudioConductorSettings? _conductorSettings;
         private CueSheetHandle _cueSheetHandle;
+        private PlaybackHandle _playbackHandle;
         private CueSheetAsset? _tempAsset;
 
         public CuePreviewModel(ItemCue item, Func<AudioConductorSettings?> settingsProvider)
@@ -51,11 +52,23 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 _cueSheetHandle = _conductor.RegisterCueSheet(_tempAsset);
             }
 
-            _conductor.Play(_cueSheetHandle, _cue.name);
+            _playbackHandle = _conductor.Play(_cueSheetHandle, _cue.name);
+        }
+
+        public void TogglePause()
+        {
+            if (_conductor == null || !_playbackHandle.IsValid)
+                return;
+
+            if (_conductor.IsPlaying(_playbackHandle))
+                _conductor.Pause(_playbackHandle);
+            else
+                _conductor.Resume(_playbackHandle);
         }
 
         public void Stop()
         {
+            _playbackHandle = default;
             _conductor?.Dispose();
             _conductor = null;
             _conductorSettings = null;

@@ -604,6 +604,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _trackPreviewModel?.Play();
         }
 
+        public void TogglePauseCue()
+        {
+            _trackPreviewModel?.TogglePause();
+        }
+
         public void StopCue()
         {
             _trackPreviewModel?.Stop();

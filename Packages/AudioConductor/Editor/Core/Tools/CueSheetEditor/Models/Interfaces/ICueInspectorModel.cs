@@ -60,6 +60,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         void PlayCue();
 
+        void TogglePauseCue();
+
         void StopCue();
     }
 }

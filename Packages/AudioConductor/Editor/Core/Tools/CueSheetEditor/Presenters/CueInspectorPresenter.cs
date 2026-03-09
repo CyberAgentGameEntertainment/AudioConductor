@@ -150,6 +150,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.PlayRequestedAsObservable
                 .Subscribe(_ => model.PlayCue())
                 .DisposeWith(_viewEventDisposable);
+            _view.PauseRequestedAsObservable
+                .Subscribe(_ => model.TogglePauseCue())
+                .DisposeWith(_viewEventDisposable);
             _view.StopRequestedAsObservable
                 .Subscribe(_ => model.StopCue())
                 .DisposeWith(_viewEventDisposable);

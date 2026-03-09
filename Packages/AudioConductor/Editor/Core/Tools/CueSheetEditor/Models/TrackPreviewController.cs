@@ -65,6 +65,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 _audioSource.Stop();
         }
 
+        public void Pause()
+        {
+            if (_audioSource != null)
+                _audioSource.Pause();
+        }
+
+        public void UnPause()
+        {
+            if (_audioSource != null)
+                _audioSource.UnPause();
+        }
+
         public void SetCurrentSample(int sample)
         {
             if (_audioSource != null)

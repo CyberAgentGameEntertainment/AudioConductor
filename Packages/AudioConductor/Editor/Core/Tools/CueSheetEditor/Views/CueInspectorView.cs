@@ -11,6 +11,8 @@ using AudioConductor.Editor.Foundation;
 using AudioConductor.Editor.Foundation.TinyRx;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Shared;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
@@ -24,6 +26,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private readonly Subject<string> _nameChangedSubject = new();
         private readonly TextField _nameField;
+        private readonly Button _pauseButton;
+        private readonly Subject<Empty> _pauseRequestedSubject = new();
         private readonly Subject<float> _pitchChangedSubject = new();
         private readonly SliderAndFloatField _pitchField;
         private readonly Subject<bool> _pitchInvertChangedSubject = new();
@@ -62,6 +66,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField = this.Q<Toggle>("PitchInvert");
             _playTypeField = this.Q<CuePlayTypeField>();
             _playButton = this.Q<Button>("Play");
+            _pauseButton = this.Q<Button>("Pause");
+            _pauseButton.style.backgroundImage =
+                new StyleBackground((Texture2D)EditorGUIUtility.IconContent("PauseButton").image);
             _stopButton = this.Q<Button>("Stop");
 
             // Smoothly moving sliders and preview
@@ -89,6 +96,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal IObservable<bool> PitchInvertChangedAsObservable => _pitchInvertChangedSubject;
         internal IObservable<CuePlayType> PlayTypeChangedAsObservable => _playTypeChangedSubject;
         internal IObservable<Empty> PlayRequestedAsObservable => _playRequestedSubject;
+        internal IObservable<Empty> PauseRequestedAsObservable => _pauseRequestedSubject;
         internal IObservable<Empty> StopRequestedAsObservable => _stopRequestedSubject;
 
         public void Dispose()
@@ -133,12 +141,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField.RegisterValueChangedCallback(OnPitchInvertChanged);
             _playTypeField.RegisterValueChangedCallback(OnPlayTypeChanged);
             _playButton.RegisterCallback<ClickEvent>(OnPlayButtonClicked);
+            _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
             _stopButton.RegisterCallback<ClickEvent>(OnStopButtonClicked);
         }
 
         private void CleanupEventHandlers()
         {
             _stopButton.UnregisterCallback<ClickEvent>(OnStopButtonClicked);
+            _pauseButton.UnregisterCallback<ClickEvent>(OnPauseButtonClicked);
             _playButton.UnregisterCallback<ClickEvent>(OnPlayButtonClicked);
             _playTypeField.UnregisterValueChangedCallback(OnPlayTypeChanged);
             _pitchInvertField.UnregisterValueChangedCallback(OnPitchInvertChanged);
@@ -319,6 +329,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnPlayButtonClicked(ClickEvent _)
         {
             _playRequestedSubject.OnNext(Empty.Default);
+        }
+
+        private void OnPauseButtonClicked(ClickEvent _)
+        {
+            _pauseRequestedSubject.OnNext(Empty.Default);
         }
 
         private void OnStopButtonClicked(ClickEvent _)
