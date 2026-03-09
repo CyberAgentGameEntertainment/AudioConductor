@@ -11,7 +11,7 @@ namespace AudioConductor.Runtime.Core
 {
     public sealed partial class Conductor
     {
-        private readonly struct EvictionResult
+        internal readonly struct EvictionResult
         {
             public readonly uint Id;
             public readonly uint CueSheetId;
@@ -61,7 +61,7 @@ namespace AudioConductor.Runtime.Core
             }
         }
 
-        private readonly struct PlaybackState
+        internal readonly struct PlaybackState
         {
             internal PlaybackState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
@@ -79,7 +79,7 @@ namespace AudioConductor.Runtime.Core
             internal int Priority { get; }
         }
 
-        private readonly struct OneShotState
+        internal readonly struct OneShotState
         {
             internal OneShotState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {

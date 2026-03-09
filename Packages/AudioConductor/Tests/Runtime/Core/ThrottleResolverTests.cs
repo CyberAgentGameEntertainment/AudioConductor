@@ -1,0 +1,262 @@
+// --------------------------------------------------------------
+// Copyright 2026 CyberAgent, Inc.
+// --------------------------------------------------------------
+
+#nullable enable
+
+using AudioConductor.Runtime.Core;
+using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Tests.Runtime.Core.Fakes;
+using NUnit.Framework;
+using PlaybackState = AudioConductor.Runtime.Core.Conductor.PlaybackState;
+using OneShotState = AudioConductor.Runtime.Core.Conductor.OneShotState;
+using EvictionResult = AudioConductor.Runtime.Core.Conductor.EvictionResult;
+
+namespace AudioConductor.Tests.Runtime.Core
+{
+    [TestFixture]
+    internal sealed class ThrottleResolverTests
+    {
+        private static Cue CreateCue(int categoryId = 0)
+        {
+            return new Cue { categoryId = categoryId };
+        }
+
+        [Test]
+        public void ResolveThrottle_LimitZero_ReturnsTrue()
+        {
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.FirstComeFirstServed, 0,
+                10, 0, 0, null, null, out var eviction);
+            Assert.That(result, Is.True);
+            Assert.That(eviction.Id, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ResolveThrottle_BelowLimit_ReturnsTrue()
+        {
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.FirstComeFirstServed, 3,
+                2, 0, 0, null, null, out var eviction);
+            Assert.That(result, Is.True);
+            Assert.That(eviction.Id, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ResolveThrottle_AtLimit_FirstComeFirstServed_ReturnsFalse()
+        {
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.FirstComeFirstServed, 2,
+                2, 0, 0, null, null, out _);
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void ResolveThrottle_AtLimit_PriorityOrder_WithCandidate_ReturnsTrue()
+        {
+            var player = new FakePlayer { IsPlaying = true };
+            var cue = CreateCue();
+            var managed = new PlaybackState(1, 1, cue, player, 0);
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.PriorityOrder, 1,
+                1, 0, 0, managed, null, out var eviction);
+            Assert.That(result, Is.True);
+            Assert.That(eviction.Id, Is.EqualTo(1u));
+        }
+
+        [Test]
+        public void ResolveThrottle_AtLimit_MinPriorityHigherThanTrack_ReturnsFalse()
+        {
+            // All existing sounds have higher priority (value > trackPriority) → reject.
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.PriorityOrder, 1,
+                1, 5, 0, null, null, out _);
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void ResolveThrottle_AtLimit_MinPriorityLowerThanTrack_ForcesEviction()
+        {
+            // Existing sounds have lower priority → force PriorityOrder eviction regardless of throttleType.
+            var player = new FakePlayer { IsPlaying = true };
+            var cue = CreateCue();
+            var managed = new PlaybackState(1, 1, cue, player, 0);
+            var result = ThrottleResolver.ResolveThrottle(
+                ThrottleType.FirstComeFirstServed, 1,
+                1, 0, 5, managed, null, out var eviction);
+            Assert.That(result, Is.True);
+            Assert.That(eviction.Id, Is.EqualTo(1u));
+        }
+
+        [Test]
+        public void AccumulateAllScopes_Playback_CountsAndTracksOldest()
+        {
+            var cue = CreateCue(10);
+            var player = new FakePlayer { IsPlaying = true };
+            var state = new PlaybackState(1, 100, cue, player, 5);
+
+            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
+            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+
+            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+                ref cueCount, ref cueMin, ref cueOldest,
+                ref sheetCount, ref sheetMin, ref sheetOldest,
+                ref catCount, ref catMin, ref catOldest,
+                ref globalCount, ref globalMin, ref globalOldest);
+
+            Assert.That(globalCount, Is.EqualTo(1));
+            Assert.That(sheetCount, Is.EqualTo(1));
+            Assert.That(cueCount, Is.EqualTo(1));
+            Assert.That(catCount, Is.EqualTo(1));
+            Assert.That(globalOldest!.Value.Id, Is.EqualTo(1u));
+        }
+
+        [Test]
+        public void AccumulateAllScopes_Playback_SkipsStoppedPlayer()
+        {
+            var cue = CreateCue();
+            var player = new FakePlayer { IsPlaying = false, IsPaused = false };
+            var state = new PlaybackState(1, 100, cue, player, 0);
+
+            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
+            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+
+            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 0,
+                ref cueCount, ref cueMin, ref cueOldest,
+                ref sheetCount, ref sheetMin, ref sheetOldest,
+                ref catCount, ref catMin, ref catOldest,
+                ref globalCount, ref globalMin, ref globalOldest);
+
+            Assert.That(globalCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void AccumulateAllScopes_Playback_DifferentSheet_OnlyCounts_GlobalAndCategory()
+        {
+            var cue = CreateCue(10);
+            var player = new FakePlayer { IsPlaying = true };
+            var state = new PlaybackState(1, 200, cue, player, 0);
+
+            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
+            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+
+            // Target sheet is 100, but state's sheet is 200
+            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+                ref cueCount, ref cueMin, ref cueOldest,
+                ref sheetCount, ref sheetMin, ref sheetOldest,
+                ref catCount, ref catMin, ref catOldest,
+                ref globalCount, ref globalMin, ref globalOldest);
+
+            Assert.That(globalCount, Is.EqualTo(1));
+            Assert.That(sheetCount, Is.EqualTo(0));
+            Assert.That(cueCount, Is.EqualTo(1));
+            Assert.That(catCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AccumulateAllScopes_OneShot_CountsAndTracksOldest()
+        {
+            var cue = CreateCue(10);
+            var player = new FakePlayer { IsPlaying = true };
+            var state = new OneShotState(1, 100, cue, player, 5);
+
+            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
+            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
+            OneShotState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+
+            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+                ref cueCount, ref cueMin, ref cueOldest,
+                ref sheetCount, ref sheetMin, ref sheetOldest,
+                ref catCount, ref catMin, ref catOldest,
+                ref globalCount, ref globalMin, ref globalOldest);
+
+            Assert.That(globalCount, Is.EqualTo(1));
+            Assert.That(sheetCount, Is.EqualTo(1));
+            Assert.That(cueCount, Is.EqualTo(1));
+            Assert.That(catCount, Is.EqualTo(1));
+            Assert.That(globalOldest!.Value.Id, Is.EqualTo(1u));
+        }
+
+        [Test]
+        public void SelectEvictionCandidate_ManagedOlderThanOneShot_SelectsManaged()
+        {
+            var cue = CreateCue();
+            var player = new FakePlayer { IsPlaying = true };
+            var managed = new PlaybackState(1, 100, cue, player, 0);
+            var oneShot = new OneShotState(2, 100, cue, player, 0);
+
+            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+            Assert.That(result.Id, Is.EqualTo(1u));
+            Assert.That(result.IsManaged, Is.True);
+        }
+
+        [Test]
+        public void SelectEvictionCandidate_OneShotOlderThanManaged_SelectsOneShot()
+        {
+            var cue = CreateCue();
+            var player = new FakePlayer { IsPlaying = true };
+            var managed = new PlaybackState(5, 100, cue, player, 0);
+            var oneShot = new OneShotState(2, 100, cue, player, 0);
+
+            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+            Assert.That(result.Id, Is.EqualTo(2u));
+            Assert.That(result.IsManaged, Is.False);
+        }
+
+        [Test]
+        public void SelectEvictionCandidate_BothNull_ReturnsDefault()
+        {
+            var result = ThrottleResolver.SelectEvictionCandidate(null, null);
+            Assert.That(result.Id, Is.EqualTo(0u));
+        }
+
+        [Test]
+        public void AdjustCountsAfterEviction_ZeroId_NoChange()
+        {
+            var eviction = default(EvictionResult);
+            var cue = CreateCue();
+            int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
+
+            ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 0,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            Assert.That(globalCount, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void AdjustCountsAfterEviction_MatchingScopes_DecrementsAll()
+        {
+            var cue = CreateCue(10);
+            var eviction = new EvictionResult(1, 100, cue, true);
+            int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
+
+            ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            Assert.That(globalCount, Is.EqualTo(2));
+            Assert.That(sheetCount, Is.EqualTo(2));
+            Assert.That(cueCount, Is.EqualTo(2));
+            Assert.That(catCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void AdjustCountsAfterEviction_DifferentSheet_OnlyDecrementsGlobalAndCategory()
+        {
+            var cue = CreateCue(10);
+            var eviction = new EvictionResult(1, 200, cue, true);
+            int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
+
+            ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,
+                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
+
+            Assert.That(globalCount, Is.EqualTo(2));
+            Assert.That(sheetCount, Is.EqualTo(3));
+            Assert.That(cueCount, Is.EqualTo(2));
+            Assert.That(catCount, Is.EqualTo(2));
+        }
+    }
+}

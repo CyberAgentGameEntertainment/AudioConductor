@@ -5,7 +5,6 @@
 #nullable enable
 
 using System;
-using System.Runtime.CompilerServices;
 using AudioConductor.Runtime.Core.Enums;
 using AudioConductor.Runtime.Core.Models;
 using AudioConductor.Runtime.Core.Shared;
@@ -258,14 +257,14 @@ namespace AudioConductor.Runtime.Core
                 globalOldestOneShot = null;
 
             foreach (var p in _playbacks.Values)
-                AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
+                ThrottleResolver.AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestManaged,
                     ref sheetCount, ref sheetMin, ref sheetOldestManaged,
                     ref catCount, ref catMin, ref catOldestManaged,
                     ref globalCount, ref globalMin, ref globalOldestManaged);
 
             foreach (var s in _oneShotStates)
-                AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
+                ThrottleResolver.AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestOneShot,
                     ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
                     ref catCount, ref catMin, ref catOldestOneShot,
@@ -275,28 +274,28 @@ namespace AudioConductor.Runtime.Core
             // AdjustCountsAfterEviction updates local counts so subsequent scopes
             // see the effect of prior evictions. Actual stop is deferred to Phase 2
             // to ensure no side effects when a later scope rejects the play.
-            if (!ResolveThrottle(cueThrottleType, cueThrottleLimit,
+            if (!ThrottleResolver.ResolveThrottle(cueThrottleType, cueThrottleLimit,
                     cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot,
                     out var cueEviction))
                 return false;
-            AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
+            ThrottleResolver.AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
+            if (!ThrottleResolver.ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
                     sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot,
                     out var sheetEviction))
                 return false;
-            AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
+            ThrottleResolver.AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ResolveThrottle(catThrottleType, catThrottleLimit,
+            if (!ThrottleResolver.ResolveThrottle(catThrottleType, catThrottleLimit,
                     catCount, catMin, track.priority, catOldestManaged, catOldestOneShot,
                     out var catEviction))
                 return false;
-            AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
+            ThrottleResolver.AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ResolveThrottle(globalThrottleType, globalThrottleLimit,
+            if (!ThrottleResolver.ResolveThrottle(globalThrottleType, globalThrottleLimit,
                     globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot,
                     out var globalEviction))
                 return false;
@@ -308,51 +307,6 @@ namespace AudioConductor.Runtime.Core
             ExecuteEviction(globalEviction);
 
             return true;
-        }
-
-        private static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
-            int playNum, int minPriority, int trackPriority,
-            PlaybackState? oldestManaged, OneShotState? oldestOneShot,
-            out EvictionResult eviction)
-        {
-            eviction = default;
-
-            if (throttleLimit <= 0 || playNum < throttleLimit)
-                return true;
-
-            if (minPriority > trackPriority)
-                return false;
-
-            if (minPriority < trackPriority)
-                throttleType = ThrottleType.PriorityOrder;
-
-            switch (throttleType)
-            {
-                case ThrottleType.PriorityOrder:
-                    eviction = SelectEvictionCandidate(oldestManaged, oldestOneShot);
-                    return eviction.Id != 0;
-                case ThrottleType.FirstComeFirstServed:
-                    return false;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AdjustCountsAfterEviction(in EvictionResult eviction,
-            uint targetCueSheetId, Cue targetCue, int targetCategoryId,
-            ref int cueCount, ref int sheetCount, ref int catCount, ref int globalCount)
-        {
-            if (eviction.Id == 0)
-                return;
-
-            globalCount--;
-            if (eviction.CueSheetId == targetCueSheetId)
-                sheetCount--;
-            if (eviction.Cue == targetCue)
-                cueCount--;
-            if (eviction.Cue.categoryId == targetCategoryId)
-                catCount--;
         }
 
         private void StopAllPlaybacksImmediate()
@@ -416,128 +370,6 @@ namespace AudioConductor.Runtime.Core
             fadeable.ActiveFadeId = 0;
             fadeable.IsFading = false;
             _fadeOutTargets.Remove(fadeable);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AccumulateAllScopes(in PlaybackState p, uint targetCueSheetId, Cue targetCue,
-            int targetCategoryId,
-            ref int cueCount, ref int cueMin, ref PlaybackState? cueOldest,
-            ref int sheetCount, ref int sheetMin, ref PlaybackState? sheetOldest,
-            ref int catCount, ref int catMin, ref PlaybackState? catOldest,
-            ref int globalCount, ref int globalMin, ref PlaybackState? globalOldest)
-        {
-            if (p.Player == null || !p.Player.IsPlaying && !p.Player.IsPaused)
-                return;
-
-            globalCount++;
-            if (p.Priority < globalMin ||
-                p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id))
-            {
-                globalMin = p.Priority;
-                globalOldest = p;
-            }
-
-            if (p.CueSheetId == targetCueSheetId)
-            {
-                sheetCount++;
-                if (p.Priority < sheetMin ||
-                    p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id))
-                {
-                    sheetMin = p.Priority;
-                    sheetOldest = p;
-                }
-            }
-
-            if (p.Cue == targetCue)
-            {
-                cueCount++;
-                if (p.Priority < cueMin || p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id))
-                {
-                    cueMin = p.Priority;
-                    cueOldest = p;
-                }
-            }
-
-            if (p.Cue.categoryId == targetCategoryId)
-            {
-                catCount++;
-                if (p.Priority < catMin || p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id))
-                {
-                    catMin = p.Priority;
-                    catOldest = p;
-                }
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AccumulateAllScopes(in OneShotState s, uint targetCueSheetId, Cue targetCue,
-            int targetCategoryId,
-            ref int cueCount, ref int cueMin, ref OneShotState? cueOldest,
-            ref int sheetCount, ref int sheetMin, ref OneShotState? sheetOldest,
-            ref int catCount, ref int catMin, ref OneShotState? catOldest,
-            ref int globalCount, ref int globalMin, ref OneShotState? globalOldest)
-        {
-            if (s.Player == null || !s.Player.IsPlaying && !s.Player.IsPaused)
-                return;
-
-            globalCount++;
-            if (s.Priority < globalMin ||
-                s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id))
-            {
-                globalMin = s.Priority;
-                globalOldest = s;
-            }
-
-            if (s.CueSheetId == targetCueSheetId)
-            {
-                sheetCount++;
-                if (s.Priority < sheetMin ||
-                    s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id))
-                {
-                    sheetMin = s.Priority;
-                    sheetOldest = s;
-                }
-            }
-
-            if (s.Cue == targetCue)
-            {
-                cueCount++;
-                if (s.Priority < cueMin || s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id))
-                {
-                    cueMin = s.Priority;
-                    cueOldest = s;
-                }
-            }
-
-            if (s.Cue.categoryId == targetCategoryId)
-            {
-                catCount++;
-                if (s.Priority < catMin || s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id))
-                {
-                    catMin = s.Priority;
-                    catOldest = s;
-                }
-            }
-        }
-
-        private static EvictionResult SelectEvictionCandidate(PlaybackState? oldestManaged,
-            OneShotState? oldestOneShot)
-        {
-            // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
-            if (oldestManaged.HasValue &&
-                (!oldestOneShot.HasValue || oldestManaged.Value.Id <= oldestOneShot.Value.Id))
-            {
-                var m = oldestManaged.Value;
-                return new EvictionResult(m.Id, m.CueSheetId, m.Cue, true);
-            }
-
-            if (oldestOneShot.HasValue)
-            {
-                var s = oldestOneShot.Value;
-                return new EvictionResult(s.Id, s.CueSheetId, s.Cue, false);
-            }
-
-            return default;
         }
 
         private void ExecuteEviction(in EvictionResult eviction)
