@@ -5,9 +5,9 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Manages fade state lifecycle: start, update, cancel, and fade-out target tracking.

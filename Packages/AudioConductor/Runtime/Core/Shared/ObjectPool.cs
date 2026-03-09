@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     /// <summary>
     ///     Base class of ObjectPool.

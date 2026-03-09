@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Read-only snapshot of a Track within a Cue.

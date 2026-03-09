@@ -5,9 +5,9 @@
 #nullable enable
 
 using System.Threading.Tasks;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Delegates CueSheet loading and releasing to the asset management system.

@@ -5,9 +5,9 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Carries per-cue state that a stateless <see cref="ITrackSelector" /> uses to select the next track.

@@ -7,7 +7,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     /// <summary>
     ///     Value range definition.

@@ -5,9 +5,8 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core;
 
-namespace AudioConductor.Tests.Runtime.Core.Fakes
+namespace AudioConductor.Core.Tests.Fakes
 {
     internal sealed class FakePlayerProvider : IPlayerProvider
     {

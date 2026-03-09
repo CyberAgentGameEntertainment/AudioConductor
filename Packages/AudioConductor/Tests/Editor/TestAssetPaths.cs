@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 
-namespace AudioConductor.Tests.Editor
+namespace AudioConductor.Editor.Core.Tests
 {
     internal static class TestAssetPaths
     {

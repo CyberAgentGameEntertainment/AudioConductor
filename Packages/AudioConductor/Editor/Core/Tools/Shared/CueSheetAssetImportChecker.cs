@@ -5,7 +5,7 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared

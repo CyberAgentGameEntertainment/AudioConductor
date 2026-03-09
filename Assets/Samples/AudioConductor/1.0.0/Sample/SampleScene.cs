@@ -3,8 +3,8 @@
 // --------------------------------------------------------------
 
 using System.Linq;
-using AudioConductor.Runtime.Core;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core;
+using AudioConductor.Core.Models;
 using UnityEngine;
 using UnityEngine.UI;
 

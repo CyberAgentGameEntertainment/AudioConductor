@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal sealed class RandomTrackSelector : ITrackSelector
     {

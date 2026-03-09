@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Identifies a registered CueSheet within an <see cref="Conductor" /> instance.

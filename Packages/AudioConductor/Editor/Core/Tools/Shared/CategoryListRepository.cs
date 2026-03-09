@@ -6,8 +6,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared

@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Read-only snapshot of a registered CueSheet.

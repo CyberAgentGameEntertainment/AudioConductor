@@ -4,9 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Shared;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     public sealed partial class Conductor
     {

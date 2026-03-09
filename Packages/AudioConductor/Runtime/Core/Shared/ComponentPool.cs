@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     /// <summary>
     ///     Base class of ComponentPool.

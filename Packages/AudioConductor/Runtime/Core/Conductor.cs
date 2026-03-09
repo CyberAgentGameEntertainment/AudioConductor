@@ -6,11 +6,11 @@
 
 using System;
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     The main entry point for AudioConductor v2.

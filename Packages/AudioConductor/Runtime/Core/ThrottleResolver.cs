@@ -6,11 +6,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
-using static AudioConductor.Runtime.Core.Conductor;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using static AudioConductor.Core.Conductor;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal static class ThrottleResolver
     {

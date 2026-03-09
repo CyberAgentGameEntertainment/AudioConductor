@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     internal sealed class FadeState
     {

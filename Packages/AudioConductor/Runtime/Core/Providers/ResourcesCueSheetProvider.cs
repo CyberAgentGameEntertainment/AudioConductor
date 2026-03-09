@@ -6,10 +6,10 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Providers
+namespace AudioConductor.Core.Providers
 {
     /// <summary>
     ///     ICueSheetProvider implementation that loads assets from Resources with reference counting.

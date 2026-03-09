@@ -5,11 +5,10 @@
 #nullable enable
 
 using System;
-using AudioConductor.Runtime.Core;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Tests.Runtime.Core.Fakes
+namespace AudioConductor.Core.Tests.Fakes
 {
     internal sealed class FakePlayer : IInternalPlayer
     {

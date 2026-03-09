@@ -8,7 +8,7 @@ using System.IO;
 using AudioConductor.Editor.Core.Tools.WaveChunkReader;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
+namespace AudioConductor.Editor.Core.Tests.Tools.WaveChunkReader
 {
     internal class WaveChunkReaderTests
     {
@@ -100,7 +100,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             var dataPayload = new byte[channels * (bitsPerSample / 8) * 100]; // 100 frames
             using var ms = BuildWav(channels, samplingRate, bitsPerSample, dataPayload);
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             reader.Execute(ms);
 
             Assert.That(reader.Channels, Is.EqualTo(channels));
@@ -119,7 +119,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write(new[] { 'W', 'A', 'V', 'E' });
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
 
@@ -133,7 +133,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write(new[] { 'A', 'I', 'F', 'F' }); // not WAVE
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
 
@@ -157,7 +157,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write(new byte[dataSize]);
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
 
@@ -192,7 +192,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write((ushort)16);
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
 
@@ -202,7 +202,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             // JUNK chunk with odd size=3 → padded to 4; reader should reach DATA and parse correctly
             using var ms = BuildWavWithOddChunk("JUNK", 3);
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.DoesNotThrow(() => reader.Execute(ms));
             Assert.That(reader.Channels, Is.EqualTo(2));
         }
@@ -234,7 +234,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write(dataPayload);
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
 
@@ -266,7 +266,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.WaveChunkReader
             w.Write(new byte[8]);
             ms.Position = 0;
 
-            var reader = new AudioConductor.Editor.Core.Tools.WaveChunkReader.WaveChunkReader();
+            var reader = new Core.Tools.WaveChunkReader.WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
         }
     }

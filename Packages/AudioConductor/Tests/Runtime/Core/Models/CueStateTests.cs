@@ -5,11 +5,11 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Runtime.Core.Models
+namespace AudioConductor.Core.Tests.Models
 {
     public class CueStateTests
     {

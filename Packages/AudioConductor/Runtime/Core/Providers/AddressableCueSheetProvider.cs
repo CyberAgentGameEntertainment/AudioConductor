@@ -9,11 +9,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace AudioConductor.Runtime.Core.Providers
+namespace AudioConductor.Core.Providers
 {
     /// <summary>
     ///     ICueSheetProvider implementation that loads assets via Addressables with handle management.

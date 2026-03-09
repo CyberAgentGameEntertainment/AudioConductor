@@ -4,7 +4,7 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Core.Enums;
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared

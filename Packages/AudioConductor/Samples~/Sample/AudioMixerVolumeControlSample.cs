@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 using UnityEngine;
@@ -7,17 +7,22 @@ using UnityEngine.Audio;
 
 public class AudioMixerVolumeControlSample : MonoBehaviour
 {
-    [SerializeField]
-    private AudioMixer _audioMixer;
+    [SerializeField] private AudioMixer _audioMixer;
 
     public void SetBGMVolume(float value)
-        => SetVolume("BGMVolume", value);
+    {
+        SetVolume("BGMVolume", value);
+    }
 
     public void SetSEVolume(float value)
-        => SetVolume("SEVolume", value);
+    {
+        SetVolume("SEVolume", value);
+    }
 
     public void SetVoiceVolume(float value)
-        => SetVolume("VoiceVolume", value);
+    {
+        SetVolume("VoiceVolume", value);
+    }
 
     private void SetVolume(string parameterName, float value)
     {

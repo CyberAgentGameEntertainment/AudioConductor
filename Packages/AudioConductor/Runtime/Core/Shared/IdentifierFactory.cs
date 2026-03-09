@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     internal static class IdentifierFactory
     {

@@ -5,10 +5,10 @@
 #nullable enable
 
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Core.Enums;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     internal sealed class CueState
     {

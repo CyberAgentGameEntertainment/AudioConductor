@@ -7,12 +7,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {

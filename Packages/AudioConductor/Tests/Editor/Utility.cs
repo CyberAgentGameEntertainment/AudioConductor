@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AudioConductor.Tests.Editor
+namespace AudioConductor.Editor.Core.Tests
 {
     internal static class Utility
     {

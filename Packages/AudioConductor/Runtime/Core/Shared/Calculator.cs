@@ -4,10 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     internal static class Calculator
     {

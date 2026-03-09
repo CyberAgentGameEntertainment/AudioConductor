@@ -2,7 +2,7 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal interface IInternalPlayer : IAudioClipPlayer, IFadeable
     {

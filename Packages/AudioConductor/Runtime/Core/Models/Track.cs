@@ -5,10 +5,10 @@
 #nullable enable
 
 using System;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     /// <summary>
     ///     The unit of play.

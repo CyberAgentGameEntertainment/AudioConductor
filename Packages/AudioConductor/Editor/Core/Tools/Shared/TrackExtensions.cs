@@ -4,7 +4,7 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {

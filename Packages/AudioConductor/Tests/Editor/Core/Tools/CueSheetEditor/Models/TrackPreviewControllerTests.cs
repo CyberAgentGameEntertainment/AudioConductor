@@ -8,7 +8,7 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 {
     internal class TrackPreviewControllerTests
     {

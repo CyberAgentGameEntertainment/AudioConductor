@@ -4,8 +4,8 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Enums;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 {

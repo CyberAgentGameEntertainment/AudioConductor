@@ -4,16 +4,15 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Tests.Runtime.Core.Fakes;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
-using PlaybackState = AudioConductor.Runtime.Core.Conductor.PlaybackState;
-using OneShotState = AudioConductor.Runtime.Core.Conductor.OneShotState;
-using EvictionResult = AudioConductor.Runtime.Core.Conductor.EvictionResult;
+using PlaybackState = AudioConductor.Core.Conductor.PlaybackState;
+using OneShotState = AudioConductor.Core.Conductor.OneShotState;
+using EvictionResult = AudioConductor.Core.Conductor.EvictionResult;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     [TestFixture]
     internal sealed class ThrottleResolverTests

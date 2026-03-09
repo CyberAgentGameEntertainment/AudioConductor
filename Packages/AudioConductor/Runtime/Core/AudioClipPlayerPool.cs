@@ -4,10 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal sealed class AudioClipPlayerPool : ComponentPool<AudioClipPlayer>
     {

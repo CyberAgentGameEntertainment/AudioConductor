@@ -1,3 +1,7 @@
+// --------------------------------------------------------------
+// Copyright 2026 CyberAgent, Inc.
+// --------------------------------------------------------------
+
 using System.Runtime.CompilerServices;
 
 #if UNITY_EDITOR

@@ -1,6 +1,6 @@
 {
     "name": "AudioConductor.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "AudioConductor.Editor",
     "references": [
         "GUID:c9bbfa2570df343ad81305168b068032"
     ],

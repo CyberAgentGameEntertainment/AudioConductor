@@ -4,7 +4,8 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Models;
+using System;
+using AudioConductor.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
@@ -48,7 +49,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         {
             var guids = AssetDatabase.FindAssets("t:" + nameof(AudioConductorSettings), new[] { "Assets" });
             if (guids == null || guids.Length == 0)
-                return System.Array.Empty<AudioConductorSettings>();
+                return Array.Empty<AudioConductorSettings>();
 
             var result = new AudioConductorSettings[guids.Length];
             for (var i = 0; i < guids.Length; i++)

@@ -1,13 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
 
 using System.Collections.Generic;
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Runtime.Core.Enums;
 using UnityEditor.IMGUI.Controls;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models

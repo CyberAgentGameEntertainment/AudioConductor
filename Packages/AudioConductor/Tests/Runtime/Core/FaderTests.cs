@@ -4,11 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     public class FaderTests
     {

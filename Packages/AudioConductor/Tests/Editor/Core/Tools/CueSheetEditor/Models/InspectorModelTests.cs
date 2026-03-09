@@ -5,14 +5,14 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core.Models;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
-using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 {
     internal class InspectorModelTests
     {

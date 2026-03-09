@@ -5,9 +5,9 @@
 #nullable enable
 
 using System.Diagnostics.CodeAnalysis;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {

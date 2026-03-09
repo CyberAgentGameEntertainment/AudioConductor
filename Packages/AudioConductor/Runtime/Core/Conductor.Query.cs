@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     public sealed partial class Conductor
     {

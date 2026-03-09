@@ -4,13 +4,11 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core;
+using AudioConductor.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using ConductorBehaviour = AudioConductor.Runtime.Core.ConductorBehaviour;
-using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     public class ConductorTests
     {

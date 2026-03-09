@@ -6,12 +6,12 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
-using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 {
     internal class ItemCueTests
     {

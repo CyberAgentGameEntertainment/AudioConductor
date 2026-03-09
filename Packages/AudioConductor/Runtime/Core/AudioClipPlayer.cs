@@ -6,11 +6,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Provide functions for AudioClip playing.

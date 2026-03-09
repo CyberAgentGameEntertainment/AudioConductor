@@ -6,11 +6,11 @@
 
 using System;
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     /// <summary>
     ///     An object that groups tracks.

@@ -5,10 +5,10 @@
 #nullable enable
 
 using System;
-using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Core.Enums;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     /// <summary>
     ///     Audio Category.

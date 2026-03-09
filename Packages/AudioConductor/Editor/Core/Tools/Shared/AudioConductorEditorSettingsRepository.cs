@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
@@ -37,14 +37,17 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         internal sealed class AssetPostProcessor : AssetPostprocessor
         {
             private static void OnPostprocessAllAssets(string[] importedAssets,
-                                                       string[] deletedAssets,
-                                                       string[] movedAssets,
-                                                       string[] movedFromAssetPaths)
+                string[] deletedAssets,
+                string[] movedAssets,
+                string[] movedFromAssetPaths)
             {
                 instance._settings = null;
             }
 
-            public override int GetPostprocessOrder() => int.MaxValue;
+            public override int GetPostprocessOrder()
+            {
+                return int.MaxValue;
+            }
         }
     }
 }

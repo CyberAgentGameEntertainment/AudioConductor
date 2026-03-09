@@ -6,14 +6,12 @@
 
 using System;
 using System.Threading.Tasks;
-using AudioConductor.Runtime.Core;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
-using AudioConductorSettings = AudioConductor.Runtime.Core.Models.AudioConductorSettings;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     public class ConductorCueSheetTests
     {

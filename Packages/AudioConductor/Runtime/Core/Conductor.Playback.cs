@@ -5,11 +5,11 @@
 #nullable enable
 
 using System;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     public sealed partial class Conductor
     {

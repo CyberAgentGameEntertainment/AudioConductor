@@ -5,14 +5,14 @@
 #nullable enable
 
 using System.Collections;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Providers;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Providers;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace AudioConductor.Tests.Runtime.Core.Providers
+namespace AudioConductor.Core.Tests.Providers
 {
     public class ResourcesCueSheetProviderTests
     {

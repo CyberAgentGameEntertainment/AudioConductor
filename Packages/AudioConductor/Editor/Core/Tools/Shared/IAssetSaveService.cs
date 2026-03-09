@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
 #nullable enable
@@ -17,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         /// <summary>
         ///     Target asset.
         /// </summary>
-        public Object? Asset { get; }
+        Object? Asset { get; }
 
         IReadOnlyObservableProperty<bool> IsDirty { get; }
 

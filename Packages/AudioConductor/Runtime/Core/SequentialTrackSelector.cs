@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal sealed class SequentialTrackSelector : ITrackSelector
     {

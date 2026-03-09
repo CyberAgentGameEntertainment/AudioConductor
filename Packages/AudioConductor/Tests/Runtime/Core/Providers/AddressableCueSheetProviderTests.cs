@@ -9,8 +9,8 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Providers;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Providers;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.AddressableAssets.Build;
@@ -20,7 +20,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Tests.Runtime.Core.Providers
+namespace AudioConductor.Core.Tests.Providers
 {
     public class AddressableCueSheetProviderTests : IPrebuildSetup, IPostBuildCleanup
     {

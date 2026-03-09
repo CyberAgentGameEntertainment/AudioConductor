@@ -4,11 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core;
-using AudioConductor.Tests.Runtime.Core.Fakes;
+using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     /// <summary>
     ///     Tests for <see cref="FadeManager" /> fade lifecycle management.

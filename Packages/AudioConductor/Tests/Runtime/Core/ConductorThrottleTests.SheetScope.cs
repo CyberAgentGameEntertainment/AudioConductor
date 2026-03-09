@@ -4,11 +4,11 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Core.Enums;
 using NUnit.Framework;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     public partial class ConductorThrottleTests
     {

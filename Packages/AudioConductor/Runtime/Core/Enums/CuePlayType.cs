@@ -2,7 +2,7 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-namespace AudioConductor.Runtime.Core.Enums
+namespace AudioConductor.Core.Enums
 {
     /// <summary>
     ///     Type to play the cue.

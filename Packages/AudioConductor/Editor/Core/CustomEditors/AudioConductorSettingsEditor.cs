@@ -6,8 +6,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

@@ -4,8 +4,8 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {

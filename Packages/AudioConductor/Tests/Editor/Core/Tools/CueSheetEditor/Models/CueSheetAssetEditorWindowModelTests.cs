@@ -4,12 +4,12 @@
 
 #nullable enable
 
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
-using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 {
     internal class CueSheetAssetEditorWindowModelTests
     {

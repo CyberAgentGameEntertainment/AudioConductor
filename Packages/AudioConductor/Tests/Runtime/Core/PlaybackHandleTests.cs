@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Runtime.Core;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Runtime.Core
+namespace AudioConductor.Core.Tests
 {
     public class PlaybackHandleTests
     {

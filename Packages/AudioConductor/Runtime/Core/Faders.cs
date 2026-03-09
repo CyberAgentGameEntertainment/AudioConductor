@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     public static class Faders
     {

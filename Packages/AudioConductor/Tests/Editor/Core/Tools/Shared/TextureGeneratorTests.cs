@@ -8,7 +8,7 @@ using AudioConductor.Editor.Core.Tools.Shared;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.Shared
+namespace AudioConductor.Editor.Core.Tests.Tools.Shared
 {
     internal class TextureGeneratorTests
     {

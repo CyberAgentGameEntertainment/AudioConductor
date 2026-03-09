@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     Stateless strategy for selecting the next track index from a <see cref="TrackSelectionContext" />.
