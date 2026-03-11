@@ -141,5 +141,62 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CodeGen
             Assert.That(result.Success, Is.True);
             Assert.That(result.SourceCode, Does.Contain("public enum SampleCueSheet"));
         }
+
+        [Test]
+        public void Generate_WithCues_ContainsExtensionClass()
+        {
+            _asset.cueSheet.cueList.Add(new Cue { name = "title", cueId = 1 });
+            _asset.cueSheet.cueList.Add(new Cue { name = "battle", cueId = 2 });
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.SourceCode, Does.Contain("public static class BGMExtensions"));
+        }
+
+        [Test]
+        public void Generate_WithCues_ExtensionMethodUsesSwitch()
+        {
+            _asset.cueSheet.cueList.Add(new Cue { name = "title", cueId = 1 });
+            _asset.cueSheet.cueList.Add(new Cue { name = "battle", cueId = 2 });
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.SourceCode, Does.Contain("public static string GetCueSheetName(this BGM value)"));
+            Assert.That(result.SourceCode, Does.Contain("BGM.Title => cueSheetName,"));
+            Assert.That(result.SourceCode, Does.Contain("BGM.Battle => cueSheetName,"));
+            Assert.That(result.SourceCode, Does.Contain("_ => throw new ArgumentOutOfRangeException"));
+        }
+
+        [Test]
+        public void Generate_WithNamespace_ExtensionClassWrappedInNamespace()
+        {
+            _asset.codeGenNamespace = "AudioConductor.Generated";
+            _asset.cueSheet.cueList.Add(new Cue { name = "title", cueId = 1 });
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.SourceCode, Does.Contain("public static class BGMExtensions"));
+            Assert.That(result.SourceCode, Does.Contain("GetCueSheetName"));
+        }
+
+        [Test]
+        public void Generate_EmptyCueList_DoesNotContainExtensionClass()
+        {
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.SourceCode, Does.Not.Contain("Extensions"));
+        }
+
+        [Test]
+        public void Generate_WithCustomSuffix_ExtensionClassUsesFullEnumName()
+        {
+            _asset.codeGenClassSuffix = "AudioIds";
+            _asset.cueSheet.cueList.Add(new Cue { name = "title", cueId = 1 });
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.SourceCode, Does.Contain("public static class BGMAudioIdsExtensions"));
+            Assert.That(result.SourceCode, Does.Contain("this BGMAudioIds value"));
+        }
     }
 }
