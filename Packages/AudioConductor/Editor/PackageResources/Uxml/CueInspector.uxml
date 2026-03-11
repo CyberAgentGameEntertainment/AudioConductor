@@ -1,5 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:TextField picking-mode="Ignore" label="Cue Name" name="Name" is-delayed="true" />
+    <uie:IntegerField label="Cue ID" name="CueId" is-delayed="false" />
     <AudioConductor.Editor.Core.Tools.Shared.ColorDefinePopupField label="Color" />
     <AudioConductor.Editor.Foundation.PopupIntField label="Category" name="Category" />
     <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" />

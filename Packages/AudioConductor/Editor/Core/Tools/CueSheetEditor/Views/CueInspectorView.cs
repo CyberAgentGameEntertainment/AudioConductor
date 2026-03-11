@@ -23,6 +23,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private readonly PopupIntField _categoryField;
         private readonly Subject<string?> _colorChangedSubject = new();
         private readonly ColorDefinePopupField _colorDefinePopupField;
+        private readonly IntegerField _cueIdField;
 
         private readonly Subject<string> _nameChangedSubject = new();
         private readonly TextField _nameField;
@@ -55,6 +56,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             tree.CloneTree(this);
 
             _nameField = this.Q<TextField>("Name");
+            _cueIdField = this.Q<IntegerField>("CueId");
+            _cueIdField.SetEnabled(false);
             _colorDefinePopupField = this.Q<ColorDefinePopupField>();
             _categoryField = this.Q<PopupIntField>("Category");
             _throttleTypeField = this.Q<ThrottleTypeField>();
@@ -177,6 +180,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.showMixedValue = false;
             _nameField.SetValueWithoutNotify(value.Value);
             _nameField.showMixedValue = value.HasMultipleDifferentValues;
+        }
+
+        internal void SetCueId(MixedValue<int> value)
+        {
+            _cueIdField.showMixedValue = false;
+            _cueIdField.SetValueWithoutNotify(value.Value);
+            _cueIdField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
         internal void SetColor(MixedValue<string?> value)

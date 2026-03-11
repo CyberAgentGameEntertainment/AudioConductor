@@ -26,11 +26,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly IAssetSaveService _assetSaveService;
         private readonly ObservableProperty<MixedValue<int>> _categoryId;
         private readonly ObservableProperty<MixedValue<string?>> _color;
+
+        private readonly ObservableProperty<MixedValue<int>> _cueId;
         private readonly AutoIncrementHistory _history;
         private readonly HashSet<int> _itemIds;
 
         private readonly ItemCue[] _items;
-
         private readonly ObservableProperty<MixedValue<string>> _name;
         private readonly ObservableProperty<MixedValue<float>> _pitch;
         private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
@@ -67,10 +68,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _history = history;
             _assetSaveService = assetSaveService;
 
-            var mixed = new bool[11];
+            var mixed = new bool[12];
             foreach (var cue in _target)
             {
                 mixed[0] |= Name != cue.name;
+                mixed[11] |= TypicalTarget.cueId != cue.cueId;
                 mixed[1] |= Color != cue.colorId;
                 mixed[2] |= CategoryId != cue.categoryId;
                 mixed[3] |= ThrottleType != cue.throttleType;
@@ -85,6 +87,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
             _name = new(new(Name, mixed[0]));
+            _cueId = new(new(TypicalTarget.cueId, mixed[11]));
             _color = new(new(Color, mixed[1]));
             _categoryId = new(new(CategoryId, mixed[2]));
             _throttleType = new(new(ThrottleType, mixed[3]));
@@ -143,6 +146,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         public IReadOnlyObservableProperty<MixedValue<string>> NameObservable => _name;
+
+        #endregion
+
+        #region CueId
+
+        public IReadOnlyObservableProperty<MixedValue<int>> CueIdObservable => _cueId;
 
         #endregion
 

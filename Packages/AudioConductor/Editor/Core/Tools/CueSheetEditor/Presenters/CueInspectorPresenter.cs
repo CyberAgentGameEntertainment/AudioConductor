@@ -74,6 +74,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             model.NameObservable
                 .Subscribe(_view.SetName)
                 .DisposeWith(_bindDisposable);
+            model.CueIdObservable
+                .Subscribe(_view.SetCueId)
+                .DisposeWith(_bindDisposable);
             model.ColorObservable
                 .Subscribe(_view.SetColor)
                 .DisposeWith(_bindDisposable);
