@@ -13,11 +13,26 @@ using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx;
 using NUnit.Framework;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 {
     internal sealed class CueSheetParameterPaneModelTests
     {
+        private CueSheetAsset _asset = null!;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_asset);
+        }
+
         [Test]
         public void NameHistory()
         {
@@ -37,7 +52,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.Name = testValue;
@@ -85,7 +100,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.ThrottleType = testValue;
@@ -146,12 +161,12 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             ChangeThrottleLimit(testValue, testValue);
         }
 
-        private static void ChangeThrottleLimit(int testValue, int expected)
+        private void ChangeThrottleLimit(int testValue, int expected)
         {
             var cueSheet = new CueSheet();
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             using (model.ThrottleLimitObservable.Skip(1).Subscribe(v => { Assert.That(v, Is.EqualTo(expected)); }))
             {
@@ -180,7 +195,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.ThrottleLimit = testValue;
@@ -241,12 +256,12 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             ChangeVolume(testValue, testValue);
         }
 
-        private static void ChangeVolume(float testValue, float expected)
+        private void ChangeVolume(float testValue, float expected)
         {
             var cueSheet = new CueSheet();
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             using (model.VolumeObservable.Skip(1).Subscribe(v => { Assert.That(v, Is.EqualTo(expected)); }))
             {
@@ -275,7 +290,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.Volume = testValue;
@@ -336,12 +351,12 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             ChangePitch(testValue, testValue);
         }
 
-        private static void ChangePitch(float testValue, float expected)
+        private void ChangePitch(float testValue, float expected)
         {
             var cueSheet = new CueSheet();
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             using (model.PitchObservable.Skip(1).Subscribe(v => { Assert.That(v, Is.EqualTo(expected)); }))
             {
@@ -370,7 +385,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.Pitch = testValue;
@@ -418,7 +433,7 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
             };
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
-            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
 
             foreach (var testValue in testValues)
                 model.PitchInvert = testValue;
@@ -445,6 +460,186 @@ namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
 
             Assert.That(model.PitchInvert, Is.EqualTo(lastValue));
             Assert.That(cueSheet.pitchInvert, Is.EqualTo(lastValue));
+        }
+
+        [Test]
+        public void History_DifferentValue_CodeGenEnabled()
+        {
+            const bool defaultValue = false;
+            const bool sameValue = true;
+            const bool lastValue = false;
+            var testValues = new[]
+            {
+                sameValue,
+                sameValue,
+                lastValue
+            };
+
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            foreach (var testValue in testValues)
+                model.CodeGenEnabled = testValue;
+
+            Assert.That(model.CodeGenEnabled, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenEnabled, Is.EqualTo(lastValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenEnabled, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenEnabled, Is.EqualTo(sameValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenEnabled, Is.EqualTo(defaultValue));
+            Assert.That(_asset.codeGenEnabled, Is.EqualTo(defaultValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenEnabled, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenEnabled, Is.EqualTo(sameValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenEnabled, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenEnabled, Is.EqualTo(lastValue));
+        }
+
+        [Test]
+        public void History_DifferentValue_CodeGenOutputPath()
+        {
+            var defaultValue = "Assets/Scripts/Generated/";
+            var sameValue = "Assets/Generated";
+            var lastValue = "Assets/Output";
+            var testValues = new[]
+            {
+                sameValue,
+                sameValue,
+                lastValue
+            };
+
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            foreach (var testValue in testValues)
+                model.CodeGenOutputPath = testValue;
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenOutputPath, Is.EqualTo(lastValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenOutputPath, Is.EqualTo(sameValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo(defaultValue));
+            Assert.That(_asset.codeGenOutputPath, Is.EqualTo(defaultValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenOutputPath, Is.EqualTo(sameValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenOutputPath, Is.EqualTo(lastValue));
+        }
+
+        [Test]
+        public void History_DifferentValue_CodeGenNamespace()
+        {
+            var defaultValue = string.Empty;
+            var sameValue = "AudioConductor.Generated";
+            var lastValue = "MyGame.Audio";
+            var testValues = new[]
+            {
+                sameValue,
+                sameValue,
+                lastValue
+            };
+
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            foreach (var testValue in testValues)
+                model.CodeGenNamespace = testValue;
+
+            Assert.That(model.CodeGenNamespace, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenNamespace, Is.EqualTo(lastValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenNamespace, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenNamespace, Is.EqualTo(sameValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenNamespace, Is.EqualTo(defaultValue));
+            Assert.That(_asset.codeGenNamespace, Is.EqualTo(defaultValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenNamespace, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenNamespace, Is.EqualTo(sameValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenNamespace, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenNamespace, Is.EqualTo(lastValue));
+        }
+
+        [Test]
+        public void History_DifferentValue_CodeGenClassSuffix()
+        {
+            var defaultValue = string.Empty;
+            var sameValue = "AudioIds";
+            var lastValue = "Enums";
+            var testValues = new[]
+            {
+                sameValue,
+                sameValue,
+                lastValue
+            };
+
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            foreach (var testValue in testValues)
+                model.CodeGenClassSuffix = testValue;
+
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(lastValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(sameValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo(defaultValue));
+            Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(defaultValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(sameValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(lastValue));
         }
     }
 }

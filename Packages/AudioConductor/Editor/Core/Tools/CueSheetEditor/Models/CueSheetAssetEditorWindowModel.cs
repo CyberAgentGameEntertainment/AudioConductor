@@ -49,7 +49,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         {
             _assetSaveService.SetAsset(_target);
             CueSheetEditorModel = new CueSheetEditorModel(_target.cueSheet, _history, _assetSaveService, _paneState,
-                _inspectorUnCollapsed, _cueListTreeViewState,
+                _inspectorUnCollapsed, _cueListTreeViewState, _target,
                 settingsProvider);
         }
 

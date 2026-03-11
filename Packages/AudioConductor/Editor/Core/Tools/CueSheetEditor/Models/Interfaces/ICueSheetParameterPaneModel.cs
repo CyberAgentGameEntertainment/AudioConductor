@@ -34,5 +34,21 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
         bool PitchInvert { get; set; }
 
         IReadOnlyObservableProperty<bool> PitchInvertObservable { get; }
+
+        bool CodeGenEnabled { get; set; }
+
+        IReadOnlyObservableProperty<bool> CodeGenEnabledObservable { get; }
+
+        string CodeGenOutputPath { get; set; }
+
+        IReadOnlyObservableProperty<string> CodeGenOutputPathObservable { get; }
+
+        string CodeGenNamespace { get; set; }
+
+        IReadOnlyObservableProperty<string> CodeGenNamespaceObservable { get; }
+
+        string CodeGenClassSuffix { get; set; }
+
+        IReadOnlyObservableProperty<string> CodeGenClassSuffixObservable { get; }
     }
 }

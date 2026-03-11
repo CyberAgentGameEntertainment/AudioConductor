@@ -24,11 +24,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
             IObservableProperty<bool> inspectorUnCollapsed,
             CueListTreeView.State cueListTreeViewState,
+            [NotNull] CueSheetAsset asset,
             Func<AudioConductorSettings?>? settingsProvider = null
         )
         {
             CueSheetParameterPaneModel =
-                new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
+                new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, asset);
 
             CueListEditorPaneModel
                 = new CueListEditorPaneModel(cueSheet, history, assetSaveService, inspectorUnCollapsed,

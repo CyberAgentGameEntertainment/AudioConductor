@@ -59,6 +59,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _model.PitchInvertObservable
                 .Subscribe(_view.SetPitchInvert)
                 .DisposeWith(_bindDisposable);
+            _model.CodeGenEnabledObservable
+                .Subscribe(_view.SetCodeGenEnabled)
+                .DisposeWith(_bindDisposable);
+            _model.CodeGenOutputPathObservable
+                .Subscribe(_view.SetCodeGenOutputPath)
+                .DisposeWith(_bindDisposable);
+            _model.CodeGenNamespaceObservable
+                .Subscribe(_view.SetCodeGenNamespace)
+                .DisposeWith(_bindDisposable);
+            _model.CodeGenClassSuffixObservable
+                .Subscribe(_view.SetCodeGenClassSuffix)
+                .DisposeWith(_bindDisposable);
         }
 
         private void Unbind()
@@ -85,6 +97,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_viewEventDisposable);
             _view.PitchInvertChangedAsObservable
                 .Subscribe(value => _model.PitchInvert = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.CodeGenEnabledChangedAsObservable
+                .Subscribe(value => _model.CodeGenEnabled = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.CodeGenOutputPathChangedAsObservable
+                .Subscribe(value => _model.CodeGenOutputPath = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.CodeGenNamespaceChangedAsObservable
+                .Subscribe(value => _model.CodeGenNamespace = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.CodeGenClassSuffixChangedAsObservable
+                .Subscribe(value => _model.CodeGenClassSuffix = value)
                 .DisposeWith(_viewEventDisposable);
         }
 

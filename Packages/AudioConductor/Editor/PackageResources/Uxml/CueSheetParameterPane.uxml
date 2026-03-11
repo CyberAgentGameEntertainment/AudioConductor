@@ -18,5 +18,19 @@
         <ui:VisualElement name="Row" style="flex-direction: row;">
             <ui:Toggle label="Pitch Invert" name="PitchInvert" style="flex-basis: 33.333%; padding-top: 2px;" />
         </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row; margin-top: 8px;">
+            <ui:Toggle label="Code Gen Enabled" name="CodeGenEnabled" style="flex-basis: 33.333%; padding-top: 2px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="CodeGenSettings">
+            <ui:VisualElement name="Row" style="flex-direction: row;">
+                <ui:TextField picking-mode="Ignore" label="Output Path" value="" name="CodeGenOutputPath" is-delayed="true" tooltip="Directory for the generated enum file. Default: Assets/Scripts/Generated/" style="flex-basis: 33.333%;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="Row" style="flex-direction: row;">
+                <ui:TextField picking-mode="Ignore" label="Namespace" value="" name="CodeGenNamespace" is-delayed="true" tooltip="Namespace for the generated enum. Empty means no namespace." style="flex-basis: 33.333%;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="Row" style="flex-direction: row;">
+                <ui:TextField picking-mode="Ignore" label="Class Suffix" value="" name="CodeGenClassSuffix" is-delayed="true" tooltip="Suffix appended to the CueSheet name to form the enum type name. e.g. BGM + Cues = BGMCues. Empty means CueSheet name only." style="flex-basis: 33.333%;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

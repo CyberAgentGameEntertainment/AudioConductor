@@ -12,22 +12,38 @@ using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
 using JetBrains.Annotations;
+using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueSheetParameterPaneModel : ICueSheetParameterPaneModel
     {
+        private readonly CueSheetAsset _asset;
         private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<string> _codeGenClassSuffix;
+
+        private readonly ObservableProperty<bool> _codeGenEnabled;
+        private readonly ObservableProperty<string> _codeGenNamespace;
+        private readonly ObservableProperty<string> _codeGenOutputPath;
         private readonly AutoIncrementHistory _history;
         private readonly ObservableCueSheet _target;
 
         public CueSheetParameterPaneModel([NotNull] CueSheet cueSheet,
             [NotNull] AutoIncrementHistory history,
-            [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] IAssetSaveService assetSaveService,
+            [NotNull] CueSheetAsset asset)
         {
             _target = new ObservableCueSheet(cueSheet);
             _history = history;
             _assetSaveService = assetSaveService;
+            _asset = asset;
+
+            // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
+            _codeGenEnabled = new(_asset.codeGenEnabled);
+            _codeGenOutputPath = new(_asset.codeGenOutputPath);
+            _codeGenNamespace = new(_asset.codeGenNamespace);
+            _codeGenClassSuffix = new(_asset.codeGenClassSuffix);
+            // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
         }
 
         #region Name
@@ -222,6 +238,142 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         public IReadOnlyObservableProperty<bool> PitchInvertObservable => _target.PitchInvertObservable;
+
+        #endregion
+
+        #region CodeGenEnabled
+
+        public bool CodeGenEnabled
+        {
+            get => _codeGenEnabled.Value;
+            set
+            {
+                var old = _codeGenEnabled.Value;
+                _history.Register($"Set CueSheetAsset {nameof(CodeGenEnabled)} {value}", Redo, Undo);
+
+                #region LocalMethods
+
+                void Redo()
+                {
+                    _codeGenEnabled.SetValueAndNotify(_asset.codeGenEnabled = value);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _codeGenEnabled.SetValueAndNotify(_asset.codeGenEnabled = old);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                #endregion
+            }
+        }
+
+        public IReadOnlyObservableProperty<bool> CodeGenEnabledObservable => _codeGenEnabled;
+
+        #endregion
+
+        #region CodeGenOutputPath
+
+        public string CodeGenOutputPath
+        {
+            get => _codeGenOutputPath.Value;
+            set
+            {
+                var old = _codeGenOutputPath.Value;
+                _history.Register($"Set CueSheetAsset {nameof(CodeGenOutputPath)} {value}", Redo, Undo);
+
+                #region LocalMethods
+
+                void Redo()
+                {
+                    _codeGenOutputPath.SetValueAndNotify(_asset.codeGenOutputPath = value);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _codeGenOutputPath.SetValueAndNotify(_asset.codeGenOutputPath = old);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                #endregion
+            }
+        }
+
+        public IReadOnlyObservableProperty<string> CodeGenOutputPathObservable => _codeGenOutputPath;
+
+        #endregion
+
+        #region CodeGenNamespace
+
+        public string CodeGenNamespace
+        {
+            get => _codeGenNamespace.Value;
+            set
+            {
+                var old = _codeGenNamespace.Value;
+                _history.Register($"Set CueSheetAsset {nameof(CodeGenNamespace)} {value}", Redo, Undo);
+
+                #region LocalMethods
+
+                void Redo()
+                {
+                    _codeGenNamespace.SetValueAndNotify(_asset.codeGenNamespace = value);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _codeGenNamespace.SetValueAndNotify(_asset.codeGenNamespace = old);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                #endregion
+            }
+        }
+
+        public IReadOnlyObservableProperty<string> CodeGenNamespaceObservable => _codeGenNamespace;
+
+        #endregion
+
+        #region CodeGenClassSuffix
+
+        public string CodeGenClassSuffix
+        {
+            get => _codeGenClassSuffix.Value;
+            set
+            {
+                var old = _codeGenClassSuffix.Value;
+                _history.Register($"Set CueSheetAsset {nameof(CodeGenClassSuffix)} {value}", Redo, Undo);
+
+                #region LocalMethods
+
+                void Redo()
+                {
+                    _codeGenClassSuffix.SetValueAndNotify(_asset.codeGenClassSuffix = value);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _codeGenClassSuffix.SetValueAndNotify(_asset.codeGenClassSuffix = old);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                #endregion
+            }
+        }
+
+        public IReadOnlyObservableProperty<string> CodeGenClassSuffixObservable => _codeGenClassSuffix;
 
         #endregion
     }
