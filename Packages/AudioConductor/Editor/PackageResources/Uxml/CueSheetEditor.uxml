@@ -7,17 +7,17 @@
                  style="flex-direction: row; flex-grow: 1; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;">
         <ui:GroupBox name="TabContainer" class="border border-top border-bottom"
                      style="flex-direction: column; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
-            <ui:Button display-tooltip-when-elided="true" name="Parameter" tooltip="Edit CueSheet parameter"
+            <ui:Button display-tooltip-when-elided="true" name="Parameter"
                        class="tab toggle cue-sheet-parameter select-pane"
                        style="transition-property: all; transition-duration: 0s; transition-timing-function: ease; transition-delay: 0s; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
             <ui:VisualElement name="Border" class="border-element"
                               style="height: 1px; max-height: initial; min-height: initial;" />
-            <ui:Button display-tooltip-when-elided="true" name="CueList" tabindex="1" tooltip="Edit Cue&amp;Track"
+            <ui:Button display-tooltip-when-elided="true" name="CueList" tabindex="1"
                        class="tab toggle cue-list-edit select-pane"
                        style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
             <ui:VisualElement name="Border" class="border-element"
                               style="height: 1px; max-height: initial; min-height: initial;" />
-            <ui:Button display-tooltip-when-elided="true" name="OtherOperation" tabindex="2" tooltip="Other operations"
+            <ui:Button display-tooltip-when-elided="true" name="OtherOperation" tabindex="2"
                        class="tab toggle other-operation select-pane"
                        style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
             <ui:VisualElement name="Border" class="border-element"

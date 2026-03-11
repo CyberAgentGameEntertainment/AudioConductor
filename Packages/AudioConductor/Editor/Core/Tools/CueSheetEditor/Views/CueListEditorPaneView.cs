@@ -44,6 +44,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _throttleToggle = this.Q<ToolbarToggle>("Throttle");
             _memoToggle = this.Q<ToolbarToggle>("Memo");
             _searchField = this.Q<ToolbarSearchField>();
+            ApplyTooltips();
         }
 
         internal IObservable<bool> InspectorToggleChangedAsObservable => _inspectorToggleChangedSubject;
@@ -56,11 +57,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public void Dispose()
         {
             CleanupEventHandlers();
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
         {
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void SetButtonState(IReadOnlyCollection<int> visibleColumns)
@@ -99,6 +102,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             this.SetDisplay(false);
         }
 
+        private void ApplyTooltips()
+        {
+            _volumeToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_volume");
+            _playInfoToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_play_info");
+            _throttleToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_throttle");
+            _memoToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_memo");
+            _inspectorToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_inspector");
+        }
+
         private void SetupEventHandlers()
         {
             _inspectorToggle.RegisterValueChangedCallback(OnInspectorToggle);
@@ -130,6 +142,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         }
 
         #region Methods - EventHandlers
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
 
         private void OnInspectorToggle(ChangeEvent<bool> evt)
         {

@@ -15,6 +15,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
     internal sealed class CueSheetEditorView : IDisposable
     {
+        private readonly Button _cueListButton;
+        private readonly Button _otherOperationButton;
+        private readonly Button _parameterButton;
         private readonly VisualElement _root;
         private readonly Subject<int> _tabSelectedSubject = new();
 
@@ -31,6 +34,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 : AssetLoader.LoadUss("Resource_Light");
             root.styleSheets.Add(resourceStyleSheets);
             _tabView = new TabView(root.Q<VisualElement>("TabContainer"));
+            _parameterButton = root.Q<Button>("Parameter");
+            _cueListButton = root.Q<Button>("CueList");
+            _otherOperationButton = root.Q<Button>("OtherOperation");
+            ApplyTooltips();
         }
 
         public IObservable<int> TabSelectedAsObservable => _tabSelectedSubject;
@@ -57,14 +64,23 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             SetupEventHandlers();
         }
 
+        private void ApplyTooltips()
+        {
+            _parameterButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_parameter");
+            _cueListButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_cue_list");
+            _otherOperationButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_other_operation");
+        }
+
         private void SetupEventHandlers()
         {
             _tabView.OnTabSelected += OnTabSelected;
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         private void CleanupEventHandlers()
         {
             _tabView.OnTabSelected -= OnTabSelected;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         #region Methods - EventHandlers
@@ -72,6 +88,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnTabSelected(int index)
         {
             _tabSelectedSubject.OnNext(index);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
         }
 
         #endregion

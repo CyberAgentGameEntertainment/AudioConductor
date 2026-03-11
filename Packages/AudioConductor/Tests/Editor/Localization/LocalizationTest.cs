@@ -132,5 +132,47 @@ namespace AudioConductor.Editor.Tests.Localization
 
             Assert.AreEqual(expected, result);
         }
+
+        [TestCase("category.name", "Category name.")]
+        [TestCase("category.throttle_type", "Concurrent play control type.")]
+        [TestCase("category.throttle_limit", "Limit of concurrent play.")]
+        [TestCase("category.audio_mixer_group", "Output AudioMixerGroup.")]
+        [TestCase("cue_sheet.tab_parameter", "Edit CueSheet parameter")]
+        [TestCase("cue_sheet.tab_cue_list", "Edit Cue&Track")]
+        [TestCase("cue_sheet.tab_other_operation", "Other operations")]
+        [TestCase("cue_list.toggle_volume", "Show/Hide \"Volume\" & \"Volume Range\" columns")]
+        [TestCase("cue_list.toggle_play_info", "Show/Hide \"Category\" & \"Play Type\" columns")]
+        [TestCase("cue_list.toggle_throttle", "Show/Hide \"Throttle Type\" & \"Throttle Limit\" columns")]
+        [TestCase("cue_list.toggle_memo", "Show/Hide \"Color\" column")]
+        [TestCase("cue_list.toggle_inspector", "Show/Hide inspector")]
+        public void Tr_English_RemainingKeys_ReturnsExpectedText(string key, string expected)
+        {
+            L.Language = EditorLanguage.English;
+
+            var result = L.Tr(key);
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestCase("category.name", "カテゴリ名")]
+        [TestCase("category.throttle_type", "同時発音の制御方式")]
+        [TestCase("category.throttle_limit", "同時発音数の上限")]
+        [TestCase("category.audio_mixer_group", "出力先の AudioMixerGroup")]
+        [TestCase("cue_sheet.tab_parameter", "CueSheet パラメータを編集")]
+        [TestCase("cue_sheet.tab_cue_list", "Cue&Track を編集")]
+        [TestCase("cue_sheet.tab_other_operation", "その他の操作")]
+        [TestCase("cue_list.toggle_volume", "\"Volume\" & \"Volume Range\" 列の表示切替")]
+        [TestCase("cue_list.toggle_play_info", "\"Category\" & \"Play Type\" 列の表示切替")]
+        [TestCase("cue_list.toggle_throttle", "\"Throttle Type\" & \"Throttle Limit\" 列の表示切替")]
+        [TestCase("cue_list.toggle_memo", "\"Color\" 列の表示切替")]
+        [TestCase("cue_list.toggle_inspector", "インスペクタの表示切替")]
+        public void Tr_Japanese_RemainingKeys_ReturnsExpectedText(string key, string expected)
+        {
+            L.Language = EditorLanguage.Japanese;
+
+            var result = L.Tr(key);
+
+            Assert.AreEqual(expected, result);
+        }
     }
 }

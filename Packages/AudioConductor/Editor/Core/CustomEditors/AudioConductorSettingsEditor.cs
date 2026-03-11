@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Editor.Localization;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -139,6 +138,11 @@ namespace AudioConductor.Editor.Core.CustomEditors
 
         private class CategoryView : BindableElement
         {
+            private readonly ObjectField _audioMixerGroupField;
+            private readonly TextField _nameField;
+            private readonly IntegerField _throttleLimitField;
+            private readonly ThrottleTypeField _throttleTypeField;
+
             public CategoryView()
             {
                 var element = AssetLoader.LoadUxml("Category");
@@ -149,17 +153,39 @@ namespace AudioConductor.Editor.Core.CustomEditors
                 idField.SetEnabled(false);
                 idField.SetDisplay(false); // for developer
 
-                var nameField = this.Q<TextField>("Name");
-                nameField.bindingPath = nameof(Category.name);
+                _nameField = this.Q<TextField>("Name");
+                _nameField.bindingPath = nameof(Category.name);
 
-                var throttleTypeField = this.Q<ThrottleTypeField>();
-                throttleTypeField.bindingPath = nameof(Category.throttleType);
+                _throttleTypeField = this.Q<ThrottleTypeField>();
+                _throttleTypeField.bindingPath = nameof(Category.throttleType);
 
-                var throttleLimitField = this.Q<IntegerField>("ThrottleLimit");
-                throttleLimitField.bindingPath = nameof(Category.throttleLimit);
+                _throttleLimitField = this.Q<IntegerField>("ThrottleLimit");
+                _throttleLimitField.bindingPath = nameof(Category.throttleLimit);
 
-                var audioMixerGroupField = this.Q<ObjectField>();
-                audioMixerGroupField.bindingPath = nameof(Category.audioMixerGroup);
+                _audioMixerGroupField = this.Q<ObjectField>();
+                _audioMixerGroupField.bindingPath = nameof(Category.audioMixerGroup);
+
+                ApplyTooltips();
+                Localization.Localization.LanguageChanged += OnLanguageChanged;
+                RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
+            }
+
+            private void ApplyTooltips()
+            {
+                _nameField.tooltip = Localization.Localization.Tr("category.name");
+                _throttleTypeField.tooltip = Localization.Localization.Tr("category.throttle_type");
+                _throttleLimitField.tooltip = Localization.Localization.Tr("category.throttle_limit");
+                _audioMixerGroupField.tooltip = Localization.Localization.Tr("category.audio_mixer_group");
+            }
+
+            private void OnLanguageChanged()
+            {
+                ApplyTooltips();
+            }
+
+            private void OnDetachFromPanel(DetachFromPanelEvent evt)
+            {
+                Localization.Localization.LanguageChanged -= OnLanguageChanged;
             }
         }
     }
