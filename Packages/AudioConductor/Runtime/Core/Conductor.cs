@@ -105,7 +105,8 @@ namespace AudioConductor.Core
             _fadeManager.Dispose();
 
             foreach (var registration in _cueSheets.Values)
-                _provider?.Release(registration.Asset);
+                if (registration.LoadId != 0)
+                    _provider?.Release(registration.LoadId);
             _cueSheets.Clear();
 
             if (_behaviour != null)

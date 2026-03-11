@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -101,14 +102,17 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Dispose_CallsProviderReleaseForEachRegistration()
         {
-            var provider = new FakeProvider();
+            var provider = new FakeProvider { AssetToReturn = _cueSheetAsset };
             var conductor = new Conductor(_settings, provider);
-            conductor.RegisterCueSheet(_cueSheetAsset);
-            conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var task1 = conductor.RegisterCueSheetAsync("key1");
+            task1.Wait();
+            var task2 = conductor.RegisterCueSheetAsync("key2");
+            task2.Wait();
 
             conductor.Dispose();
 
-            Assert.That(provider.ReleaseCallCount, Is.EqualTo(2));
+            Assert.That(provider.ReleasedLoadIds, Has.Count.EqualTo(2));
         }
 
         [Test]
@@ -137,33 +141,62 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void UnregisterCueSheet_WithProvider_CallsRelease()
         {
-            var provider = new FakeProvider();
+            var provider = new FakeProvider { AssetToReturn = _cueSheetAsset };
+            using var conductor = new Conductor(_settings, provider);
+
+            var task = conductor.RegisterCueSheetAsync("test_key");
+            task.Wait();
+
+            conductor.UnregisterCueSheet(task.Result);
+
+            Assert.That(provider.ReleasedLoadIds, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void Dispose_WithDirectRegistration_DoesNotCallProviderRelease()
+        {
+            var provider = new FakeProvider { AssetToReturn = _cueSheetAsset };
+            var conductor = new Conductor(_settings, provider);
+            conductor.RegisterCueSheet(_cueSheetAsset);
+
+            conductor.Dispose();
+
+            Assert.That(provider.ReleasedLoadIds, Is.Empty);
+        }
+
+        [Test]
+        public void UnregisterCueSheet_WithDirectRegistration_DoesNotCallProviderRelease()
+        {
+            var provider = new FakeProvider { AssetToReturn = _cueSheetAsset };
             using var conductor = new Conductor(_settings, provider);
             var handle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             conductor.UnregisterCueSheet(handle);
 
-            Assert.That(provider.ReleaseCallCount, Is.EqualTo(1));
+            Assert.That(provider.ReleasedLoadIds, Is.Empty);
         }
 
         private sealed class FakeProvider : ICueSheetProvider
         {
+            private uint _loadIdCounter;
             internal CueSheetAsset AssetToReturn { get; set; } = null!;
-            internal int ReleaseCallCount { get; private set; }
+            internal List<uint> ReleasedLoadIds { get; } = new();
 
-            public CueSheetAsset? Load(string key)
+            public CueSheetLoadInfo? Load(string key)
             {
-                return AssetToReturn;
+                if (AssetToReturn == null)
+                    return null;
+                return new CueSheetLoadInfo(AssetToReturn, ++_loadIdCounter);
             }
 
-            public Task<CueSheetAsset?> LoadAsync(string key)
+            public Task<CueSheetLoadInfo?> LoadAsync(string key)
             {
-                return Task.FromResult<CueSheetAsset?>(AssetToReturn);
+                return Task.FromResult(Load(key));
             }
 
-            public void Release(CueSheetAsset? asset)
+            public void Release(uint loadId)
             {
-                ReleaseCallCount++;
+                ReleasedLoadIds.Add(loadId);
             }
         }
     }

@@ -16,20 +16,10 @@ namespace AudioConductor.Core
     ///     <see cref="ICueSheetProvider" /> implementations.
     /// </summary>
     /// <typeparam name="TState">The per-load state stored alongside each load operation (e.g. an operation handle).</typeparam>
-    public abstract class CueSheetProviderBase<TState> : IDisposable
+    public abstract class CueSheetProviderBase<TState> : ICueSheetProvider, IDisposable
     {
         private readonly Dictionary<uint, TState> _states = new();
         private uint _nextLoadId;
-
-        /// <summary>
-        ///     Releases all tracked loads and clears internal state.
-        /// </summary>
-        public void Dispose()
-        {
-            foreach (var state in _states.Values)
-                ReleaseCore(state);
-            _states.Clear();
-        }
 
         /// <summary>
         ///     Synchronously loads a CueSheet by key.
@@ -74,6 +64,16 @@ namespace AudioConductor.Core
                 return;
 
             ReleaseCore(state);
+        }
+
+        /// <summary>
+        ///     Releases all tracked loads and clears internal state.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var state in _states.Values)
+                ReleaseCore(state);
+            _states.Clear();
         }
 
         /// <summary>

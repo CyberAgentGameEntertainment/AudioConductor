@@ -36,10 +36,13 @@ namespace AudioConductor.Core
             if (_provider == null)
                 throw new InvalidOperationException("ICueSheetProvider is not set.");
 
-            var asset = await _provider.LoadAsync(key);
-            if (asset == null)
+            var info = await _provider.LoadAsync(key);
+            if (info == null)
                 throw new InvalidOperationException($"Failed to load CueSheet with key '{key}'.");
-            return RegisterCueSheet(asset);
+
+            var id = ++_cueSheetHandleCounter;
+            _cueSheets[id] = new CueSheetRegistration(info.Value.Asset, info.Value.LoadId);
+            return new CueSheetHandle(id);
         }
 
         /// <summary>
@@ -55,7 +58,8 @@ namespace AudioConductor.Core
             if (!_cueSheets.TryGetValue(handle.Id, out var registration))
                 return;
 
-            _provider?.Release(registration.Asset);
+            if (registration.LoadId != 0)
+                _provider?.Release(registration.LoadId);
             _cueSheets.Remove(handle.Id);
         }
     }

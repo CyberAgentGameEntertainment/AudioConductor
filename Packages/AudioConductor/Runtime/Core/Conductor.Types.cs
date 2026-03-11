@@ -33,9 +33,10 @@ namespace AudioConductor.Core
             private readonly Dictionary<string, Cue> _cueNameLookup;
             private readonly Dictionary<Cue, CueState> _cueStateCache = new();
 
-            internal CueSheetRegistration(CueSheetAsset asset)
+            internal CueSheetRegistration(CueSheetAsset asset, uint loadId = 0)
             {
                 Asset = asset;
+                LoadId = loadId;
                 var cueList = asset.cueSheet.cueList;
                 _cueNameLookup = new Dictionary<string, Cue>(cueList.Count);
                 _cueIdLookup = new Dictionary<int, Cue>(cueList.Count);
@@ -48,6 +49,7 @@ namespace AudioConductor.Core
             }
 
             internal CueSheetAsset Asset { get; }
+            internal uint LoadId { get; }
 
             internal Cue? FindCue(string cueName)
             {

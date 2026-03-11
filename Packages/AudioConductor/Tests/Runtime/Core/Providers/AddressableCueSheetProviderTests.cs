@@ -17,7 +17,6 @@ using UnityEditor.AddressableAssets.Build.DataBuilders;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.TestTools;
-using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Providers.Tests
 {
@@ -71,6 +70,12 @@ namespace AudioConductor.Core.Providers.Tests
             _provider = new AddressableCueSheetProvider();
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _provider.Dispose();
+        }
+
         private static IEnumerator WaitForTask(Task task)
         {
             while (!task.IsCompleted)
@@ -87,14 +92,16 @@ namespace AudioConductor.Core.Providers.Tests
         }
 
         [UnityTest]
-        public IEnumerator LoadAsync_ValidKey_ReturnsAsset()
+        public IEnumerator LoadAsync_ValidKey_ReturnsLoadInfo()
         {
             var task = _provider.LoadAsync(TestAddress);
             yield return WaitForTask(task);
 
             Assert.That(task.Result, Is.Not.Null);
+            Assert.That(task.Result!.Value.Asset, Is.Not.Null);
+            Assert.That(task.Result.Value.LoadId, Is.GreaterThan(0u));
 
-            _provider.Release(task.Result);
+            _provider.Release(task.Result.Value.LoadId);
         }
 
         [UnityTest]
@@ -103,7 +110,7 @@ namespace AudioConductor.Core.Providers.Tests
             var task = _provider.LoadAsync(TestAddress);
             yield return WaitForTask(task);
 
-            Assert.That(() => _provider.Release(task.Result), Throws.Nothing);
+            Assert.That(() => _provider.Release(task.Result!.Value.LoadId), Throws.Nothing);
         }
 
         [UnityTest]
@@ -118,26 +125,22 @@ namespace AudioConductor.Core.Providers.Tests
             Assert.That(task1.Result, Is.Not.Null);
             Assert.That(task2.Result, Is.Not.Null);
 
-            _provider.Release(task1.Result);
-            _provider.Release(task2.Result);
+            _provider.Release(task1.Result!.Value.LoadId);
+            _provider.Release(task2.Result!.Value.LoadId);
 
             Assert.Pass();
         }
 
         [Test]
-        public void Release_NullAsset_DoesNotThrow()
+        public void Release_ZeroLoadId_DoesNotThrow()
         {
-            Assert.That(() => _provider.Release(null), Throws.Nothing);
+            Assert.That(() => _provider.Release(0), Throws.Nothing);
         }
 
         [Test]
-        public void Release_UnloadedAsset_DoesNotThrow()
+        public void Release_UnknownLoadId_DoesNotThrow()
         {
-            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
-
-            Assert.That(() => _provider.Release(asset), Throws.Nothing);
-
-            Object.DestroyImmediate(asset);
+            Assert.That(() => _provider.Release(999), Throws.Nothing);
         }
 
         [UnityTest]
@@ -146,9 +149,10 @@ namespace AudioConductor.Core.Providers.Tests
             var task = _provider.LoadAsync(TestAddress);
             yield return WaitForTask(task);
 
-            _provider.Release(task.Result);
+            _provider.Release(task.Result!.Value.LoadId);
 
-            Assert.That(() => _provider.Release(task.Result), Throws.Nothing);
+            // Second release with same loadId should be ignored
+            Assert.That(() => _provider.Release(task.Result.Value.LoadId), Throws.Nothing);
         }
     }
 }

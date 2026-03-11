@@ -6,8 +6,6 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using UnityEngine.AddressableAssets;
@@ -18,18 +16,11 @@ namespace AudioConductor.Core.Providers
     /// <summary>
     ///     ICueSheetProvider implementation that loads assets via Addressables with handle management.
     /// </summary>
-    public class AddressableCueSheetProvider : ICueSheetProvider
+    public class AddressableCueSheetProvider : CueSheetProviderBase<AsyncOperationHandle<CueSheetAsset>>
     {
-        private readonly Dictionary<CueSheetAsset, Stack<AsyncOperationHandle<CueSheetAsset>>> _handles = new();
-
         /// <inheritdoc />
-        public virtual CueSheetAsset Load(string key)
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc />
-        public virtual async Task<CueSheetAsset?> LoadAsync(string key)
+        protected override async Task<(CueSheetAsset asset, AsyncOperationHandle<CueSheetAsset> state)?> LoadCoreAsync(
+            string key)
         {
             var handle = Addressables.LoadAssetAsync<CueSheetAsset>(key);
 
@@ -50,30 +41,13 @@ namespace AudioConductor.Core.Providers
                 return null;
             }
 
-            if (!_handles.TryGetValue(asset, out var stack))
-            {
-                stack = new Stack<AsyncOperationHandle<CueSheetAsset>>();
-                _handles[asset] = stack;
-            }
-
-            stack.Push(handle);
-            return asset;
+            return (asset, handle);
         }
 
         /// <inheritdoc />
-        public virtual void Release(CueSheetAsset? asset)
+        protected override void ReleaseCore(AsyncOperationHandle<CueSheetAsset> state)
         {
-            if (asset == null)
-                return;
-
-            if (!_handles.TryGetValue(asset, out var stack) || stack.Count == 0)
-                return;
-
-            var handle = stack.Pop();
-            Addressables.Release(handle);
-
-            if (stack.Count == 0)
-                _handles.Remove(asset);
+            Addressables.Release(state);
         }
     }
 }

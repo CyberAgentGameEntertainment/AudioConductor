@@ -34,6 +34,7 @@ namespace AudioConductor.Core.Providers.Tests
         [TearDown]
         public void TearDown()
         {
+            _provider.Dispose();
             _provider = null!;
 
             if (AssetDatabase.IsValidFolder("Assets/AudioConductorTestResources"))
@@ -53,13 +54,15 @@ namespace AudioConductor.Core.Providers.Tests
         }
 
         [Test]
-        public void Load_ValidKey_ReturnsAsset()
+        public void Load_ValidKey_ReturnsLoadInfo()
         {
             CreateTestAsset();
 
-            var asset = _provider.Load("TestCueSheet");
+            var result = _provider.Load("TestCueSheet");
 
-            Assert.That(asset, Is.Not.Null);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Value.Asset, Is.Not.Null);
+            Assert.That(result.Value.LoadId, Is.GreaterThan(0u));
         }
 
         [Test]
@@ -67,10 +70,21 @@ namespace AudioConductor.Core.Providers.Tests
         {
             CreateTestAsset();
 
-            var asset1 = _provider.Load("TestCueSheet");
-            var asset2 = _provider.Load("TestCueSheet");
+            var result1 = _provider.Load("TestCueSheet");
+            var result2 = _provider.Load("TestCueSheet");
 
-            Assert.That(asset1, Is.SameAs(asset2));
+            Assert.That(result1!.Value.Asset, Is.SameAs(result2!.Value.Asset));
+        }
+
+        [Test]
+        public void Load_SameKey_ReturnsDifferentLoadIds()
+        {
+            CreateTestAsset();
+
+            var result1 = _provider.Load("TestCueSheet");
+            var result2 = _provider.Load("TestCueSheet");
+
+            Assert.That(result1!.Value.LoadId, Is.Not.EqualTo(result2!.Value.LoadId));
         }
 
         [Test]
@@ -78,10 +92,9 @@ namespace AudioConductor.Core.Providers.Tests
         {
             CreateTestAsset();
 
-            var asset = _provider.Load("TestCueSheet");
-            _provider.Release(asset);
+            var result = _provider.Load("TestCueSheet");
+            _provider.Release(result!.Value.LoadId);
 
-            // After release with count 0, asset should be unloaded (no exception thrown)
             Assert.Pass();
         }
 
@@ -90,23 +103,20 @@ namespace AudioConductor.Core.Providers.Tests
         {
             CreateTestAsset();
 
-            var asset1 = _provider.Load("TestCueSheet");
-            var asset2 = _provider.Load("TestCueSheet");
+            var result1 = _provider.Load("TestCueSheet");
+            var result2 = _provider.Load("TestCueSheet");
 
-            // First release should not unload (count goes from 2 to 1)
-            _provider.Release(asset1);
+            _provider.Release(result1!.Value.LoadId);
 
-            // Asset should still be accessible
-            Assert.That(asset2, Is.Not.Null);
+            Assert.That(result2!.Value.Asset, Is.Not.Null);
 
-            // Second release should unload (count goes from 1 to 0)
-            _provider.Release(asset2);
+            _provider.Release(result2.Value.LoadId);
 
             Assert.Pass();
         }
 
         [UnityTest]
-        public IEnumerator LoadAsync_ReturnsAsset()
+        public IEnumerator LoadAsync_ReturnsLoadInfo()
         {
             CreateTestAsset();
 
@@ -116,6 +126,8 @@ namespace AudioConductor.Core.Providers.Tests
                 yield return null;
 
             Assert.That(task.Result, Is.Not.Null);
+            Assert.That(task.Result!.Value.Asset, Is.Not.Null);
+            Assert.That(task.Result.Value.LoadId, Is.GreaterThan(0u));
         }
 
         [UnityTest]
@@ -130,27 +142,23 @@ namespace AudioConductor.Core.Providers.Tests
         }
 
         [Test]
-        public void Release_UnloadedAsset_DoesNotThrow()
+        public void Release_ZeroLoadId_DoesNotThrow()
         {
-            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
-
-            Assert.That(() => _provider.Release(asset), Throws.Nothing);
-
-            Object.DestroyImmediate(asset);
+            Assert.That(() => _provider.Release(0), Throws.Nothing);
         }
 
         [Test]
-        public void Release_NullAsset_DoesNotThrow()
+        public void Release_UnknownLoadId_DoesNotThrow()
         {
-            Assert.That(() => _provider.Release(null), Throws.Nothing);
+            Assert.That(() => _provider.Release(999), Throws.Nothing);
         }
 
         [Test]
         public void Load_InvalidKey_ReturnsNull()
         {
-            var asset = _provider.Load("NonExistentKey");
+            var result = _provider.Load("NonExistentKey");
 
-            Assert.That(asset, Is.Null);
+            Assert.That(result, Is.Null);
         }
 
         [UnityTest]
@@ -163,19 +171,7 @@ namespace AudioConductor.Core.Providers.Tests
             while (!task.IsCompleted)
                 yield return null;
 
-            Assert.That(() => _provider.Release(task.Result), Throws.Nothing);
-        }
-
-        [UnityTest]
-        public IEnumerator Release_AfterLoadAsyncInvalidKey_DoesNotThrow()
-        {
-            var task = _provider.LoadAsync("NonExistentKey");
-
-            while (!task.IsCompleted)
-                yield return null;
-
-            // null is returned on failure; Release(null)must be safe
-            Assert.That(() => _provider.Release(task.Result), Throws.Nothing);
+            Assert.That(() => _provider.Release(task.Result!.Value.LoadId), Throws.Nothing);
         }
 
         [Test]
@@ -183,11 +179,11 @@ namespace AudioConductor.Core.Providers.Tests
         {
             CreateTestAsset();
 
-            var asset = _provider.Load("TestCueSheet");
-            _provider.Release(asset);
+            var result = _provider.Load("TestCueSheet");
+            _provider.Release(result!.Value.LoadId);
 
-            // Second release on already-removed asset must be ignored safely
-            Assert.That(() => _provider.Release(asset), Throws.Nothing);
+            // Second release with same loadId is already removed, should be safe
+            Assert.That(() => _provider.Release(result.Value.LoadId), Throws.Nothing);
         }
     }
 }

@@ -14,52 +14,72 @@ namespace AudioConductor.Core.Providers
     /// <summary>
     ///     ICueSheetProvider implementation that loads assets from Resources with reference counting.
     /// </summary>
-    public class ResourcesCueSheetProvider : ICueSheetProvider
+    public class ResourcesCueSheetProvider : CueSheetProviderBase<string>
     {
-        private readonly Dictionary<CueSheetAsset, int> _refCounts = new();
+        private readonly Dictionary<string, (CueSheetAsset asset, int count)> _cache = new();
 
         /// <inheritdoc />
-        public virtual CueSheetAsset? Load(string key)
+        protected override (CueSheetAsset asset, string state)? LoadCore(string key)
         {
+            if (_cache.TryGetValue(key, out var entry))
+            {
+                _cache[key] = (entry.asset, entry.count + 1);
+                return (entry.asset, key);
+            }
+
             var asset = Resources.Load<CueSheetAsset>(key);
-            if (asset != null)
-                _refCounts[asset] = _refCounts.TryGetValue(asset, out var count) ? count + 1 : 1;
-            return asset;
+            if (asset == null)
+                return null;
+
+            _cache[key] = (asset, 1);
+            return (asset, key);
         }
 
         /// <inheritdoc />
-        public virtual Task<CueSheetAsset?> LoadAsync(string key)
+        protected override Task<(CueSheetAsset asset, string state)?> LoadCoreAsync(string key)
         {
-            var tcs = new TaskCompletionSource<CueSheetAsset?>();
+            if (_cache.TryGetValue(key, out var entry))
+            {
+                _cache[key] = (entry.asset, entry.count + 1);
+                return Task.FromResult<(CueSheetAsset asset, string state)?>((entry.asset, key));
+            }
+
+            var tcs = new TaskCompletionSource<(CueSheetAsset asset, string state)?>();
             var request = Resources.LoadAsync<CueSheetAsset>(key);
             request.completed += _ =>
             {
                 var asset = request.asset as CueSheetAsset;
-                if (asset != null)
-                    _refCounts[asset] = _refCounts.TryGetValue(asset, out var count) ? count + 1 : 1;
-                tcs.SetResult(asset);
+                if (asset == null)
+                {
+                    tcs.SetResult(null);
+                    return;
+                }
+
+                if (_cache.TryGetValue(key, out var existing))
+                    _cache[key] = (existing.asset, existing.count + 1);
+                else
+                    _cache[key] = (asset, 1);
+
+                tcs.SetResult((asset, key));
             };
             return tcs.Task;
         }
 
         /// <inheritdoc />
-        public virtual void Release(CueSheetAsset? asset)
+        protected override void ReleaseCore(string key)
         {
-            if (asset == null)
+            if (!_cache.TryGetValue(key, out var entry))
                 return;
 
-            if (!_refCounts.TryGetValue(asset, out var count))
-                return;
-
-            count--;
-            if (count <= 0)
+            var newCount = entry.count - 1;
+            if (newCount <= 0)
             {
-                _refCounts.Remove(asset);
-                Resources.UnloadAsset(asset);
+                _cache.Remove(key);
+                Resources.UnloadAsset(entry.asset);
             }
             else
             {
-                _refCounts[asset] = count;
+                _cache[key] = (entry.asset, newCount);
             }
         }
     }

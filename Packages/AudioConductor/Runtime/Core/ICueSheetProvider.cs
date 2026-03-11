@@ -17,16 +17,16 @@ namespace AudioConductor.Core
         /// <summary>
         ///     Synchronously loads a <see cref="CueSheetAsset" /> by key.
         /// </summary>
-        CueSheetAsset? Load(string key);
+        CueSheetLoadInfo? Load(string key);
 
         /// <summary>
         ///     Asynchronously loads a <see cref="CueSheetAsset" /> by key.
         /// </summary>
-        Task<CueSheetAsset?> LoadAsync(string key);
+        Task<CueSheetLoadInfo?> LoadAsync(string key);
 
         /// <summary>
-        ///     Releases a previously loaded <see cref="CueSheetAsset" />.
+        ///     Releases a previously loaded CueSheet identified by its load ID.
         /// </summary>
-        void Release(CueSheetAsset? asset);
+        void Release(uint loadId);
     }
 }
