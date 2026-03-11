@@ -5,6 +5,7 @@
 #nullable enable
 
 using System.Linq;
+using System.Reflection;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
@@ -22,6 +23,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         private const KeyCode UndoKey = KeyCode.Z;
         private const KeyCode RedoKey = KeyCode.Y;
         private const string SelectedSettingsGuidPrefKey = "AudioConductor.SelectedSettingsGuid";
+
+        private static MethodInfo? _addTabMethod;
+        private static bool _addTabMethodResolved;
 
         [SerializeField] private CueSheetAssetEditorWindowModel _target = null!;
         [SerializeField] private string _selectedSettingsGuid = null!;
@@ -112,7 +116,39 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             var window = CreateInstance<CueSheetAssetEditorWindow>();
             window._target = new CueSheetAssetEditorWindowModel(cueSheetAsset);
             window.minSize = new Vector2(1340, 700);
+
+            var existingWindow = openedWindows.FirstOrDefault();
+            if (existingWindow != null && TryAddTab(existingWindow, window))
+                return;
+
             window.Show();
+        }
+
+        private static bool TryAddTab(EditorWindow existingWindow, EditorWindow newWindow)
+        {
+            if (!_addTabMethodResolved)
+            {
+                // UnityEditor.DockArea.AddTab(EditorWindow, bool)
+                var dockAreaType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.DockArea");
+                _addTabMethod = dockAreaType?.GetMethod("AddTab",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(EditorWindow), typeof(bool) }, null);
+                _addTabMethodResolved = true;
+            }
+
+            if (_addTabMethod == null)
+                return false;
+
+            var parent = existingWindow.GetType()
+                .GetField("m_Parent", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.GetValue(existingWindow);
+
+            if (parent == null || parent.GetType() != _addTabMethod.DeclaringType)
+                return false;
+
+            _addTabMethod.Invoke(parent, new object[] { newWindow, true });
+            newWindow.Focus();
+            return true;
         }
 
         private void Cleanup()
