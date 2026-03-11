@@ -99,6 +99,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchField.highValue = ValueRangeConst.Pitch.Max;
             _pitchRangeField.lowValue = ValueRangeConst.PitchRange.Min;
             _pitchRangeField.highValue = ValueRangeConst.PitchRange.Max;
+            ApplyTooltips();
         }
 
         internal IObservable<string> NameChangedAsObservable => _nameChangedSubject;
@@ -125,6 +126,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             CleanupEventHandlers();
             _previewAreaContainer.onGUIHandler = null;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
@@ -132,6 +134,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _previewAreaContainer.onGUIHandler = DrawPreviewArea;
 
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void Open()
@@ -147,6 +150,29 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             Stop();
 
             this.SetDisplay(false);
+        }
+
+        private void ApplyTooltips()
+        {
+            _nameField.tooltip = Localization.Localization.Tr("track_inspector.name");
+            _colorDefinePopupField.tooltip = Localization.Localization.Tr("track_inspector.color");
+            _audioClipField.tooltip = Localization.Localization.Tr("track_inspector.audio_clip");
+            _volumeField.tooltip = Localization.Localization.Tr("track_inspector.volume");
+            _volumeRangeField.tooltip = Localization.Localization.Tr("track_inspector.volume_range");
+            _pitchField.tooltip = Localization.Localization.Tr("track_inspector.pitch");
+            _pitchRangeField.tooltip = Localization.Localization.Tr("track_inspector.pitch_range");
+            _pitchInvertField.tooltip = Localization.Localization.Tr("track_inspector.pitch_invert");
+            _randomWeightField.tooltip = Localization.Localization.Tr("track_inspector.random_weight");
+            _priorityField.tooltip = Localization.Localization.Tr("track_inspector.priority");
+            _fadeTimeField.tooltip = Localization.Localization.Tr("track_inspector.fade_time");
+            _startSampleField.tooltip = Localization.Localization.Tr("track_inspector.start_sample");
+            _endSampleField.tooltip = Localization.Localization.Tr("track_inspector.end_sample");
+            _isLoopField.tooltip = Localization.Localization.Tr("track_inspector.loop");
+            _loopStartSampleField.tooltip = Localization.Localization.Tr("track_inspector.loop_start_sample");
+            _analyzeButton.tooltip = Localization.Localization.Tr("track_inspector.analyze");
+            _playButton.tooltip = Localization.Localization.Tr("track_inspector.play");
+            _pauseButton.tooltip = Localization.Localization.Tr("track_inspector.pause");
+            _stopButton.tooltip = Localization.Localization.Tr("track_inspector.stop");
         }
 
         private void SetupEventHandlers()
@@ -415,6 +441,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnLoopStartSampleChanged(ChangeEvent<int> evt)
         {
             _loopStartSampleChangedSubject.OnNext(evt.newValue);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
         }
 
         private void OnAnalyzeButtonClicked(ClickEvent _)

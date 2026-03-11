@@ -71,6 +71,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         {
             CleanupEventHandlers();
             _imguiContainer.onGUIHandler = null;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup(TreeViewItem root, CueListTreeView.State state)
@@ -79,6 +80,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             _treeView = new CueListTreeView(root, state);
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnGUI()
@@ -135,6 +137,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal void Refresh()
         {
             _treeView.Reload();
+        }
+
+        private void OnLanguageChanged()
+        {
+            _treeView.ApplyHeaderContent();
         }
 
         private void SetupEventHandlers()

@@ -30,6 +30,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _rootItem = root;
             showAlternatingRowBackgrounds = true;
             rowHeight = 16;
+            ApplyHeaderContent();
             multiColumnHeader.ResizeToFit();
             Reload();
         }
@@ -88,6 +89,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             var e = Event.current;
             if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
                 SetSelection(Array.Empty<int>(), TreeViewSelectionOptions.FireSelectionChanged);
+        }
+
+        internal void ApplyHeaderContent()
+        {
+            foreach (var column in multiColumnHeader.state.columns)
+                if (column.userData is int columnIndex)
+                    column.headerContent = ((ColumnType)columnIndex).CreateHeaderContent();
         }
 
         protected override void RowGUI(RowGUIArgs args)

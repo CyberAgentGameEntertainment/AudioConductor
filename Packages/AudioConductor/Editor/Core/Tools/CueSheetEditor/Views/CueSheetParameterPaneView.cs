@@ -60,6 +60,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _codeGenOutputPathField = this.Q<TextField>("CodeGenOutputPath");
             _codeGenNamespaceField = this.Q<TextField>("CodeGenNamespace");
             _codeGenClassSuffixField = this.Q<TextField>("CodeGenClassSuffix");
+            ApplyTooltips();
         }
 
         internal IObservable<string> NameChangedAsObservable => _nameChangedSubject;
@@ -76,11 +77,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public void Dispose()
         {
             CleanupEventHandlers();
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
         {
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void Open()
@@ -91,6 +94,20 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal void Close()
         {
             this.SetDisplay(false);
+        }
+
+        private void ApplyTooltips()
+        {
+            _nameField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.name");
+            _throttleTypeField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.throttle_type");
+            _throttleLimitField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.throttle_limit");
+            _volumeField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.volume");
+            _pitchField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.pitch");
+            _pitchInvertField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.pitch_invert");
+            _codeGenEnabledField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_enabled");
+            _codeGenOutputPathField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_output_path");
+            _codeGenNamespaceField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_namespace");
+            _codeGenClassSuffixField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_class_suffix");
         }
 
         private void SetupEventHandlers()
@@ -226,6 +243,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnCodeGenClassSuffixChanged(ChangeEvent<string> evt)
         {
             _codeGenClassSuffixChangedSubject.OnNext(evt.newValue);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
         }
 
         #endregion
