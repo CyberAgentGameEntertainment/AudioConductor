@@ -23,15 +23,6 @@ namespace AudioConductor.Core
         /// <returns>A handle for controlling this playback instance.</returns>
         public PlaybackHandle Play(CueSheetHandle sheetHandle, string cueName, PlayOptions? options = null)
         {
-            if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
-                throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
-
-            if (options?.TrackIndex.HasValue == true && options?.Selector != null)
-                throw new ArgumentException("TrackIndex and Selector are mutually exclusive.");
-
-            if (!string.IsNullOrEmpty(options?.TrackName) && options?.Selector != null)
-                throw new ArgumentException("TrackName and Selector are mutually exclusive.");
-
             if (!sheetHandle.IsValid)
                 return default;
 
@@ -42,45 +33,52 @@ namespace AudioConductor.Core
             if (cue == null)
                 return default;
 
-            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
+            return PlayCue(sheetHandle.Id, registration, cue, options);
+        }
 
-            Track? track;
-            if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
-                track = cueState.GetTrack(options.Value.TrackIndex.Value);
-            else if (!string.IsNullOrEmpty(options?.TrackName))
-                track = cueState.GetTrack(options!.Value.TrackName!);
-            else
-                track = cueState.NextTrack(options?.Selector);
-
-            if (track == null || track.audioClip == null)
+        /// <summary>
+        ///     Plays a cue from the registered CueSheet identified by the handle using an integer cue ID.
+        ///     Returns a <see cref="PlaybackHandle" /> for controlling the playback.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueId">The integer ID of the cue to play.</param>
+        /// <param name="options">Optional playback settings. If null, CueSheet defaults are used.</param>
+        /// <returns>A handle for controlling this playback instance.</returns>
+        public PlaybackHandle Play(CueSheetHandle sheetHandle, int cueId, PlayOptions? options = null)
+        {
+            if (!sheetHandle.IsValid)
                 return default;
 
-            if (!CanPlay(sheetHandle.Id, cue, track))
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
                 return default;
 
-            var player = _playerProvider.Rent();
-            _categories.TryGetValue(cue.categoryId, out var category);
-            var cueSheet = registration.Asset.cueSheet;
-            var volume = Calculator.CalcVolume(cueSheet, cue, track);
-            var pitch = Calculator.CalcPitch(cueSheet, cue, track);
-            var isLoop = options?.IsLoop == true || track.isLoop;
-            player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
-                track.startSample, track.loopStartSample, track.endSample);
-            player.Play();
-            player.SetMasterVolume(_masterVolume);
+            var cue = registration.FindCue(cueId);
+            if (cue == null)
+                return default;
 
-            var id = ++_playStateCounter;
-            var state = new PlaybackState(id, sheetHandle.Id, cue, player, track.priority);
-            _playbacks[id] = state;
+            return PlayCue(sheetHandle.Id, registration, cue, options);
+        }
 
-            if (options?.FadeTime > 0f)
-            {
-                player.SetVolumeFade(0f);
-                _fadeManager.StartFade(player, options.Value.Fader ?? Faders.Linear, 0f, 1f,
-                    options.Value.FadeTime.Value);
-            }
+        /// <summary>
+        ///     Plays a cue as a fire-and-forget OneShot using an integer cue ID.
+        ///     No handle is returned; the playback cannot be controlled after it starts.
+        ///     The AudioClipPlayer is automatically returned to the OneShot pool when playback completes.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueId">The integer ID of the cue to play.</param>
+        public void PlayOneShot(CueSheetHandle sheetHandle, int cueId)
+        {
+            if (!sheetHandle.IsValid)
+                return;
 
-            return new PlaybackHandle(id);
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cue = registration.FindCue(cueId);
+            if (cue == null)
+                return;
+
+            PlayOneShotCue(sheetHandle.Id, registration, cue);
         }
 
         /// <summary>
@@ -181,13 +179,71 @@ namespace AudioConductor.Core
             if (cue == null)
                 return;
 
-            var cueState = registration.GetOrCreateCueState(sheetHandle.Id, cue);
+            PlayOneShotCue(sheetHandle.Id, registration, cue);
+        }
+
+        private PlaybackHandle PlayCue(uint cueSheetId, CueSheetRegistration registration, Cue cue,
+            PlayOptions? options)
+        {
+            if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
+                throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
+
+            if (options?.TrackIndex.HasValue == true && options?.Selector != null)
+                throw new ArgumentException("TrackIndex and Selector are mutually exclusive.");
+
+            if (!string.IsNullOrEmpty(options?.TrackName) && options?.Selector != null)
+                throw new ArgumentException("TrackName and Selector are mutually exclusive.");
+
+            var cueState = registration.GetOrCreateCueState(cueSheetId, cue);
+
+            Track? track;
+            if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
+                track = cueState.GetTrack(options.Value.TrackIndex.Value);
+            else if (!string.IsNullOrEmpty(options?.TrackName))
+                track = cueState.GetTrack(options!.Value.TrackName!);
+            else
+                track = cueState.NextTrack(options?.Selector);
+
+            if (track == null || track.audioClip == null)
+                return default;
+
+            if (!CanPlay(cueSheetId, cue, track))
+                return default;
+
+            var player = _playerProvider.Rent();
+            _categories.TryGetValue(cue.categoryId, out var category);
+            var cueSheet = registration.Asset.cueSheet;
+            var volume = Calculator.CalcVolume(cueSheet, cue, track);
+            var pitch = Calculator.CalcPitch(cueSheet, cue, track);
+            var isLoop = options?.IsLoop == true || track.isLoop;
+            player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
+                track.startSample, track.loopStartSample, track.endSample);
+            player.Play();
+            player.SetMasterVolume(_masterVolume);
+
+            var id = ++_playStateCounter;
+            var state = new PlaybackState(id, cueSheetId, cue, player, track.priority);
+            _playbacks[id] = state;
+
+            if (options?.FadeTime > 0f)
+            {
+                player.SetVolumeFade(0f);
+                _fadeManager.StartFade(player, options.Value.Fader ?? Faders.Linear, 0f, 1f,
+                    options.Value.FadeTime.Value);
+            }
+
+            return new PlaybackHandle(id);
+        }
+
+        private void PlayOneShotCue(uint cueSheetId, CueSheetRegistration registration, Cue cue)
+        {
+            var cueState = registration.GetOrCreateCueState(cueSheetId, cue);
             var track = cueState.NextTrack();
 
             if (track == null || track.audioClip == null)
                 return;
 
-            if (!CanPlay(sheetHandle.Id, cue, track))
+            if (!CanPlay(cueSheetId, cue, track))
                 return;
 
             var player = _oneShotProvider.Rent();
@@ -199,7 +255,7 @@ namespace AudioConductor.Core
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
             player.SetMasterVolume(_masterVolume);
-            _oneShotStates.Add(new OneShotState(++_playStateCounter, sheetHandle.Id, cue, player, track.priority));
+            _oneShotStates.Add(new OneShotState(++_playStateCounter, cueSheetId, cue, player, track.priority));
         }
 
         private bool CanPlay(uint cueSheetId, Cue cue, Track track)

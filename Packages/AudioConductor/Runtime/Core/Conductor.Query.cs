@@ -63,7 +63,7 @@ namespace AudioConductor.Core
             if (result.Capacity < cueList.Count)
                 result.Capacity = cueList.Count;
             for (var i = 0; i < cueList.Count; i++)
-                result.Add(new CueInfo(cueList[i].name, cueList[i].categoryId));
+                result.Add(new CueInfo(cueList[i].name, cueList[i].categoryId, cueList[i].cueId));
         }
 
         /// <summary>
@@ -102,6 +102,36 @@ namespace AudioConductor.Core
             for (var i = 0; i < trackList.Count; i++)
                 result.Add(new TrackInfo(trackList[i].name, trackList[i].audioClip, trackList[i].isLoop,
                     trackList[i].priority));
+        }
+
+        /// <summary>
+        ///     Returns the cue ID for the specified cue name within the CueSheet.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue.</param>
+        /// <returns>The cue ID, or null if the handle or cue name is invalid.</returns>
+        public int? GetCueId(CueSheetHandle sheetHandle, string cueName)
+        {
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return null;
+
+            var cue = registration.FindCue(cueName);
+            return cue?.cueId;
+        }
+
+        /// <summary>
+        ///     Returns the cue name for the specified cue ID within the CueSheet.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueId">The cue ID.</param>
+        /// <returns>The cue name, or null if the handle or cue ID is invalid.</returns>
+        public string? GetCueName(CueSheetHandle sheetHandle, int cueId)
+        {
+            if (!sheetHandle.IsValid || !_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return null;
+
+            var cue = registration.FindCue(cueId);
+            return cue?.name;
         }
 
         /// <summary>

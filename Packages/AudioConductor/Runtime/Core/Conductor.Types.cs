@@ -29,6 +29,7 @@ namespace AudioConductor.Core
 
         private sealed class CueSheetRegistration
         {
+            private readonly Dictionary<int, Cue> _cueIdLookup;
             private readonly Dictionary<string, Cue> _cueNameLookup;
             private readonly Dictionary<Cue, CueState> _cueStateCache = new();
 
@@ -37,8 +38,13 @@ namespace AudioConductor.Core
                 Asset = asset;
                 var cueList = asset.cueSheet.cueList;
                 _cueNameLookup = new Dictionary<string, Cue>(cueList.Count);
+                _cueIdLookup = new Dictionary<int, Cue>(cueList.Count);
                 for (var i = 0; i < cueList.Count; i++)
+                {
                     _cueNameLookup[cueList[i].name] = cueList[i];
+                    if (cueList[i].cueId != 0)
+                        _cueIdLookup[cueList[i].cueId] = cueList[i];
+                }
             }
 
             internal CueSheetAsset Asset { get; }
@@ -46,6 +52,12 @@ namespace AudioConductor.Core
             internal Cue? FindCue(string cueName)
             {
                 _cueNameLookup.TryGetValue(cueName, out var cue);
+                return cue;
+            }
+
+            internal Cue? FindCue(int cueId)
+            {
+                _cueIdLookup.TryGetValue(cueId, out var cue);
                 return cue;
             }
 

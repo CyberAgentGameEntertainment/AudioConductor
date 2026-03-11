@@ -119,6 +119,48 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void PlayOneShot_WithInvalidSheetHandle_AndCueId_DoesNotThrow()
+        {
+            using var conductor = new Conductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.PlayOneShot(default, 1));
+        }
+
+        [Test]
+        public void PlayOneShot_WithUnregisteredHandle_AndCueId_DoesNotThrow()
+        {
+            using var conductor = new Conductor(_settings);
+
+            Assert.DoesNotThrow(() => conductor.PlayOneShot(new CueSheetHandle(999), 1));
+        }
+
+        [Test]
+        public void PlayOneShot_WithNonExistentCueId_DoesNotThrow()
+        {
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, 999));
+        }
+
+        [Test]
+        public void PlayOneShot_WithValidCueId_DoesNotThrow()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1", cueId = 1 };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.DoesNotThrow(() => conductor.PlayOneShot(sheetHandle, 1));
+
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
         public void Dispose_WithActivateOneShotPlaybacks_DoesNotThrow()
         {
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);

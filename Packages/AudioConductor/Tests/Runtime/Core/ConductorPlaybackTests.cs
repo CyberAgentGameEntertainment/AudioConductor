@@ -294,6 +294,70 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void Play_WithCueId_WithBothTrackIndexAndTrackName_ThrowsArgumentException()
+        {
+            var track = new Track { name = "track0", audioClip = null };
+            var cue = new Cue { name = "cue1", cueId = 1 };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            Assert.Throws<ArgumentException>(() =>
+                conductor.Play(sheetHandle, 1, new PlayOptions { TrackIndex = 0, TrackName = "track0" }));
+        }
+
+        [Test]
+        public void Play_WithInvalidSheetHandle_AndCueId_ReturnsInvalidHandle()
+        {
+            using var conductor = new Conductor(_settings);
+
+            var handle = conductor.Play(default, 1);
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithUnregisteredHandle_AndCueId_ReturnsInvalidHandle()
+        {
+            using var conductor = new Conductor(_settings);
+
+            var handle = conductor.Play(new CueSheetHandle(999), 1);
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithNonExistentCueId_ReturnsInvalidHandle()
+        {
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, 999);
+
+            Assert.That(handle.IsValid, Is.False);
+        }
+
+        [Test]
+        public void Play_WithValidCueId_ReturnsValidHandle()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1", cueId = 1 };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            var handle = conductor.Play(sheetHandle, 1);
+
+            Assert.That(handle.IsValid, Is.True);
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
         public void Play_SequentialCuePlayedTwice_SecondPlayUsesNextTrack()
         {
             var clip0 = AudioClip.Create("clip0", 44100, 1, 44100, false);

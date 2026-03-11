@@ -104,6 +104,23 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void GetCueInfos_ReturnsCueIds()
+        {
+            using var conductor = new Conductor(_settings);
+            var asset = CreateCueSheetAsset("Sheet");
+            asset.cueSheet.cueList.Add(new Cue { name = "cue_a", categoryId = 1, cueId = 1 });
+            asset.cueSheet.cueList.Add(new Cue { name = "cue_b", categoryId = 2, cueId = 2 });
+            var handle = conductor.RegisterCueSheet(asset);
+
+            var infos = conductor.GetCueInfos(handle);
+
+            Assert.That(infos[0].CueId, Is.EqualTo(1));
+            Assert.That(infos[1].CueId, Is.EqualTo(2));
+
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
         public void GetCueInfos_WithUnknownHandle_ReturnsEmpty()
         {
             using var conductor = new Conductor(_settings);

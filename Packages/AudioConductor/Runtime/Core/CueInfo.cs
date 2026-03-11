@@ -21,10 +21,16 @@ namespace AudioConductor.Core
         /// </summary>
         public int CategoryId { get; }
 
-        internal CueInfo(string name, int categoryId)
+        /// <summary>
+        ///     Stable integer ID for runtime playback. 0 means unassigned.
+        /// </summary>
+        public int CueId { get; }
+
+        internal CueInfo(string name, int categoryId, int cueId)
         {
             Name = name;
             CategoryId = categoryId;
+            CueId = cueId;
         }
     }
 }
