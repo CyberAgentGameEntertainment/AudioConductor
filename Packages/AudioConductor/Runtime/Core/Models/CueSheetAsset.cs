@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using UnityEngine;
 
 namespace AudioConductor.Core.Models
@@ -35,9 +36,14 @@ namespace AudioConductor.Core.Models
 
 #if UNITY_EDITOR
         /// <summary>
-        ///     Enables automatic enum code generation on asset save.
+        ///     Enables enum code generation for this cue sheet.
         /// </summary>
         public bool codeGenEnabled;
+
+        /// <summary>
+        ///     Trigger mode used when enum code generation is enabled.
+        /// </summary>
+        public CueSheetCodeGenMode codeGenMode = CueSheetCodeGenMode.Manual;
 
         /// <summary>
         ///     Output directory for the generated file.

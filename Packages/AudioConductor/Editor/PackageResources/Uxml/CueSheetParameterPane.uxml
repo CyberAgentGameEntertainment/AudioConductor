@@ -23,6 +23,9 @@
         </ui:VisualElement>
         <ui:VisualElement name="CodeGenSettings">
             <ui:VisualElement name="Row" style="flex-direction: row;">
+                <AudioConductor.Editor.Core.Tools.Shared.CueSheetCodeGenModeField style="flex-basis: 33.333%;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="Row" style="flex-direction: row;">
                 <ui:TextField picking-mode="Ignore" label="Output Path" value="" name="CodeGenOutputPath" is-delayed="true" style="flex-basis: 33.333%;" />
             </ui:VisualElement>
             <ui:VisualElement name="Row" style="flex-direction: row;">
@@ -30,6 +33,9 @@
             </ui:VisualElement>
             <ui:VisualElement name="Row" style="flex-direction: row;">
                 <ui:TextField picking-mode="Ignore" label="Class Suffix" value="" name="CodeGenClassSuffix" is-delayed="true" style="flex-basis: 33.333%;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="Row" style="flex-direction: row;">
+                <ui:Button text="Generate Now" display-tooltip-when-elided="true" name="GenerateCode" style="max-width: 120px; margin-top: 3px; margin-bottom: 3px;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

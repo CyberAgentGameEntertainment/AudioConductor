@@ -508,6 +508,51 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
         }
 
         [Test]
+        public void History_DifferentValue_CodeGenMode()
+        {
+            const CueSheetCodeGenMode defaultValue = CueSheetCodeGenMode.Manual;
+            const CueSheetCodeGenMode sameValue = CueSheetCodeGenMode.OnSave;
+            const CueSheetCodeGenMode lastValue = CueSheetCodeGenMode.Manual;
+            var testValues = new[]
+            {
+                sameValue,
+                sameValue,
+                lastValue
+            };
+
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            foreach (var testValue in testValues)
+                model.CodeGenMode = testValue;
+
+            Assert.That(model.CodeGenMode, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenMode, Is.EqualTo(lastValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenMode, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenMode, Is.EqualTo(sameValue));
+
+            history.Undo();
+
+            Assert.That(model.CodeGenMode, Is.EqualTo(defaultValue));
+            Assert.That(_asset.codeGenMode, Is.EqualTo(defaultValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenMode, Is.EqualTo(sameValue));
+            Assert.That(_asset.codeGenMode, Is.EqualTo(sameValue));
+
+            history.Redo();
+
+            Assert.That(model.CodeGenMode, Is.EqualTo(lastValue));
+            Assert.That(_asset.codeGenMode, Is.EqualTo(lastValue));
+        }
+
+        [Test]
         public void History_DifferentValue_CodeGenOutputPath()
         {
             var defaultValue = "Assets/Scripts/Generated/";

@@ -5,8 +5,8 @@
 #nullable enable
 
 using System;
-using System.IO;
 using System.Linq;
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using UnityEditor;
 
@@ -33,7 +33,6 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _isGenerating = true;
             try
             {
-                var generated = false;
                 foreach (var path in assetPaths)
                 {
                     if (AssetDatabase.GetMainAssetTypeAtPath(path) != TargetType)
@@ -41,30 +40,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     var asset = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(path);
                     if (!asset.codeGenEnabled)
                         continue;
-
-                    var result = CueEnumGenerator.Generate(asset);
-                    if (!result.Success)
+                    if (asset.codeGenMode != CueSheetCodeGenMode.OnSave)
                         continue;
 
-                    var fileName = result.EnumName + ".cs";
-                    var outputPath = string.IsNullOrEmpty(asset.codeGenOutputPath)
-                        ? (Path.GetDirectoryName(path) ?? ".") + "/" + fileName
-                        : asset.codeGenOutputPath!.TrimEnd('/') + "/" + fileName;
-
-                    // Skip write if content is identical
-                    if (File.Exists(outputPath) && File.ReadAllText(outputPath) == result.SourceCode)
-                        continue;
-
-                    var dir = Path.GetDirectoryName(outputPath);
-                    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                        Directory.CreateDirectory(dir);
-
-                    File.WriteAllText(outputPath, result.SourceCode);
-                    generated = true;
+                    CueEnumCodeWriter.Write(asset);
                 }
-
-                if (generated)
-                    AssetDatabase.Refresh();
             }
             finally
             {

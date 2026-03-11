@@ -7,6 +7,7 @@
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
+using AudioConductor.Editor.Core.Tools.CodeGen;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
@@ -23,6 +24,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly ObservableProperty<string> _codeGenClassSuffix;
 
         private readonly ObservableProperty<bool> _codeGenEnabled;
+        private readonly ObservableProperty<CueSheetCodeGenMode> _codeGenMode;
         private readonly ObservableProperty<string> _codeGenNamespace;
         private readonly ObservableProperty<string> _codeGenOutputPath;
         private readonly AutoIncrementHistory _history;
@@ -40,6 +42,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
             _codeGenEnabled = new(_asset.codeGenEnabled);
+            _codeGenMode = new(_asset.codeGenMode);
             _codeGenOutputPath = new(_asset.codeGenOutputPath ?? string.Empty);
             _codeGenNamespace = new(_asset.codeGenNamespace ?? string.Empty);
             _codeGenClassSuffix = new(_asset.codeGenClassSuffix ?? string.Empty);
@@ -275,6 +278,40 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #endregion
 
+        #region CodeGenMode
+
+        public CueSheetCodeGenMode CodeGenMode
+        {
+            get => _codeGenMode.Value;
+            set
+            {
+                var old = _codeGenMode.Value;
+                _history.Register($"Set CueSheetAsset {nameof(CodeGenMode)} {value}", Redo, Undo);
+
+                #region LocalMethods
+
+                void Redo()
+                {
+                    _codeGenMode.SetValueAndNotify(_asset.codeGenMode = value);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _codeGenMode.SetValueAndNotify(_asset.codeGenMode = old);
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                #endregion
+            }
+        }
+
+        public IReadOnlyObservableProperty<CueSheetCodeGenMode> CodeGenModeObservable => _codeGenMode;
+
+        #endregion
+
         #region CodeGenOutputPath
 
         public string CodeGenOutputPath
@@ -376,5 +413,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public IReadOnlyObservableProperty<string> CodeGenClassSuffixObservable => _codeGenClassSuffix;
 
         #endregion
+
+        public CueEnumCodeWriter.WriteResult GenerateCode()
+        {
+            return CueEnumCodeWriter.Write(_asset);
+        }
     }
 }

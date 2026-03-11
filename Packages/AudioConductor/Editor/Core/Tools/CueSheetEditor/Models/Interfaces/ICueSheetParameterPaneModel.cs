@@ -5,6 +5,7 @@
 #nullable enable
 
 using AudioConductor.Core.Enums;
+using AudioConductor.Editor.Core.Tools.CodeGen;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
@@ -39,6 +40,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<bool> CodeGenEnabledObservable { get; }
 
+        CueSheetCodeGenMode CodeGenMode { get; set; }
+
+        IReadOnlyObservableProperty<CueSheetCodeGenMode> CodeGenModeObservable { get; }
+
         string CodeGenOutputPath { get; set; }
 
         IReadOnlyObservableProperty<string> CodeGenOutputPathObservable { get; }
@@ -50,5 +55,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
         string CodeGenClassSuffix { get; set; }
 
         IReadOnlyObservableProperty<string> CodeGenClassSuffixObservable { get; }
+
+        CueEnumCodeWriter.WriteResult GenerateCode();
     }
 }

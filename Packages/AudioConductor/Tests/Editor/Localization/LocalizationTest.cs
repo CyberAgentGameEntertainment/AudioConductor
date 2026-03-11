@@ -194,6 +194,10 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)")]
         [TestCase("cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction.")]
         [TestCase("cue_sheet_parameter.codegen_enabled", "Enable enum code generation for this CueSheet.")]
+        [TestCase("cue_sheet_parameter.codegen_mode",
+            "Choose whether enum code generation runs on save or only when triggered manually.")]
+        [TestCase("cue_sheet_parameter.codegen_generate",
+            "Generate the enum file immediately using the current CueSheet settings.")]
         [TestCase("cue_sheet_parameter.codegen_output_path",
             "Directory for the generated enum file. Default: Assets/Scripts/Generated/")]
         [TestCase("cue_sheet_parameter.codegen_namespace",
@@ -272,6 +276,8 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_sheet_parameter.pitch", "CueSheet のデフォルトピッチスケール (0.01 〜 3.0)")]
         [TestCase("cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転")]
         [TestCase("cue_sheet_parameter.codegen_enabled", "この CueSheet の enum コード生成を有効化")]
+        [TestCase("cue_sheet_parameter.codegen_mode", "enum コード生成を保存時に自動実行するか、手動実行のみにするかを選択")]
+        [TestCase("cue_sheet_parameter.codegen_generate", "現在の CueSheet 設定を使って enum ファイルを即時生成")]
         [TestCase("cue_sheet_parameter.codegen_output_path",
             "生成する enum ファイルの出力先ディレクトリ。デフォルト: Assets/Scripts/Generated/")]
         [TestCase("cue_sheet_parameter.codegen_namespace", "生成する enum の namespace。空の場合は namespace なし")]

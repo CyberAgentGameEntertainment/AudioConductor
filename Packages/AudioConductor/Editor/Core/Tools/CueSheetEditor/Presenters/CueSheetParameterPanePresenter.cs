@@ -5,9 +5,12 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Foundation.TinyRx;
+using UnityEditor;
+using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
@@ -62,6 +65,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _model.CodeGenEnabledObservable
                 .Subscribe(_view.SetCodeGenEnabled)
                 .DisposeWith(_bindDisposable);
+            _model.CodeGenModeObservable
+                .Subscribe(_view.SetCodeGenMode)
+                .DisposeWith(_bindDisposable);
             _model.CodeGenOutputPathObservable
                 .Subscribe(_view.SetCodeGenOutputPath)
                 .DisposeWith(_bindDisposable);
@@ -101,6 +107,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.CodeGenEnabledChangedAsObservable
                 .Subscribe(value => _model.CodeGenEnabled = value)
                 .DisposeWith(_viewEventDisposable);
+            _view.CodeGenModeChangedAsObservable
+                .Subscribe(value => _model.CodeGenMode = value)
+                .DisposeWith(_viewEventDisposable);
             _view.CodeGenOutputPathChangedAsObservable
                 .Subscribe(value => _model.CodeGenOutputPath = value)
                 .DisposeWith(_viewEventDisposable);
@@ -109,6 +118,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_viewEventDisposable);
             _view.CodeGenClassSuffixChangedAsObservable
                 .Subscribe(value => _model.CodeGenClassSuffix = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.GenerateCodeClickedAsObservable
+                .Subscribe(_ => GenerateCode())
                 .DisposeWith(_viewEventDisposable);
         }
 
@@ -125,6 +137,25 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         public void Close()
         {
             _view.Close();
+        }
+
+        private void GenerateCode()
+        {
+            if (!_model.CodeGenEnabled)
+                return;
+
+            var result = _model.GenerateCode();
+            if (!result.Success)
+            {
+                var message = string.Join("\n", result.Errors.DefaultIfEmpty("Unknown error."));
+                Debug.LogError(message);
+                EditorUtility.DisplayDialog("Cue enum generation failed.", message, "OK");
+                return;
+            }
+
+            var title = result.WroteFile ? "Cue enum generation success." : "Cue enum already up to date.";
+            var messageText = string.IsNullOrEmpty(result.OutputPath) ? result.EnumName : result.OutputPath;
+            EditorUtility.DisplayDialog(title, messageText, "OK");
         }
     }
 }

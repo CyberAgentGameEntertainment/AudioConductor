@@ -78,6 +78,8 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch", "CueSheet のデフォルトピッチスケール (0.01 〜 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転" },
             { "cue_sheet_parameter.codegen_enabled", "この CueSheet の enum コード生成を有効化" },
+            { "cue_sheet_parameter.codegen_mode", "enum コード生成を保存時に自動実行するか、手動実行のみにするかを選択" },
+            { "cue_sheet_parameter.codegen_generate", "現在の CueSheet 設定を使って enum ファイルを即時生成" },
             { "cue_sheet_parameter.codegen_output_path", "生成する enum ファイルの出力先ディレクトリ。デフォルト: Assets/Scripts/Generated/" },
             { "cue_sheet_parameter.codegen_namespace", "生成する enum の namespace。空の場合は namespace なし" },
             {

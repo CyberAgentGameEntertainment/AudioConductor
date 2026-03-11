@@ -78,6 +78,8 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
             { "cue_sheet_parameter.codegen_enabled", "Enable enum code generation for this CueSheet." },
+            { "cue_sheet_parameter.codegen_mode", "Choose whether enum code generation runs on save or only when triggered manually." },
+            { "cue_sheet_parameter.codegen_generate", "Generate the enum file immediately using the current CueSheet settings." },
             {
                 "cue_sheet_parameter.codegen_output_path",
                 "Directory for the generated enum file. Default: Assets/Scripts/Generated/"
