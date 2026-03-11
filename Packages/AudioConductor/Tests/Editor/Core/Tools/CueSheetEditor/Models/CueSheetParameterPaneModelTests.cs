@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using System.IO;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
@@ -22,7 +21,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal sealed class CueSheetParameterPaneModelTests
     {
-        private const string RootFolder = "Assets/gen/CueSheetParameterPaneModelTests";
+        private const string RootFolder = "Assets/gen/" + nameof(CueSheetParameterPaneModelTests);
         private CueSheetAsset _asset = null!;
         private AudioConductorEditorSettings _settings = null!;
 
@@ -31,7 +30,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
         {
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
-            Directory.CreateDirectory(RootFolder);
+            Utility.CreateFolderRecursively(RootFolder);
 
             _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
             _settings.defaultCodeGenOutputPath = "Assets/ProjectGenerated";
@@ -46,8 +45,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
 
             Object.DestroyImmediate(_asset);
             if (_settings != null)

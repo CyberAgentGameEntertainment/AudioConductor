@@ -5,8 +5,8 @@
 #nullable enable
 
 using System.Collections.Generic;
-using System.IO;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumBatchGeneratorTests
     {
-        private const string RootFolder = "Assets/gen/CueEnumBatchGeneratorTests";
+        private const string RootFolder = "Assets/gen/" + nameof(CueEnumBatchGeneratorTests);
         private readonly List<CueSheetAsset> _assets = new();
 
         [SetUp]
@@ -25,15 +25,15 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
 
-            Directory.CreateDirectory(RootFolder);
+            Utility.CreateFolderRecursively(RootFolder);
             AssetDatabase.Refresh();
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
 
             foreach (var asset in _assets)
                 if (asset != null)
@@ -47,7 +47,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, 1),
+                CreateCueSheetAsset("01_Enabled", true),
                 CreateCueSheetAsset("02_Disabled", false, 2)
             };
 
@@ -64,7 +64,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, 1),
+                CreateCueSheetAsset("01_Enabled", true),
                 CreateCueSheetAsset("02_Disabled", false, 2)
             };
 
@@ -94,7 +94,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Valid", true, 1),
+                CreateCueSheetAsset("01_Valid", true),
                 CreateCueSheetAsset("02_Invalid", true, duplicateCueNames: true),
                 CreateCueSheetAsset("03_Valid", true, 3)
             };
@@ -114,7 +114,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, 1)
+                CreateCueSheetAsset("01_Enabled", true)
             };
             CueEnumBatchGenerator.Generate(CueEnumBatchGenerator.CueEnumBatchScope.EnabledOnly, assets);
 

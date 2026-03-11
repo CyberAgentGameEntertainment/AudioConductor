@@ -7,6 +7,7 @@
 using System.IO;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
+using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumCodeWriterTests
     {
-        private const string RootFolder = "Assets/gen/CueEnumCodeWriterTests";
+        private const string RootFolder = "Assets/gen/" + nameof(CueEnumCodeWriterTests);
         private CueSheetAsset _asset = null!;
         private AudioConductorEditorSettings _settings = null!;
 
@@ -26,7 +27,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
 
-            Directory.CreateDirectory(RootFolder);
+            Utility.CreateFolderRecursively(RootFolder);
 
             _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
             _settings.defaultCodeGenOutputPath = RootFolder + "/ProjectDefault";
@@ -52,8 +53,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
 
             if (_settings != null)
                 Object.DestroyImmediate(_settings, true);

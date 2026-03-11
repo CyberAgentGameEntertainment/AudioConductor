@@ -4,9 +4,9 @@
 
 #nullable enable
 
-using System.IO;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
+using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal class CueEnumGeneratorTests
     {
-        private const string RootFolder = "Assets/gen/CueEnumGeneratorTests";
+        private const string RootFolder = "Assets/gen/" + nameof(CueEnumGeneratorTests);
         private CueSheetAsset _asset = null!;
         private AudioConductorEditorSettings _settings = null!;
 
@@ -25,7 +25,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
-            Directory.CreateDirectory(RootFolder);
+            Utility.CreateFolderRecursively(RootFolder);
 
             _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
             _settings.defaultCodeGenNamespace = "Project.Generated";
@@ -43,8 +43,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
 
             Object.DestroyImmediate(_asset);
             if (_settings != null)

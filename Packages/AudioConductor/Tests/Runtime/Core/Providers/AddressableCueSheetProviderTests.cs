@@ -7,7 +7,7 @@
 #if AUDIOCONDUCTOR_ADDRESSABLES
 using System;
 using System.Collections;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -23,22 +23,30 @@ namespace AudioConductor.Core.Providers.Tests
     public class AddressableCueSheetProviderTests : IPrebuildSetup, IPostBuildCleanup
     {
         private const string TestAddress = "TestCueSheetAddress";
-        private const string RootFolder = "Assets/gen/AddressableCueSheetProviderTests";
+        private const string RootFolder = "Assets/gen/" + nameof(AddressableCueSheetProviderTests);
+        private const string ConfigName = "AddressableAssetSettings.Tests";
 
         private AddressableCueSheetProvider _provider = null!;
 
         void IPostBuildCleanup.Cleanup()
         {
+            EditorBuildSettings.RemoveConfigObject(ConfigName);
+
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
+
             if (AssetDatabase.IsValidFolder("Assets/gen"))
                 AssetDatabase.DeleteAsset("Assets/gen");
+
+            AssetDatabase.Refresh();
         }
 
         void IPrebuildSetup.Setup()
         {
-            if (Directory.Exists(RootFolder))
+            if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
 
-            Directory.CreateDirectory(RootFolder);
+            CreateFolderRecursively(RootFolder);
 
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
             var assetPath = RootFolder + "/TestCueSheet.asset";
@@ -46,7 +54,7 @@ namespace AudioConductor.Core.Providers.Tests
 
             var settings = AddressableAssetSettings.Create(
                 RootFolder + "/Settings",
-                "AddressableAssetSettings.Tests",
+                ConfigName,
                 true, true);
 
             var guid = AssetDatabase.AssetPathToGUID(assetPath);
@@ -82,6 +90,21 @@ namespace AudioConductor.Core.Providers.Tests
             {
                 EditorApplication.QueuePlayerLoopUpdate();
                 yield return null;
+            }
+        }
+
+        private static void CreateFolderRecursively(string path)
+        {
+            if (!path.StartsWith("Assets/"))
+                return;
+
+            var dirs = path.Split('/');
+            var combinePath = dirs[0];
+            foreach (var dir in dirs.Skip(1))
+            {
+                if (!AssetDatabase.IsValidFolder(combinePath + '/' + dir))
+                    AssetDatabase.CreateFolder(combinePath, dir);
+                combinePath += '/' + dir;
             }
         }
 

@@ -5,10 +5,10 @@
 #nullable enable
 
 using System.Collections.Generic;
-using System.IO;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
+using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumDefaultsSettingsChangeProcessorTests
     {
-        private const string RootFolder = "Assets/gen/CueEnumDefaultsSettingsChangeProcessorTests";
+        private const string RootFolder = "Assets/gen/" + nameof(CueEnumDefaultsSettingsChangeProcessorTests);
         private readonly List<CueSheetAsset> _assets = new();
         private AudioConductorEditorSettings _settings = null!;
 
@@ -28,7 +28,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
 
-            Directory.CreateDirectory(RootFolder);
+            Utility.CreateFolderRecursively(RootFolder);
 
             // Redirect default output path into gen/ so the AssetPostprocessor
             // does not leave generated files outside the test sandbox.
@@ -41,8 +41,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
 
             if (_settings != null)
                 Object.DestroyImmediate(_settings, true);

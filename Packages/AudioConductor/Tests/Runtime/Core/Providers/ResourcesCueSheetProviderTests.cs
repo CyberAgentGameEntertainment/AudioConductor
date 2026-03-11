@@ -5,6 +5,7 @@
 #nullable enable
 
 using System.Collections;
+using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
 using UnityEditor;
@@ -41,6 +42,15 @@ namespace AudioConductor.Core.Providers.Tests
             {
                 AssetDatabase.DeleteAsset("Assets/AudioConductorTestResources");
                 AssetDatabase.Refresh();
+            }
+        }
+
+        private static IEnumerator WaitForTask(Task task)
+        {
+            while (!task.IsCompleted)
+            {
+                EditorApplication.QueuePlayerLoopUpdate();
+                yield return null;
             }
         }
 
@@ -121,9 +131,7 @@ namespace AudioConductor.Core.Providers.Tests
             CreateTestAsset();
 
             var task = _provider.LoadAsync("TestCueSheet");
-
-            while (!task.IsCompleted)
-                yield return null;
+            yield return WaitForTask(task);
 
             Assert.That(task.Result, Is.Not.Null);
             Assert.That(task.Result!.Value.Asset, Is.Not.Null);
@@ -134,9 +142,7 @@ namespace AudioConductor.Core.Providers.Tests
         public IEnumerator LoadAsync_InvalidKey_ReturnsNull()
         {
             var task = _provider.LoadAsync("NonExistentKey");
-
-            while (!task.IsCompleted)
-                yield return null;
+            yield return WaitForTask(task);
 
             Assert.That(task.Result, Is.Null);
         }
@@ -167,9 +173,7 @@ namespace AudioConductor.Core.Providers.Tests
             CreateTestAsset();
 
             var task = _provider.LoadAsync("TestCueSheet");
-
-            while (!task.IsCompleted)
-                yield return null;
+            yield return WaitForTask(task);
 
             Assert.That(() => _provider.Release(task.Result!.Value.LoadId), Throws.Nothing);
         }
