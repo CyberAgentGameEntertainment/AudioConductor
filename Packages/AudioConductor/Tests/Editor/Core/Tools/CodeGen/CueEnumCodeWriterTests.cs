@@ -6,6 +6,7 @@
 
 using System.IO;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Models;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
     {
         private const string RootFolder = "Assets/gen/CueEnumCodeWriterTests";
         private CueSheetAsset _asset = null!;
+        private AudioConductorEditorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
@@ -25,6 +27,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
                 AssetDatabase.DeleteAsset(RootFolder);
 
             Directory.CreateDirectory(RootFolder);
+
+            _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
+            _settings.defaultCodeGenOutputPath = RootFolder + "/ProjectDefault";
+            AssetDatabase.CreateAsset(_settings, RootFolder + "/AudioConductorEditorSettings.asset");
 
             _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
             _asset.cueSheet.name = "BGM";
@@ -36,6 +42,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             _asset.codeGenOutputPath = RootFolder;
             AssetDatabase.CreateAsset(_asset, RootFolder + "/TestCueSheet.asset");
             AssetDatabase.Refresh();
+            _asset.useDefaultCodeGenOutputPath = false;
+            _asset.useDefaultCodeGenNamespace = false;
+            _asset.useDefaultCodeGenClassSuffix = false;
+            EditorUtility.SetDirty(_asset);
+            AssetDatabase.SaveAssets();
         }
 
         [TearDown]
@@ -44,6 +55,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             if (AssetDatabase.IsValidFolder("Assets/gen"))
                 AssetDatabase.DeleteAsset("Assets/gen");
 
+            if (_settings != null)
+                Object.DestroyImmediate(_settings, true);
             if (_asset != null)
                 Object.DestroyImmediate(_asset, true);
         }
@@ -87,6 +100,18 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             Assert.That(result.WroteFile, Is.True);
             Assert.That(File.ReadAllText(outputPath), Does.Contain("Battle = 9,"));
             Assert.That(Directory.GetFiles(RootFolder, "*.tmp"), Is.Empty);
+        }
+
+        [Test]
+        public void Write_UseDefaultOutputPath_WritesToEditorSettingsPath()
+        {
+            _asset.useDefaultCodeGenOutputPath = true;
+
+            var result = CueEnumCodeWriter.Write(_asset);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.OutputPath, Is.EqualTo(RootFolder + "/ProjectDefault/BGM.cs"));
+            Assert.That(File.Exists(RootFolder + "/ProjectDefault/BGM.cs"), Is.True);
         }
     }
 }

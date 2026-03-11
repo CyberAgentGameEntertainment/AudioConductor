@@ -14,6 +14,12 @@ namespace AudioConductor.Editor.Core.Models
         order = 1)]
     internal sealed class AudioConductorEditorSettings : ScriptableObject
     {
+        public string defaultCodeGenOutputPath = "Assets/Scripts/Generated/";
+
+        public string defaultCodeGenNamespace = string.Empty;
+
+        public string defaultCodeGenClassSuffix = string.Empty;
+
         /// <summary>
         ///     List of <see cref="ColorDefine" />.
         /// </summary>

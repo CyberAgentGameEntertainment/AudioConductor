@@ -17,6 +17,18 @@ namespace AudioConductor.Editor.Localization
             { "settings.master_volume", "全オーディオに適用されるマスターボリューム (0.0 〜 1.0)" },
             { "settings.managed_pool_size", "構築時に事前生成するマネージド AudioClipPlayer の数" },
             { "settings.oneshot_pool_size", "構築時に事前生成するワンショット AudioClipPlayer の数" },
+            {
+                "editor_settings.codegen_default_output_path",
+                "Cue enum 生成先のプロジェクト既定ディレクトリ。CueSheet 側で Use Default Output Path を有効にしたときに使用"
+            },
+            {
+                "editor_settings.codegen_default_namespace",
+                "Cue enum のプロジェクト既定 namespace。CueSheet 側で Use Default Namespace を有効にしたときに使用"
+            },
+            {
+                "editor_settings.codegen_default_class_suffix",
+                "Cue enum 型名に付与するプロジェクト既定 suffix。CueSheet 側で Use Default Class Suffix を有効にしたときに使用"
+            },
             { "category.name", "カテゴリ名" },
             { "category.throttle_type", "同時発音の制御方式" },
             { "category.throttle_limit", "同時発音数の上限" },
@@ -81,10 +93,16 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.codegen_mode", "enum コード生成を保存時に自動実行するか、手動実行のみにするかを選択" },
             { "cue_sheet_parameter.codegen_generate", "現在の CueSheet 設定を使って enum ファイルを即時生成" },
             { "cue_sheet_parameter.codegen_output_path", "生成する enum ファイルの出力先ディレクトリ。デフォルト: Assets/Scripts/Generated/" },
+            { "cue_sheet_parameter.codegen_use_default_output_path", "EditorSettings に設定したプロジェクト既定の出力先ディレクトリを使用" },
             { "cue_sheet_parameter.codegen_namespace", "生成する enum の namespace。空の場合は namespace なし" },
+            { "cue_sheet_parameter.codegen_use_default_namespace", "EditorSettings に設定したプロジェクト既定の namespace を使用" },
             {
                 "cue_sheet_parameter.codegen_class_suffix",
                 "CueSheet 名に付与する enum 型名の suffix。例: BGM + Cues = BGMCues。空の場合は CueSheet 名のみ"
+            },
+            {
+                "cue_sheet_parameter.codegen_use_default_class_suffix",
+                "EditorSettings に設定したプロジェクト既定の suffix を使用"
             },
             { "other_operation.export_csv", "CueSheet データを CSV としてエクスポート" },
             { "other_operation.import_csv", "CSV から CueSheet データをインポート" }

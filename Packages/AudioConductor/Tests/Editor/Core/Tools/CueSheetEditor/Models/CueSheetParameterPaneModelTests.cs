@@ -4,14 +4,17 @@
 
 #nullable enable
 
+using System.IO;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
+using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tests;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -19,18 +22,36 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal sealed class CueSheetParameterPaneModelTests
     {
+        private const string RootFolder = "Assets/gen/CueSheetParameterPaneModelTests";
         private CueSheetAsset _asset = null!;
+        private AudioConductorEditorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
         {
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
+            Directory.CreateDirectory(RootFolder);
+
+            _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
+            _settings.defaultCodeGenOutputPath = "Assets/ProjectGenerated";
+            _settings.defaultCodeGenNamespace = "Project.Generated";
+            _settings.defaultCodeGenClassSuffix = "ProjectIds";
+            AssetDatabase.CreateAsset(_settings, RootFolder + "/AudioConductorEditorSettings.asset");
+            AssetDatabase.Refresh();
+
             _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
         }
 
         [TearDown]
         public void TearDown()
         {
+            if (AssetDatabase.IsValidFolder("Assets/gen"))
+                AssetDatabase.DeleteAsset("Assets/gen");
+
             Object.DestroyImmediate(_asset);
+            if (_settings != null)
+                Object.DestroyImmediate(_settings, true);
         }
 
         [Test]
@@ -566,6 +587,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             };
 
             var cueSheet = new CueSheet();
+            _asset.useDefaultCodeGenOutputPath = false;
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
             var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
@@ -611,6 +633,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             };
 
             var cueSheet = new CueSheet();
+            _asset.useDefaultCodeGenNamespace = false;
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
             var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
@@ -656,6 +679,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             };
 
             var cueSheet = new CueSheet();
+            _asset.useDefaultCodeGenClassSuffix = false;
             var history = new AutoIncrementHistory();
             var assetSaveService = new AssetSaveService();
             var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
@@ -685,6 +709,135 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 
             Assert.That(model.CodeGenClassSuffix, Is.EqualTo(lastValue));
             Assert.That(_asset.codeGenClassSuffix, Is.EqualTo(lastValue));
+        }
+
+        [Test]
+        public void History_DifferentValue_UseDefaultCodeGenOutputPath()
+        {
+            var cueSheet = new CueSheet();
+            _asset.codeGenOutputPath = "Assets/ExplicitOutput";
+            _asset.useDefaultCodeGenOutputPath = false;
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            model.UseDefaultCodeGenOutputPath = true;
+
+            Assert.That(model.UseDefaultCodeGenOutputPath, Is.True);
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo("Assets/ProjectGenerated"));
+            Assert.That(_asset.useDefaultCodeGenOutputPath, Is.True);
+
+            history.Undo();
+
+            Assert.That(model.UseDefaultCodeGenOutputPath, Is.False);
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo("Assets/ExplicitOutput"));
+            Assert.That(_asset.useDefaultCodeGenOutputPath, Is.False);
+        }
+
+        [Test]
+        public void History_DifferentValue_UseDefaultCodeGenNamespace()
+        {
+            var cueSheet = new CueSheet();
+            _asset.codeGenNamespace = "Explicit.Namespace";
+            _asset.useDefaultCodeGenNamespace = false;
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            model.UseDefaultCodeGenNamespace = true;
+
+            Assert.That(model.UseDefaultCodeGenNamespace, Is.True);
+            Assert.That(model.CodeGenNamespace, Is.EqualTo("Project.Generated"));
+            Assert.That(_asset.useDefaultCodeGenNamespace, Is.True);
+
+            history.Undo();
+
+            Assert.That(model.UseDefaultCodeGenNamespace, Is.False);
+            Assert.That(model.CodeGenNamespace, Is.EqualTo("Explicit.Namespace"));
+            Assert.That(_asset.useDefaultCodeGenNamespace, Is.False);
+        }
+
+        [Test]
+        public void History_DifferentValue_UseDefaultCodeGenClassSuffix()
+        {
+            var cueSheet = new CueSheet();
+            _asset.codeGenClassSuffix = "ExplicitSuffix";
+            _asset.useDefaultCodeGenClassSuffix = false;
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            model.UseDefaultCodeGenClassSuffix = true;
+
+            Assert.That(model.UseDefaultCodeGenClassSuffix, Is.True);
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo("ProjectIds"));
+            Assert.That(_asset.useDefaultCodeGenClassSuffix, Is.True);
+
+            history.Undo();
+
+            Assert.That(model.UseDefaultCodeGenClassSuffix, Is.False);
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo("ExplicitSuffix"));
+            Assert.That(_asset.useDefaultCodeGenClassSuffix, Is.False);
+        }
+
+        [Test]
+        public void Constructor_DefaultUseDefaultFlags_AreTrue()
+        {
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            Assert.That(_asset.useDefaultCodeGenOutputPath, Is.True);
+            Assert.That(_asset.useDefaultCodeGenNamespace, Is.True);
+            Assert.That(_asset.useDefaultCodeGenClassSuffix, Is.True);
+            Assert.That(model.UseDefaultCodeGenOutputPath, Is.True);
+            Assert.That(model.UseDefaultCodeGenNamespace, Is.True);
+            Assert.That(model.UseDefaultCodeGenClassSuffix, Is.True);
+        }
+
+        [Test]
+        public void RefreshResolvedCodeGenDefaults_WhenUseDefaultEnabled_UpdatesDisplayedValues()
+        {
+            var cueSheet = new CueSheet();
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            _settings.defaultCodeGenOutputPath = "Assets/UpdatedGenerated";
+            _settings.defaultCodeGenNamespace = "Project.Updated";
+            _settings.defaultCodeGenClassSuffix = "UpdatedIds";
+
+            model.RefreshResolvedCodeGenDefaults();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo("Assets/UpdatedGenerated"));
+            Assert.That(model.CodeGenNamespace, Is.EqualTo("Project.Updated"));
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo("UpdatedIds"));
+        }
+
+        [Test]
+        public void RefreshResolvedCodeGenDefaults_WhenUseDefaultDisabled_KeepsExplicitValues()
+        {
+            var cueSheet = new CueSheet();
+            _asset.useDefaultCodeGenOutputPath = false;
+            _asset.codeGenOutputPath = "Assets/ExplicitOutput";
+            _asset.useDefaultCodeGenNamespace = false;
+            _asset.codeGenNamespace = "Explicit.Namespace";
+            _asset.useDefaultCodeGenClassSuffix = false;
+            _asset.codeGenClassSuffix = "ExplicitIds";
+            var history = new AutoIncrementHistory();
+            var assetSaveService = new AssetSaveService();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, _asset);
+
+            _settings.defaultCodeGenOutputPath = "Assets/UpdatedGenerated";
+            _settings.defaultCodeGenNamespace = "Project.Updated";
+            _settings.defaultCodeGenClassSuffix = "UpdatedIds";
+
+            model.RefreshResolvedCodeGenDefaults();
+
+            Assert.That(model.CodeGenOutputPath, Is.EqualTo("Assets/ExplicitOutput"));
+            Assert.That(model.CodeGenNamespace, Is.EqualTo("Explicit.Namespace"));
+            Assert.That(model.CodeGenClassSuffix, Is.EqualTo("ExplicitIds"));
         }
     }
 }

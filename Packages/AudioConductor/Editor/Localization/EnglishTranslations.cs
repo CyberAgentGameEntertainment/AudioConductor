@@ -17,6 +17,18 @@ namespace AudioConductor.Editor.Localization
             { "settings.master_volume", "Master volume scale applied to all audio. (0.0 to 1.0)" },
             { "settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction." },
             { "settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction." },
+            {
+                "editor_settings.codegen_default_output_path",
+                "Project default output directory for generated cue enums. Used when a CueSheet enables Use Default Output Path."
+            },
+            {
+                "editor_settings.codegen_default_namespace",
+                "Project default namespace for generated cue enums. Used when a CueSheet enables Use Default Namespace."
+            },
+            {
+                "editor_settings.codegen_default_class_suffix",
+                "Project default suffix appended to generated cue enum type names. Used when a CueSheet enables Use Default Class Suffix."
+            },
             { "category.name", "Category name." },
             { "category.throttle_type", "Concurrent play control type." },
             { "category.throttle_limit", "Limit of concurrent play." },
@@ -78,16 +90,34 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
             { "cue_sheet_parameter.codegen_enabled", "Enable enum code generation for this CueSheet." },
-            { "cue_sheet_parameter.codegen_mode", "Choose whether enum code generation runs on save or only when triggered manually." },
-            { "cue_sheet_parameter.codegen_generate", "Generate the enum file immediately using the current CueSheet settings." },
+            {
+                "cue_sheet_parameter.codegen_mode",
+                "Choose whether enum code generation runs on save or only when triggered manually."
+            },
+            {
+                "cue_sheet_parameter.codegen_generate",
+                "Generate the enum file immediately using the current CueSheet settings."
+            },
             {
                 "cue_sheet_parameter.codegen_output_path",
                 "Directory for the generated enum file. Default: Assets/Scripts/Generated/"
             },
+            {
+                "cue_sheet_parameter.codegen_use_default_output_path",
+                "Use the project default output directory from EditorSettings."
+            },
             { "cue_sheet_parameter.codegen_namespace", "Namespace for the generated enum. Empty means no namespace." },
+            {
+                "cue_sheet_parameter.codegen_use_default_namespace",
+                "Use the project default namespace from EditorSettings."
+            },
             {
                 "cue_sheet_parameter.codegen_class_suffix",
                 "Suffix appended to the CueSheet name to form the enum type name. e.g. BGM + Cues = BGMCues. Empty means CueSheet name only."
+            },
+            {
+                "cue_sheet_parameter.codegen_use_default_class_suffix",
+                "Use the project default class suffix from EditorSettings."
             },
             { "other_operation.export_csv", "Export CueSheet data to CSV." },
             { "other_operation.import_csv", "Import CueSheet data from CSV." }

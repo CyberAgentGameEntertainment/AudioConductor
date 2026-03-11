@@ -29,6 +29,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly ObservableProperty<string> _codeGenOutputPath;
         private readonly AutoIncrementHistory _history;
         private readonly ObservableCueSheet _target;
+        private readonly ObservableProperty<bool> _useDefaultCodeGenClassSuffix;
+        private readonly ObservableProperty<bool> _useDefaultCodeGenNamespace;
+        private readonly ObservableProperty<bool> _useDefaultCodeGenOutputPath;
 
         public CueSheetParameterPaneModel([NotNull] CueSheet cueSheet,
             [NotNull] AutoIncrementHistory history,
@@ -43,9 +46,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
             _codeGenEnabled = new(_asset.codeGenEnabled);
             _codeGenMode = new(_asset.codeGenMode);
-            _codeGenOutputPath = new(_asset.codeGenOutputPath ?? string.Empty);
-            _codeGenNamespace = new(_asset.codeGenNamespace ?? string.Empty);
-            _codeGenClassSuffix = new(_asset.codeGenClassSuffix ?? string.Empty);
+            _useDefaultCodeGenOutputPath = new(_asset.useDefaultCodeGenOutputPath);
+            _codeGenOutputPath = new(GetDisplayCodeGenOutputPath());
+            _useDefaultCodeGenNamespace = new(_asset.useDefaultCodeGenNamespace);
+            _codeGenNamespace = new(GetDisplayCodeGenNamespace());
+            _useDefaultCodeGenClassSuffix = new(_asset.useDefaultCodeGenClassSuffix);
+            _codeGenClassSuffix = new(GetDisplayCodeGenClassSuffix());
             // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
         }
 
@@ -314,6 +320,34 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region CodeGenOutputPath
 
+        public bool UseDefaultCodeGenOutputPath
+        {
+            get => _useDefaultCodeGenOutputPath.Value;
+            set
+            {
+                var old = _useDefaultCodeGenOutputPath.Value;
+                _history.Register($"Set CueSheetAsset {nameof(UseDefaultCodeGenOutputPath)} {value}", Redo, Undo);
+
+                void Redo()
+                {
+                    _useDefaultCodeGenOutputPath.SetValueAndNotify(_asset.useDefaultCodeGenOutputPath = value);
+                    _codeGenOutputPath.SetValueAndNotify(GetDisplayCodeGenOutputPath());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _useDefaultCodeGenOutputPath.SetValueAndNotify(_asset.useDefaultCodeGenOutputPath = old);
+                    _codeGenOutputPath.SetValueAndNotify(GetDisplayCodeGenOutputPath());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+            }
+        }
+
+        public IReadOnlyObservableProperty<bool> UseDefaultCodeGenOutputPathObservable => _useDefaultCodeGenOutputPath;
+
         public string CodeGenOutputPath
         {
             get => _codeGenOutputPath.Value;
@@ -326,14 +360,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
                 void Redo()
                 {
-                    _codeGenOutputPath.SetValueAndNotify(_asset.codeGenOutputPath = value);
+                    _asset.codeGenOutputPath = value;
+                    _codeGenOutputPath.SetValueAndNotify(GetDisplayCodeGenOutputPath());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
 
                 void Undo()
                 {
-                    _codeGenOutputPath.SetValueAndNotify(_asset.codeGenOutputPath = old);
+                    _asset.codeGenOutputPath = old;
+                    _codeGenOutputPath.SetValueAndNotify(GetDisplayCodeGenOutputPath());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
@@ -348,6 +384,34 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region CodeGenNamespace
 
+        public bool UseDefaultCodeGenNamespace
+        {
+            get => _useDefaultCodeGenNamespace.Value;
+            set
+            {
+                var old = _useDefaultCodeGenNamespace.Value;
+                _history.Register($"Set CueSheetAsset {nameof(UseDefaultCodeGenNamespace)} {value}", Redo, Undo);
+
+                void Redo()
+                {
+                    _useDefaultCodeGenNamespace.SetValueAndNotify(_asset.useDefaultCodeGenNamespace = value);
+                    _codeGenNamespace.SetValueAndNotify(GetDisplayCodeGenNamespace());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _useDefaultCodeGenNamespace.SetValueAndNotify(_asset.useDefaultCodeGenNamespace = old);
+                    _codeGenNamespace.SetValueAndNotify(GetDisplayCodeGenNamespace());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+            }
+        }
+
+        public IReadOnlyObservableProperty<bool> UseDefaultCodeGenNamespaceObservable => _useDefaultCodeGenNamespace;
+
         public string CodeGenNamespace
         {
             get => _codeGenNamespace.Value;
@@ -360,14 +424,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
                 void Redo()
                 {
-                    _codeGenNamespace.SetValueAndNotify(_asset.codeGenNamespace = value);
+                    _asset.codeGenNamespace = value;
+                    _codeGenNamespace.SetValueAndNotify(GetDisplayCodeGenNamespace());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
 
                 void Undo()
                 {
-                    _codeGenNamespace.SetValueAndNotify(_asset.codeGenNamespace = old);
+                    _asset.codeGenNamespace = old;
+                    _codeGenNamespace.SetValueAndNotify(GetDisplayCodeGenNamespace());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
@@ -382,6 +448,35 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region CodeGenClassSuffix
 
+        public bool UseDefaultCodeGenClassSuffix
+        {
+            get => _useDefaultCodeGenClassSuffix.Value;
+            set
+            {
+                var old = _useDefaultCodeGenClassSuffix.Value;
+                _history.Register($"Set CueSheetAsset {nameof(UseDefaultCodeGenClassSuffix)} {value}", Redo, Undo);
+
+                void Redo()
+                {
+                    _useDefaultCodeGenClassSuffix.SetValueAndNotify(_asset.useDefaultCodeGenClassSuffix = value);
+                    _codeGenClassSuffix.SetValueAndNotify(GetDisplayCodeGenClassSuffix());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+
+                void Undo()
+                {
+                    _useDefaultCodeGenClassSuffix.SetValueAndNotify(_asset.useDefaultCodeGenClassSuffix = old);
+                    _codeGenClassSuffix.SetValueAndNotify(GetDisplayCodeGenClassSuffix());
+                    EditorUtility.SetDirty(_asset);
+                    _assetSaveService.Save();
+                }
+            }
+        }
+
+        public IReadOnlyObservableProperty<bool> UseDefaultCodeGenClassSuffixObservable =>
+            _useDefaultCodeGenClassSuffix;
+
         public string CodeGenClassSuffix
         {
             get => _codeGenClassSuffix.Value;
@@ -394,14 +489,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
                 void Redo()
                 {
-                    _codeGenClassSuffix.SetValueAndNotify(_asset.codeGenClassSuffix = value);
+                    _asset.codeGenClassSuffix = value;
+                    _codeGenClassSuffix.SetValueAndNotify(GetDisplayCodeGenClassSuffix());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
 
                 void Undo()
                 {
-                    _codeGenClassSuffix.SetValueAndNotify(_asset.codeGenClassSuffix = old);
+                    _asset.codeGenClassSuffix = old;
+                    _codeGenClassSuffix.SetValueAndNotify(GetDisplayCodeGenClassSuffix());
                     EditorUtility.SetDirty(_asset);
                     _assetSaveService.Save();
                 }
@@ -417,6 +514,42 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public CueEnumCodeWriter.WriteResult GenerateCode()
         {
             return CueEnumCodeWriter.Write(_asset);
+        }
+
+        public void RefreshResolvedCodeGenDefaults()
+        {
+            if (_asset.useDefaultCodeGenOutputPath)
+                _codeGenOutputPath.SetValueAndNotify(GetDisplayCodeGenOutputPath());
+
+            if (_asset.useDefaultCodeGenNamespace)
+                _codeGenNamespace.SetValueAndNotify(GetDisplayCodeGenNamespace());
+
+            if (_asset.useDefaultCodeGenClassSuffix)
+                _codeGenClassSuffix.SetValueAndNotify(GetDisplayCodeGenClassSuffix());
+        }
+
+        private string GetDisplayCodeGenClassSuffix()
+        {
+            return _asset.useDefaultCodeGenClassSuffix
+                ? CueEnumCodeGenSettingsResolver
+                    .Resolve(_asset, AudioConductorEditorSettingsRepository.instance.Settings).ClassSuffix
+                : _asset.codeGenClassSuffix ?? string.Empty;
+        }
+
+        private string GetDisplayCodeGenNamespace()
+        {
+            return _asset.useDefaultCodeGenNamespace
+                ? CueEnumCodeGenSettingsResolver
+                    .Resolve(_asset, AudioConductorEditorSettingsRepository.instance.Settings).Namespace
+                : _asset.codeGenNamespace ?? string.Empty;
+        }
+
+        private string GetDisplayCodeGenOutputPath()
+        {
+            return _asset.useDefaultCodeGenOutputPath
+                ? CueEnumCodeGenSettingsResolver
+                    .Resolve(_asset, AudioConductorEditorSettingsRepository.instance.Settings).OutputPath
+                : _asset.codeGenOutputPath ?? string.Empty;
         }
     }
 }

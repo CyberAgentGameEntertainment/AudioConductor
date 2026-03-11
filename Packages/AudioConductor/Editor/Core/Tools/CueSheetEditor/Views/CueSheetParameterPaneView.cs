@@ -17,6 +17,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
     {
         private readonly Subject<string> _codeGenClassSuffixChangedSubject = new();
         private readonly TextField _codeGenClassSuffixField;
+        private readonly Subject<bool> _useDefaultCodeGenClassSuffixChangedSubject = new();
+        private readonly Toggle _useDefaultCodeGenClassSuffixField;
 
         private readonly Subject<bool> _codeGenEnabledChangedSubject = new();
         private readonly Toggle _codeGenEnabledField;
@@ -26,10 +28,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private readonly TextField _codeGenNamespaceField;
         private readonly Subject<string> _codeGenOutputPathChangedSubject = new();
         private readonly TextField _codeGenOutputPathField;
+        private readonly Subject<bool> _useDefaultCodeGenNamespaceChangedSubject = new();
+        private readonly Toggle _useDefaultCodeGenNamespaceField;
+        private readonly Subject<bool> _useDefaultCodeGenOutputPathChangedSubject = new();
+        private readonly Toggle _useDefaultCodeGenOutputPathField;
         private readonly Button _generateCodeButton;
         private readonly Subject<Empty> _generateCodeClickedSubject = new();
         private bool _isCodeGenEnabled;
         private CueSheetCodeGenMode _codeGenMode;
+        private bool _useDefaultCodeGenClassSuffix;
+        private bool _useDefaultCodeGenNamespace;
+        private bool _useDefaultCodeGenOutputPath;
         private readonly VisualElement _codeGenSettingsElement;
         private readonly Subject<string> _nameChangedSubject = new();
         private readonly TextField _nameField;
@@ -64,8 +73,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _codeGenEnabledField = this.Q<Toggle>("CodeGenEnabled");
             _codeGenSettingsElement = this.Q<VisualElement>("CodeGenSettings");
             _codeGenModeField = this.Q<CueSheetCodeGenModeField>();
+            _useDefaultCodeGenOutputPathField = this.Q<Toggle>("UseDefaultCodeGenOutputPath");
             _codeGenOutputPathField = this.Q<TextField>("CodeGenOutputPath");
+            _useDefaultCodeGenNamespaceField = this.Q<Toggle>("UseDefaultCodeGenNamespace");
             _codeGenNamespaceField = this.Q<TextField>("CodeGenNamespace");
+            _useDefaultCodeGenClassSuffixField = this.Q<Toggle>("UseDefaultCodeGenClassSuffix");
             _codeGenClassSuffixField = this.Q<TextField>("CodeGenClassSuffix");
             _generateCodeButton = this.Q<Button>("GenerateCode");
             ApplyTooltips();
@@ -79,8 +91,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal IObservable<bool> PitchInvertChangedAsObservable => _pitchInvertChangedSubject;
         internal IObservable<bool> CodeGenEnabledChangedAsObservable => _codeGenEnabledChangedSubject;
         internal IObservable<CueSheetCodeGenMode> CodeGenModeChangedAsObservable => _codeGenModeChangedSubject;
+        internal IObservable<bool> UseDefaultCodeGenOutputPathChangedAsObservable => _useDefaultCodeGenOutputPathChangedSubject;
         internal IObservable<string> CodeGenOutputPathChangedAsObservable => _codeGenOutputPathChangedSubject;
+        internal IObservable<bool> UseDefaultCodeGenNamespaceChangedAsObservable => _useDefaultCodeGenNamespaceChangedSubject;
         internal IObservable<string> CodeGenNamespaceChangedAsObservable => _codeGenNamespaceChangedSubject;
+        internal IObservable<bool> UseDefaultCodeGenClassSuffixChangedAsObservable => _useDefaultCodeGenClassSuffixChangedSubject;
         internal IObservable<string> CodeGenClassSuffixChangedAsObservable => _codeGenClassSuffixChangedSubject;
         internal IObservable<Empty> GenerateCodeClickedAsObservable => _generateCodeClickedSubject;
 
@@ -116,8 +131,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.pitch_invert");
             _codeGenEnabledField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_enabled");
             _codeGenModeField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_mode");
+            _useDefaultCodeGenOutputPathField.tooltip =
+                Localization.Localization.Tr("cue_sheet_parameter.codegen_use_default_output_path");
             _codeGenOutputPathField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_output_path");
+            _useDefaultCodeGenNamespaceField.tooltip =
+                Localization.Localization.Tr("cue_sheet_parameter.codegen_use_default_namespace");
             _codeGenNamespaceField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_namespace");
+            _useDefaultCodeGenClassSuffixField.tooltip =
+                Localization.Localization.Tr("cue_sheet_parameter.codegen_use_default_class_suffix");
             _codeGenClassSuffixField.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_class_suffix");
             _generateCodeButton.tooltip = Localization.Localization.Tr("cue_sheet_parameter.codegen_generate");
         }
@@ -132,8 +153,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField.RegisterValueChangedCallback(OnPitchInvertChanged);
             _codeGenEnabledField.RegisterValueChangedCallback(OnCodeGenEnabledChanged);
             _codeGenModeField.RegisterValueChangedCallback(OnCodeGenModeChanged);
+            _useDefaultCodeGenOutputPathField.RegisterValueChangedCallback(OnUseDefaultCodeGenOutputPathChanged);
             _codeGenOutputPathField.RegisterValueChangedCallback(OnCodeGenOutputPathChanged);
+            _useDefaultCodeGenNamespaceField.RegisterValueChangedCallback(OnUseDefaultCodeGenNamespaceChanged);
             _codeGenNamespaceField.RegisterValueChangedCallback(OnCodeGenNamespaceChanged);
+            _useDefaultCodeGenClassSuffixField.RegisterValueChangedCallback(OnUseDefaultCodeGenClassSuffixChanged);
             _codeGenClassSuffixField.RegisterValueChangedCallback(OnCodeGenClassSuffixChanged);
             _generateCodeButton.RegisterCallback<ClickEvent>(OnGenerateCodeClicked);
         }
@@ -141,8 +165,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void CleanupEventHandlers()
         {
             _codeGenClassSuffixField.UnregisterValueChangedCallback(OnCodeGenClassSuffixChanged);
+            _useDefaultCodeGenClassSuffixField.UnregisterValueChangedCallback(OnUseDefaultCodeGenClassSuffixChanged);
             _codeGenNamespaceField.UnregisterValueChangedCallback(OnCodeGenNamespaceChanged);
+            _useDefaultCodeGenNamespaceField.UnregisterValueChangedCallback(OnUseDefaultCodeGenNamespaceChanged);
             _codeGenOutputPathField.UnregisterValueChangedCallback(OnCodeGenOutputPathChanged);
+            _useDefaultCodeGenOutputPathField.UnregisterValueChangedCallback(OnUseDefaultCodeGenOutputPathChanged);
             _codeGenModeField.UnregisterValueChangedCallback(OnCodeGenModeChanged);
             _codeGenEnabledField.UnregisterValueChangedCallback(OnCodeGenEnabledChanged);
             _generateCodeButton.UnregisterCallback<ClickEvent>(OnGenerateCodeClicked);
@@ -205,14 +232,35 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _codeGenOutputPathField.SetValueWithoutNotify(value);
         }
 
+        internal void SetUseDefaultCodeGenOutputPath(bool value)
+        {
+            _useDefaultCodeGenOutputPath = value;
+            _useDefaultCodeGenOutputPathField.SetValueWithoutNotify(value);
+            RefreshCodeGenState();
+        }
+
         internal void SetCodeGenNamespace(string value)
         {
             _codeGenNamespaceField.SetValueWithoutNotify(value);
         }
 
+        internal void SetUseDefaultCodeGenNamespace(bool value)
+        {
+            _useDefaultCodeGenNamespace = value;
+            _useDefaultCodeGenNamespaceField.SetValueWithoutNotify(value);
+            RefreshCodeGenState();
+        }
+
         internal void SetCodeGenClassSuffix(string value)
         {
             _codeGenClassSuffixField.SetValueWithoutNotify(value);
+        }
+
+        internal void SetUseDefaultCodeGenClassSuffix(bool value)
+        {
+            _useDefaultCodeGenClassSuffix = value;
+            _useDefaultCodeGenClassSuffixField.SetValueWithoutNotify(value);
+            RefreshCodeGenState();
         }
 
         #endregion
@@ -264,14 +312,29 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _codeGenOutputPathChangedSubject.OnNext(evt.newValue);
         }
 
+        private void OnUseDefaultCodeGenOutputPathChanged(ChangeEvent<bool> evt)
+        {
+            _useDefaultCodeGenOutputPathChangedSubject.OnNext(evt.newValue);
+        }
+
         private void OnCodeGenNamespaceChanged(ChangeEvent<string> evt)
         {
             _codeGenNamespaceChangedSubject.OnNext(evt.newValue);
         }
 
+        private void OnUseDefaultCodeGenNamespaceChanged(ChangeEvent<bool> evt)
+        {
+            _useDefaultCodeGenNamespaceChangedSubject.OnNext(evt.newValue);
+        }
+
         private void OnCodeGenClassSuffixChanged(ChangeEvent<string> evt)
         {
             _codeGenClassSuffixChangedSubject.OnNext(evt.newValue);
+        }
+
+        private void OnUseDefaultCodeGenClassSuffixChanged(ChangeEvent<bool> evt)
+        {
+            _useDefaultCodeGenClassSuffixChangedSubject.OnNext(evt.newValue);
         }
 
         private void OnGenerateCodeClicked(ClickEvent _)
@@ -287,6 +350,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void RefreshCodeGenState()
         {
             _codeGenSettingsElement.SetEnabled(_isCodeGenEnabled);
+            _codeGenOutputPathField.SetEnabled(!_useDefaultCodeGenOutputPath && _isCodeGenEnabled);
+            _codeGenNamespaceField.SetEnabled(!_useDefaultCodeGenNamespace && _isCodeGenEnabled);
+            _codeGenClassSuffixField.SetEnabled(!_useDefaultCodeGenClassSuffix && _isCodeGenEnabled);
             _generateCodeButton.SetEnabled(_isCodeGenEnabled && _codeGenMode == CueSheetCodeGenMode.Manual);
         }
 

@@ -36,10 +36,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
                 AssetDatabase.DeleteAsset("Assets/gen");
 
             foreach (var asset in _assets)
-            {
                 if (asset != null)
                     Object.DestroyImmediate(asset, true);
-            }
 
             _assets.Clear();
         }
@@ -49,8 +47,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, cueId: 1),
-                CreateCueSheetAsset("02_Disabled", false, cueId: 2)
+                CreateCueSheetAsset("01_Enabled", true, 1),
+                CreateCueSheetAsset("02_Disabled", false, 2)
             };
 
             var result = CueEnumBatchGenerator.Generate(CueEnumBatchGenerator.CueEnumBatchScope.EnabledOnly, assets);
@@ -66,8 +64,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, cueId: 1),
-                CreateCueSheetAsset("02_Disabled", false, cueId: 2)
+                CreateCueSheetAsset("01_Enabled", true, 1),
+                CreateCueSheetAsset("02_Disabled", false, 2)
             };
 
             var result = CueEnumBatchGenerator.Generate(CueEnumBatchGenerator.CueEnumBatchScope.All, assets);
@@ -96,9 +94,9 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Valid", true, cueId: 1),
+                CreateCueSheetAsset("01_Valid", true, 1),
                 CreateCueSheetAsset("02_Invalid", true, duplicateCueNames: true),
-                CreateCueSheetAsset("03_Valid", true, cueId: 3)
+                CreateCueSheetAsset("03_Valid", true, 3)
             };
 
             var result = CueEnumBatchGenerator.Generate(CueEnumBatchGenerator.CueEnumBatchScope.EnabledOnly, assets);
@@ -116,7 +114,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var assets = new[]
             {
-                CreateCueSheetAsset("01_Enabled", true, cueId: 1)
+                CreateCueSheetAsset("01_Enabled", true, 1)
             };
             CueEnumBatchGenerator.Generate(CueEnumBatchGenerator.CueEnumBatchScope.EnabledOnly, assets);
 
@@ -142,16 +140,19 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             });
 
             if (duplicateCueNames)
-            {
                 asset.cueSheet.cueList.Add(new Cue
                 {
                     name = "Title",
                     cueId = cueId + 1
                 });
-            }
 
             AssetDatabase.CreateAsset(asset, $"{RootFolder}/{name}.asset");
             AssetDatabase.Refresh();
+            asset.useDefaultCodeGenOutputPath = false;
+            asset.useDefaultCodeGenNamespace = false;
+            asset.useDefaultCodeGenClassSuffix = false;
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
             _assets.Add(asset);
             return asset;
         }

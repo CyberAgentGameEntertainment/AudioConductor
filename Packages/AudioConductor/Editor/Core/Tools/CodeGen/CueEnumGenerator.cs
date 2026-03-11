@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using System.Text;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.CodeGen
 {
@@ -19,10 +20,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         {
             var errors = new List<string>();
             var cueList = asset.cueSheet.cueList;
+            var settings = AudioConductorEditorSettingsRepository.instance.Settings;
+            var resolvedSettings = CueEnumCodeGenSettingsResolver.Resolve(asset, settings);
 
             var baseName = !string.IsNullOrEmpty(asset.cueSheet.name) ? asset.cueSheet.name : asset.name;
 
-            var enumName = IdentifierConverter.ToPascalCase(baseName) + asset.codeGenClassSuffix;
+            var enumName = IdentifierConverter.ToPascalCase(baseName) + resolvedSettings.ClassSuffix;
 
             // Validate cue names and cache converted identifiers
             var seenNames = new HashSet<string>();
@@ -50,10 +53,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             if (cueList.Count > 0)
                 sb.AppendLine("using System;");
 
-            var hasNamespace = !string.IsNullOrEmpty(asset.codeGenNamespace);
+            var hasNamespace = !string.IsNullOrEmpty(resolvedSettings.Namespace);
             if (hasNamespace)
             {
-                sb.AppendLine($"namespace {asset.codeGenNamespace}");
+                sb.AppendLine($"namespace {resolvedSettings.Namespace}");
                 sb.AppendLine("{");
                 AppendEnum(sb, enumName, cueList, identifiers, "    ");
                 if (cueList.Count > 0)

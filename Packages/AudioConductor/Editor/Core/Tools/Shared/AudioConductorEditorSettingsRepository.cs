@@ -4,6 +4,9 @@
 
 #nullable enable
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Editor.Core.Models;
 using UnityEditor;
 
@@ -25,6 +28,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
         }
 
+        internal static event Action? SettingsChanged;
+
         private static AudioConductorEditorSettings? LoadSettings()
         {
             var guids = AssetDatabase.FindAssets("t:" + nameof(AudioConductorEditorSettings), new[] { "Assets" });
@@ -34,6 +39,12 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return AssetDatabase.LoadAssetAtPath<AudioConductorEditorSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
         }
 
+        internal static void NotifySettingsChanged()
+        {
+            instance._settings = null;
+            SettingsChanged?.Invoke();
+        }
+
         internal sealed class AssetPostProcessor : AssetPostprocessor
         {
             private static void OnPostprocessAllAssets(string[] importedAssets,
@@ -41,12 +52,45 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 string[] movedAssets,
                 string[] movedFromAssetPaths)
             {
-                instance._settings = null;
+                if (!HasSettingsAssetChange(importedAssets)
+                    && !HasSettingsAssetChange(deletedAssets)
+                    && !HasSettingsAssetChange(movedAssets)
+                    && !HasSettingsAssetChange(movedFromAssetPaths))
+                    return;
+
+                NotifySettingsChanged();
             }
 
             public override int GetPostprocessOrder()
             {
                 return int.MaxValue;
+            }
+
+            private static bool HasSettingsAssetChange(string[]? assetPaths)
+            {
+                if (assetPaths == null || assetPaths.Length == 0)
+                    return false;
+
+                var cachedSettingsPath = GetCachedSettingsPath();
+                var existingSettingsPaths = GetExistingSettingsPaths();
+
+                foreach (var assetPath in assetPaths)
+                    if (assetPath == cachedSettingsPath || existingSettingsPaths.Contains(assetPath))
+                        return true;
+
+                return false;
+            }
+
+            private static string? GetCachedSettingsPath()
+            {
+                return instance._settings == null ? null : AssetDatabase.GetAssetPath(instance._settings);
+            }
+
+            private static HashSet<string> GetExistingSettingsPaths()
+            {
+                return AssetDatabase.FindAssets("t:" + nameof(AudioConductorEditorSettings), new[] { "Assets" })
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .ToHashSet();
             }
         }
     }

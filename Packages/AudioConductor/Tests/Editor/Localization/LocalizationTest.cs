@@ -109,6 +109,12 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("settings.master_volume", "Master volume scale applied to all audio. (0.0 to 1.0)")]
         [TestCase("settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction.")]
         [TestCase("settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction.")]
+        [TestCase("editor_settings.codegen_default_output_path",
+            "Project default output directory for generated cue enums. Used when a CueSheet enables Use Default Output Path.")]
+        [TestCase("editor_settings.codegen_default_namespace",
+            "Project default namespace for generated cue enums. Used when a CueSheet enables Use Default Namespace.")]
+        [TestCase("editor_settings.codegen_default_class_suffix",
+            "Project default suffix appended to generated cue enum type names. Used when a CueSheet enables Use Default Class Suffix.")]
         public void Tr_English_SettingsKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.English;
@@ -123,6 +129,12 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("settings.master_volume", "全オーディオに適用されるマスターボリューム (0.0 〜 1.0)")]
         [TestCase("settings.managed_pool_size", "構築時に事前生成するマネージド AudioClipPlayer の数")]
         [TestCase("settings.oneshot_pool_size", "構築時に事前生成するワンショット AudioClipPlayer の数")]
+        [TestCase("editor_settings.codegen_default_output_path",
+            "Cue enum 生成先のプロジェクト既定ディレクトリ。CueSheet 側で Use Default Output Path を有効にしたときに使用")]
+        [TestCase("editor_settings.codegen_default_namespace",
+            "Cue enum のプロジェクト既定 namespace。CueSheet 側で Use Default Namespace を有効にしたときに使用")]
+        [TestCase("editor_settings.codegen_default_class_suffix",
+            "Cue enum 型名に付与するプロジェクト既定 suffix。CueSheet 側で Use Default Class Suffix を有効にしたときに使用")]
         public void Tr_Japanese_SettingsKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.Japanese;
@@ -200,10 +212,16 @@ namespace AudioConductor.Editor.Localization.Tests
             "Generate the enum file immediately using the current CueSheet settings.")]
         [TestCase("cue_sheet_parameter.codegen_output_path",
             "Directory for the generated enum file. Default: Assets/Scripts/Generated/")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_output_path",
+            "Use the project default output directory from EditorSettings.")]
         [TestCase("cue_sheet_parameter.codegen_namespace",
             "Namespace for the generated enum. Empty means no namespace.")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_namespace",
+            "Use the project default namespace from EditorSettings.")]
         [TestCase("cue_sheet_parameter.codegen_class_suffix",
             "Suffix appended to the CueSheet name to form the enum type name. e.g. BGM + Cues = BGMCues. Empty means CueSheet name only.")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_class_suffix",
+            "Use the project default class suffix from EditorSettings.")]
         [TestCase("other_operation.export_csv", "Export CueSheet data to CSV.")]
         [TestCase("other_operation.import_csv", "Import CueSheet data from CSV.")]
         public void Tr_English_RemainingKeys_ReturnsExpectedText(string key, string expected)
@@ -280,9 +298,15 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_sheet_parameter.codegen_generate", "現在の CueSheet 設定を使って enum ファイルを即時生成")]
         [TestCase("cue_sheet_parameter.codegen_output_path",
             "生成する enum ファイルの出力先ディレクトリ。デフォルト: Assets/Scripts/Generated/")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_output_path",
+            "EditorSettings に設定したプロジェクト既定の出力先ディレクトリを使用")]
         [TestCase("cue_sheet_parameter.codegen_namespace", "生成する enum の namespace。空の場合は namespace なし")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_namespace",
+            "EditorSettings に設定したプロジェクト既定の namespace を使用")]
         [TestCase("cue_sheet_parameter.codegen_class_suffix",
             "CueSheet 名に付与する enum 型名の suffix。例: BGM + Cues = BGMCues。空の場合は CueSheet 名のみ")]
+        [TestCase("cue_sheet_parameter.codegen_use_default_class_suffix",
+            "EditorSettings に設定したプロジェクト既定の suffix を使用")]
         [TestCase("other_operation.export_csv", "CueSheet データを CSV としてエクスポート")]
         [TestCase("other_operation.import_csv", "CSV から CueSheet データをインポート")]
         public void Tr_Japanese_RemainingKeys_ReturnsExpectedText(string key, string expected)

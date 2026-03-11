@@ -18,6 +18,9 @@ namespace AudioConductor.Editor.Core.CustomEditors
     [CustomEditor(typeof(AudioConductorEditorSettings))]
     internal sealed class AudioConductorEditorSettingsEditor : UnityEditor.Editor
     {
+        private TextField? _defaultCodeGenClassSuffixField;
+        private TextField? _defaultCodeGenNamespaceField;
+        private TextField? _defaultCodeGenOutputPathField;
         private EnumField? _languageField;
         private AudioConductorEditorSettings _settings = null!;
 
@@ -41,6 +44,17 @@ namespace AudioConductor.Editor.Core.CustomEditors
             _languageField.Init(Localization.Localization.Language);
             _languageField.RegisterValueChangedCallback(OnLanguageFieldChanged);
 
+            _defaultCodeGenOutputPathField = container.Q<TextField>("DefaultCodeGenOutputPath");
+            _defaultCodeGenOutputPathField.bindingPath = nameof(AudioConductorEditorSettings.defaultCodeGenOutputPath);
+
+            _defaultCodeGenNamespaceField = container.Q<TextField>("DefaultCodeGenNamespace");
+            _defaultCodeGenNamespaceField.bindingPath = nameof(AudioConductorEditorSettings.defaultCodeGenNamespace);
+
+            _defaultCodeGenClassSuffixField = container.Q<TextField>("DefaultCodeGenClassSuffix");
+            _defaultCodeGenClassSuffixField.bindingPath =
+                nameof(AudioConductorEditorSettings.defaultCodeGenClassSuffix);
+            ApplyTooltips();
+
             var colorDefineListView = container.Q<ListView>();
             colorDefineListView.bindingPath = nameof(AudioConductorEditorSettings.colorDefineList);
             colorDefineListView.makeItem = () => new ColorDefineView();
@@ -56,6 +70,19 @@ namespace AudioConductor.Editor.Core.CustomEditors
             return container;
         }
 
+        private void ApplyTooltips()
+        {
+            if (_defaultCodeGenOutputPathField != null)
+                _defaultCodeGenOutputPathField.tooltip =
+                    Localization.Localization.Tr("editor_settings.codegen_default_output_path");
+            if (_defaultCodeGenNamespaceField != null)
+                _defaultCodeGenNamespaceField.tooltip =
+                    Localization.Localization.Tr("editor_settings.codegen_default_namespace");
+            if (_defaultCodeGenClassSuffixField != null)
+                _defaultCodeGenClassSuffixField.tooltip =
+                    Localization.Localization.Tr("editor_settings.codegen_default_class_suffix");
+        }
+
         private void OnLanguageFieldChanged(ChangeEvent<Enum> evt)
         {
             Localization.Localization.Language = (EditorLanguage)evt.newValue;
@@ -66,6 +93,7 @@ namespace AudioConductor.Editor.Core.CustomEditors
             if (_languageField == null)
                 return;
             _languageField.SetValueWithoutNotify(Localization.Localization.Language);
+            ApplyTooltips();
         }
 
         private void OnColorDefineListItemsAdded(IEnumerable<int> indices)

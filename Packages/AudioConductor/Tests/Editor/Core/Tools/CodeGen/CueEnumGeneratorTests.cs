@@ -4,8 +4,11 @@
 
 #nullable enable
 
+using System.IO;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Models;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -13,19 +16,39 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal class CueEnumGeneratorTests
     {
+        private const string RootFolder = "Assets/gen/CueEnumGeneratorTests";
         private CueSheetAsset _asset = null!;
+        private AudioConductorEditorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
         {
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
+            Directory.CreateDirectory(RootFolder);
+
+            _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
+            _settings.defaultCodeGenNamespace = "Project.Generated";
+            _settings.defaultCodeGenClassSuffix = "ProjectIds";
+            AssetDatabase.CreateAsset(_settings, RootFolder + "/AudioConductorEditorSettings.asset");
+            AssetDatabase.Refresh();
+
             _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
             _asset.cueSheet.name = "BGM";
+            _asset.useDefaultCodeGenOutputPath = false;
+            _asset.useDefaultCodeGenNamespace = false;
+            _asset.useDefaultCodeGenClassSuffix = false;
         }
 
         [TearDown]
         public void TearDown()
         {
+            if (AssetDatabase.IsValidFolder("Assets/gen"))
+                AssetDatabase.DeleteAsset("Assets/gen");
+
             Object.DestroyImmediate(_asset);
+            if (_settings != null)
+                Object.DestroyImmediate(_settings, true);
         }
 
         [Test]
@@ -94,6 +117,29 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             var result = CueEnumGenerator.Generate(_asset);
 
             Assert.That(result.SourceCode, Does.Contain("public enum BGMAudioIds"));
+        }
+
+        [Test]
+        public void Generate_UseDefaultNamespace_UsesEditorSettingsValue()
+        {
+            _asset.useDefaultCodeGenNamespace = true;
+            _asset.cueSheet.cueList.Add(new Cue { name = "title", cueId = 1 });
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.SourceCode, Does.Contain("namespace Project.Generated"));
+        }
+
+        [Test]
+        public void Generate_UseDefaultClassSuffix_UsesEditorSettingsValue()
+        {
+            _asset.useDefaultCodeGenClassSuffix = true;
+
+            var result = CueEnumGenerator.Generate(_asset);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.SourceCode, Does.Contain("public enum BGMProjectIds"));
         }
 
         [Test]

@@ -44,17 +44,31 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<CueSheetCodeGenMode> CodeGenModeObservable { get; }
 
+        bool UseDefaultCodeGenOutputPath { get; set; }
+
+        IReadOnlyObservableProperty<bool> UseDefaultCodeGenOutputPathObservable { get; }
+
         string CodeGenOutputPath { get; set; }
 
         IReadOnlyObservableProperty<string> CodeGenOutputPathObservable { get; }
+
+        bool UseDefaultCodeGenNamespace { get; set; }
+
+        IReadOnlyObservableProperty<bool> UseDefaultCodeGenNamespaceObservable { get; }
 
         string CodeGenNamespace { get; set; }
 
         IReadOnlyObservableProperty<string> CodeGenNamespaceObservable { get; }
 
+        bool UseDefaultCodeGenClassSuffix { get; set; }
+
+        IReadOnlyObservableProperty<bool> UseDefaultCodeGenClassSuffixObservable { get; }
+
         string CodeGenClassSuffix { get; set; }
 
         IReadOnlyObservableProperty<string> CodeGenClassSuffixObservable { get; }
+
+        void RefreshResolvedCodeGenDefaults();
 
         CueEnumCodeWriter.WriteResult GenerateCode();
     }

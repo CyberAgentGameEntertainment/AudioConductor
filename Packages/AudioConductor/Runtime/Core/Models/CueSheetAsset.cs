@@ -46,14 +46,29 @@ namespace AudioConductor.Core.Models
         public CueSheetCodeGenMode codeGenMode = CueSheetCodeGenMode.Manual;
 
         /// <summary>
+        ///     Uses project default output path for generated enum file.
+        /// </summary>
+        public bool useDefaultCodeGenOutputPath = true;
+
+        /// <summary>
         ///     Output directory for the generated file.
         /// </summary>
         public string? codeGenOutputPath = DefaultCodeGenOutputPath;
 
         /// <summary>
+        ///     Uses project default namespace for the generated enum.
+        /// </summary>
+        public bool useDefaultCodeGenNamespace = true;
+
+        /// <summary>
         ///     Namespace for the generated enum. Empty means no namespace.
         /// </summary>
         public string? codeGenNamespace = string.Empty;
+
+        /// <summary>
+        ///     Uses project default class suffix for the generated enum.
+        /// </summary>
+        public bool useDefaultCodeGenClassSuffix = true;
 
         /// <summary>
         ///     Suffix appended to the CueSheet name to form the enum type name. Empty means no suffix.

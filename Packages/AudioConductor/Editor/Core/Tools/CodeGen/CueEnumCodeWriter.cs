@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using System.IO;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.Shared;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.CodeGen
@@ -24,10 +25,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 return new WriteResult(false, false, string.Empty, generationResult.EnumName,
                     new[] { "CueSheetAsset path could not be resolved." });
 
+            var settings = AudioConductorEditorSettingsRepository.instance.Settings;
+            var resolvedSettings = CueEnumCodeGenSettingsResolver.Resolve(asset, settings);
             var fileName = generationResult.EnumName + ".cs";
-            var outputPath = string.IsNullOrEmpty(asset.codeGenOutputPath)
-                ? (Path.GetDirectoryName(assetPath) ?? ".") + "/" + fileName
-                : asset.codeGenOutputPath!.TrimEnd('/') + "/" + fileName;
+            var outputPath = Path.Combine(resolvedSettings.OutputPath, fileName).Replace('\\', '/');
 
             if (File.Exists(outputPath) && File.ReadAllText(outputPath) == generationResult.SourceCode)
                 return new WriteResult(true, false, outputPath, generationResult.EnumName, generationResult.Errors);

@@ -18,7 +18,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             var assets = AssetDatabase.FindAssets("t:" + nameof(CueSheetAsset), new[] { "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .OrderBy(path => path)
-                .Select(path => AssetDatabase.LoadAssetAtPath<CueSheetAsset>(path))
+                .Select(AssetDatabase.LoadAssetAtPath<CueSheetAsset>)
                 .ToArray();
 
             return Generate(scope, assets);
