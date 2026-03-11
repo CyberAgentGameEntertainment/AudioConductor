@@ -7,14 +7,13 @@
 using System.Collections.Generic;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class OtherOperationPaneModelTests
     {

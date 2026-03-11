@@ -4,11 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Editor.Localization;
 using NUnit.Framework;
 using L = AudioConductor.Editor.Localization.Localization;
 
-namespace AudioConductor.Editor.Tests.Localization
+namespace AudioConductor.Editor.Localization.Tests
 {
     internal class LocalizationTest
     {

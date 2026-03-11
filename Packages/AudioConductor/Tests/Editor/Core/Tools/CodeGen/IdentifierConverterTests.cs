@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Editor.Core.Tools.CodeGen;
 using NUnit.Framework;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.CodeGen
+namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal class IdentifierConverterTests
     {

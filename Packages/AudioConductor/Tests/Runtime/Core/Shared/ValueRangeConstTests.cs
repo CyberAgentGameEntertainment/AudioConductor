@@ -4,11 +4,10 @@
 
 #nullable enable
 
-using AudioConductor.Core.Shared;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Core.Tests.Shared
+namespace AudioConductor.Core.Shared.Tests
 {
     public static class ValueRangeConstTests
     {

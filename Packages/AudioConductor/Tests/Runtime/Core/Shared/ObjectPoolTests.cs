@@ -5,10 +5,9 @@
 #nullable enable
 
 using System;
-using AudioConductor.Core.Shared;
 using NUnit.Framework;
 
-namespace AudioConductor.Core.Tests.Shared
+namespace AudioConductor.Core.Shared.Tests
 {
     public class ObjectPoolTests
     {

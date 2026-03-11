@@ -6,13 +6,12 @@
 
 using System.Collections;
 using AudioConductor.Core.Models;
-using AudioConductor.Core.Providers;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace AudioConductor.Core.Tests.Providers
+namespace AudioConductor.Core.Providers.Tests
 {
     public class ResourcesCueSheetProviderTests
     {

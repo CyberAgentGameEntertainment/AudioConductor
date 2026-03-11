@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Editor.Core.Tools.Shared;
 using NUnit.Framework;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.Shared
+namespace AudioConductor.Editor.Core.Tools.Shared.Tests
 {
     internal class MixedValueTests
     {

@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Core.Models;
 using NUnit.Framework;
 
-namespace AudioConductor.Core.Tests.Models
+namespace AudioConductor.Core.Models.Tests
 {
     public class FadeStateTests
     {

@@ -10,8 +10,8 @@ using System.Linq;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
+using AudioConductor.Editor.Core.Tests;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.DataTransferObjects;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
@@ -19,7 +19,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class CueListModelTests
     {

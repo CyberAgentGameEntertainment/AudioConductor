@@ -5,12 +5,11 @@
 #nullable enable
 
 using AudioConductor.Core.Models;
-using AudioConductor.Editor.Core.Tools.CodeGen;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.CodeGen
+namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal class CueEnumGeneratorTests
     {

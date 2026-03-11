@@ -6,11 +6,11 @@
 
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
+using AudioConductor.Editor.Core.Tests;
 using AudioConductor.Editor.Foundation.TinyRx;
 using NUnit.Framework;
 
-namespace AudioConductor.Editor.Core.Tests.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal sealed class ObservableCueSheetTests
     {
