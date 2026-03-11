@@ -40,9 +40,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
             _codeGenEnabled = new(_asset.codeGenEnabled);
-            _codeGenOutputPath = new(_asset.codeGenOutputPath);
-            _codeGenNamespace = new(_asset.codeGenNamespace);
-            _codeGenClassSuffix = new(_asset.codeGenClassSuffix);
+            _codeGenOutputPath = new(_asset.codeGenOutputPath ?? string.Empty);
+            _codeGenNamespace = new(_asset.codeGenNamespace ?? string.Empty);
+            _codeGenClassSuffix = new(_asset.codeGenClassSuffix ?? string.Empty);
             // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
         }
 

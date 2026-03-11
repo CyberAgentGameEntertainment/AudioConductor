@@ -48,8 +48,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
                     var fileName = result.EnumName + ".cs";
                     var outputPath = string.IsNullOrEmpty(asset.codeGenOutputPath)
-                        ? Path.GetDirectoryName(path) + "/" + fileName
-                        : asset.codeGenOutputPath.TrimEnd('/') + "/" + fileName;
+                        ? (Path.GetDirectoryName(path) ?? ".") + "/" + fileName
+                        : asset.codeGenOutputPath!.TrimEnd('/') + "/" + fileName;
 
                     // Skip write if content is identical
                     if (File.Exists(outputPath) && File.ReadAllText(outputPath) == result.SourceCode)
