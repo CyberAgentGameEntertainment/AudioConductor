@@ -36,10 +36,30 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            File.WriteAllText(outputPath, generationResult.SourceCode);
+            WriteAllTextAtomically(outputPath, generationResult.SourceCode);
             AssetDatabase.Refresh();
 
             return new WriteResult(true, true, outputPath, generationResult.EnumName, generationResult.Errors);
+        }
+
+        private static void WriteAllTextAtomically(string outputPath, string sourceCode)
+        {
+            var directory = Path.GetDirectoryName(outputPath);
+            var tempPath = Path.Combine(directory ?? ".", Path.GetRandomFileName() + ".tmp");
+
+            try
+            {
+                File.WriteAllText(tempPath, sourceCode);
+                if (File.Exists(outputPath))
+                    File.Replace(tempPath, outputPath, null);
+                else
+                    File.Move(tempPath, outputPath);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
         }
 
         internal readonly struct WriteResult

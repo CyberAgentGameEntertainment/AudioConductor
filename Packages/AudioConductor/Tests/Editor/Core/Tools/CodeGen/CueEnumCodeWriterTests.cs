@@ -56,6 +56,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             Assert.That(result.Success, Is.True);
             Assert.That(result.WroteFile, Is.True);
             Assert.That(File.Exists(Path.Combine(RootFolder, "BGM.cs")), Is.True);
+            Assert.That(Directory.GetFiles(RootFolder, "*.tmp"), Is.Empty);
         }
 
         [Test]
@@ -67,6 +68,25 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.WroteFile, Is.False);
+        }
+
+        [Test]
+        public void Write_WhenUpdatingExistingFile_ReplacesContentWithoutLeavingTempFile()
+        {
+            CueEnumCodeWriter.Write(_asset);
+            _asset.cueSheet.cueList.Add(new Cue
+            {
+                name = "Battle",
+                cueId = 9
+            });
+
+            var result = CueEnumCodeWriter.Write(_asset);
+            var outputPath = Path.Combine(RootFolder, "BGM.cs");
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.WroteFile, Is.True);
+            Assert.That(File.ReadAllText(outputPath), Does.Contain("Battle = 9,"));
+            Assert.That(Directory.GetFiles(RootFolder, "*.tmp"), Is.Empty);
         }
     }
 }
