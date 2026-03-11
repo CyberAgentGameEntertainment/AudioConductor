@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Models;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
     {
         private const string RootFolder = "Assets/gen/CueEnumDefaultsSettingsChangeProcessorTests";
         private readonly List<CueSheetAsset> _assets = new();
+        private AudioConductorEditorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
@@ -27,6 +29,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
                 AssetDatabase.DeleteAsset(RootFolder);
 
             Directory.CreateDirectory(RootFolder);
+
+            // Redirect default output path into gen/ so the AssetPostprocessor
+            // does not leave generated files outside the test sandbox.
+            _settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
+            _settings.defaultCodeGenOutputPath = RootFolder;
+            AssetDatabase.CreateAsset(_settings, RootFolder + "/EditorSettings.asset");
             AssetDatabase.Refresh();
         }
 
@@ -35,6 +43,9 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             if (AssetDatabase.IsValidFolder("Assets/gen"))
                 AssetDatabase.DeleteAsset("Assets/gen");
+
+            if (_settings != null)
+                Object.DestroyImmediate(_settings, true);
 
             foreach (var asset in _assets)
                 if (asset != null)
@@ -69,7 +80,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             asset.useDefaultCodeGenOutputPath = useDefaultOutputPath;
             asset.useDefaultCodeGenNamespace = useDefaultNamespace;
             asset.useDefaultCodeGenClassSuffix = useDefaultClassSuffix;
-            asset.codeGenOutputPath = "Assets/TestGenerated";
+            asset.codeGenOutputPath = RootFolder;
             asset.cueSheet.cueList.Add(new Cue { name = "Title", cueId = 1 });
             AssetDatabase.CreateAsset(asset, $"{RootFolder}/{name}.asset");
             AssetDatabase.Refresh();
