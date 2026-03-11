@@ -45,6 +45,7 @@ namespace AudioConductor.Core
         private double _scheduledEndTime;
 
         private int _startSample;
+        private float _volumeCategory = 1f;
         private float _volumeMaster = 1f;
 
         private float _volumeRuntime;
@@ -235,7 +236,8 @@ namespace AudioConductor.Core
         /// <inheritdoc />
         public float GetActualVolume()
         {
-            return ValueRangeConst.Volume.Clamp(VolumeAsset * VolumeFade * _volumeRuntime * _volumeMaster);
+            return ValueRangeConst.Volume.Clamp(VolumeAsset * VolumeFade * _volumeRuntime * _volumeMaster *
+                                                _volumeCategory);
         }
 
         /// <inheritdoc />
@@ -326,6 +328,12 @@ namespace AudioConductor.Core
             UpdateVolume();
         }
 
+        public void SetCategoryVolume(float volume)
+        {
+            _volumeCategory = volume;
+            UpdateVolume();
+        }
+
         public void ManualUpdate(float _)
         {
             if (!IsPlaying && !IsPaused)
@@ -359,6 +367,7 @@ namespace AudioConductor.Core
                 _source[1].Stop();
 
             _startSample = _endSample = 0;
+            _volumeCategory = 1f;
             _volumeMaster = 1f;
             VolumeFade = 1f;
             _lastAppliedVolumeScaled = -1;

@@ -7,6 +7,7 @@ namespace AudioConductor.Core
     internal interface IInternalPlayer : IAudioClipPlayer, IFadeable
     {
         void SetMasterVolume(float volume);
+        void SetCategoryVolume(float volume);
         void ManualUpdate(float deltaTime);
         void ResetState();
     }

@@ -120,6 +120,10 @@ namespace AudioConductor.Core.Tests.Fakes
         {
         }
 
+        public void SetCategoryVolume(float volume)
+        {
+        }
+
         public void ManualUpdate(float deltaTime)
         {
         }
