@@ -14,6 +14,7 @@ namespace AudioConductor.Core.Tests.Fakes
     {
         public int StopCount { get; private set; }
         public bool StopCalled => StopCount > 0;
+        public float CategoryVolume { get; private set; } = 1f;
         public bool IsPlaying { get; set; }
         public bool IsPaused { get; set; }
         public uint ActiveFadeId { get; set; }
@@ -122,6 +123,7 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void SetCategoryVolume(float volume)
         {
+            CategoryVolume = volume;
         }
 
         public void ManualUpdate(float deltaTime)
@@ -135,6 +137,7 @@ namespace AudioConductor.Core.Tests.Fakes
             ActiveFadeId = 0;
             IsFading = false;
             StopCount = 0;
+            CategoryVolume = 1f;
             VolumeFade = 1f;
         }
     }

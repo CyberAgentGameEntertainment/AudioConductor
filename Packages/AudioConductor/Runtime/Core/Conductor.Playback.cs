@@ -220,6 +220,7 @@ namespace AudioConductor.Core
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
             player.SetMasterVolume(_masterVolume);
+            player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
 
             var id = ++_playStateCounter;
             var state = new PlaybackState(id, cueSheetId, cue, player, track.priority);
@@ -255,6 +256,7 @@ namespace AudioConductor.Core
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
             player.SetMasterVolume(_masterVolume);
+            player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
             _oneShotStates.Add(new OneShotState(++_playStateCounter, cueSheetId, cue, player, track.priority));
         }
 

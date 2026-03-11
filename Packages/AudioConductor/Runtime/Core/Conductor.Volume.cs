@@ -80,5 +80,34 @@ namespace AudioConductor.Core
             foreach (var state in _oneShotStates)
                 state.Player?.SetMasterVolume(_masterVolume);
         }
+
+        /// <summary>
+        ///     Returns the current volume for the specified category.
+        ///     Returns 1.0 if no volume has been set for the category.
+        /// </summary>
+        /// <param name="categoryId">The category ID.</param>
+        /// <returns>Category volume in the range [0, 1].</returns>
+        public float GetCategoryVolume(int categoryId)
+        {
+            return _categoryVolumes.TryGetValue(categoryId, out var volume) ? volume : 1f;
+        }
+
+        /// <summary>
+        ///     Sets the volume for the specified category and applies it to all active playbacks of that category.
+        ///     The value is clamped to [0, 1].
+        /// </summary>
+        /// <param name="categoryId">The category ID.</param>
+        /// <param name="volume">Target category volume.</param>
+        public void SetCategoryVolume(int categoryId, float volume)
+        {
+            var clamped = ValueRangeConst.Volume.Clamp(volume);
+            _categoryVolumes[categoryId] = clamped;
+            foreach (var playback in _playbacks.Values)
+                if (playback.Player?.CategoryId == categoryId)
+                    playback.Player.SetCategoryVolume(clamped);
+            foreach (var state in _oneShotStates)
+                if (state.Player?.CategoryId == categoryId)
+                    state.Player.SetCategoryVolume(clamped);
+        }
     }
 }

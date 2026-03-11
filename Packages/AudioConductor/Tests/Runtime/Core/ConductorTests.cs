@@ -5,8 +5,10 @@
 #nullable enable
 
 using AudioConductor.Core.Models;
+using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
@@ -82,6 +84,142 @@ namespace AudioConductor.Core.Tests
             var mixerGroup = conductor.GetAudioMixerGroup(999);
 
             Assert.That(mixerGroup, Is.Null);
+        }
+
+        [Test]
+        public void GetCategoryVolume_WhenNotSet_ReturnsOne()
+        {
+            using var conductor = new Conductor(_settings, new FakePlayerProvider(), new FakePlayerProvider());
+
+            Assert.That(conductor.GetCategoryVolume(1), Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
+        public void SetCategoryVolume_ThenGetCategoryVolume_ReturnsSameValue()
+        {
+            using var conductor = new Conductor(_settings, new FakePlayerProvider(), new FakePlayerProvider());
+
+            conductor.SetCategoryVolume(1, 0.5f);
+
+            Assert.That(conductor.GetCategoryVolume(1), Is.EqualTo(0.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void SetCategoryVolume_AppliedToManagedPlayerWithMatchingCategory()
+        {
+            var managedProvider = new FakePlayerProvider();
+            var oneShotProvider = new FakePlayerProvider();
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var cue = new Cue { name = "cue1", categoryId = 1 };
+            cue.trackList.Add(new Track { name = "track1", audioClip = clip });
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            asset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings, managedProvider, oneShotProvider);
+            var sheetHandle = conductor.RegisterCueSheet(asset);
+            conductor.Play(sheetHandle, "cue1");
+
+            conductor.SetCategoryVolume(1, 0.4f);
+
+            var player = managedProvider.Created[0];
+            Assert.That(player.CategoryVolume, Is.EqualTo(0.4f).Within(0.0001f));
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
+        public void SetCategoryVolume_AppliedToOneShotPlayerWithMatchingCategory()
+        {
+            var managedProvider = new FakePlayerProvider();
+            var oneShotProvider = new FakePlayerProvider();
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var cue = new Cue { name = "cue1", categoryId = 2 };
+            cue.trackList.Add(new Track { name = "track1", audioClip = clip });
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            asset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings, managedProvider, oneShotProvider);
+            var sheetHandle = conductor.RegisterCueSheet(asset);
+            conductor.PlayOneShot(sheetHandle, "cue1");
+
+            conductor.SetCategoryVolume(2, 0.3f);
+
+            var player = oneShotProvider.Created[0];
+            Assert.That(player.CategoryVolume, Is.EqualTo(0.3f).Within(0.0001f));
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
+        public void SetCategoryVolume_NotAppliedToPlayerWithDifferentCategory()
+        {
+            var managedProvider = new FakePlayerProvider();
+            var oneShotProvider = new FakePlayerProvider();
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var cue = new Cue { name = "cue1", categoryId = 10 };
+            cue.trackList.Add(new Track { name = "track1", audioClip = clip });
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            asset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings, managedProvider, oneShotProvider);
+            var sheetHandle = conductor.RegisterCueSheet(asset);
+            conductor.Play(sheetHandle, "cue1");
+
+            conductor.SetCategoryVolume(99, 0.1f);
+
+            var player = managedProvider.Created[0];
+            Assert.That(player.CategoryVolume, Is.EqualTo(1f).Within(0.0001f));
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
+        public void Play_AppliesCategoryVolumeAtStart()
+        {
+            var managedProvider = new FakePlayerProvider();
+            var oneShotProvider = new FakePlayerProvider();
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var cue = new Cue { name = "cue1", categoryId = 5 };
+            cue.trackList.Add(new Track { name = "track1", audioClip = clip });
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            asset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings, managedProvider, oneShotProvider);
+            conductor.SetCategoryVolume(5, 0.7f);
+            var sheetHandle = conductor.RegisterCueSheet(asset);
+            conductor.Play(sheetHandle, "cue1");
+
+            var player = managedProvider.Created[0];
+            Assert.That(player.CategoryVolume, Is.EqualTo(0.7f).Within(0.0001f));
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
+        public void PlayOneShot_AppliesCategoryVolumeAtStart()
+        {
+            var managedProvider = new FakePlayerProvider();
+            var oneShotProvider = new FakePlayerProvider();
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var cue = new Cue { name = "cue1", categoryId = 5 };
+            cue.trackList.Add(new Track { name = "track1", audioClip = clip });
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            asset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings, managedProvider, oneShotProvider);
+            conductor.SetCategoryVolume(5, 0.7f);
+            var sheetHandle = conductor.RegisterCueSheet(asset);
+            conductor.PlayOneShot(sheetHandle, "cue1");
+
+            var player = oneShotProvider.Created[0];
+            Assert.That(player.CategoryVolume, Is.EqualTo(0.7f).Within(0.0001f));
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(clip);
         }
     }
 }

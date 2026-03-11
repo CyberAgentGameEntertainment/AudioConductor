@@ -20,6 +20,7 @@ namespace AudioConductor.Core
     {
         private const int BufferInitialCapacity = 64;
         private readonly Dictionary<int, Category> _categories = new();
+        private readonly Dictionary<int, float> _categoryVolumes = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
         private readonly FadeManager _fadeManager = new();
         private readonly IPlayerProvider _oneShotProvider;
