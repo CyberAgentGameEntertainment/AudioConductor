@@ -35,10 +35,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public void AddCue(CueAddOperationRequestedEvent evt)
         {
-            var newItem = new ItemCue(CreateNewId, new Cue
+            var newCue = new Cue
             {
-                name = DefaultNewCueName
-            });
+                name = DefaultNewCueName,
+                cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList)
+            };
+            var newItem = new ItemCue(CreateNewId, newCue);
             AddCue(_root.children.Count, newItem, $"Add Cue {Time.frameCount}");
         }
 
@@ -78,7 +80,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             {
                 var parentCue = new ItemCue(CreateNewId, new Cue
                 {
-                    name = evt.asset.name
+                    name = evt.asset.name,
+                    cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList)
                 });
                 AddCue(index, parentCue, actionTypeId);
                 parent = parentCue;
@@ -294,6 +297,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             var newCue = cue.RawData.Duplicate();
             if (newCue == null)
                 return;
+            newCue.cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList);
             var newItem = new ItemCue(CreateNewId, newCue);
             foreach (var track in newCue.trackList)
                 newItem.AddChild(new ItemTrack(CreateNewId, track));

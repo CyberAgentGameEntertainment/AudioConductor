@@ -69,6 +69,12 @@ namespace AudioConductor.Core.Models
         public CuePlayType playType;
 
         /// <summary>
+        ///     Stable integer ID for runtime playback.
+        ///     0 is reserved as an unassigned sentinel value; valid IDs start from 1.
+        /// </summary>
+        public int cueId;
+
+        /// <summary>
         ///     List of <see cref="Track" />.
         /// </summary>
         public List<Track> trackList = new();

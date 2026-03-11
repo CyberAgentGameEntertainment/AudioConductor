@@ -29,6 +29,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 pitchInvert = cue.pitchInvert,
                 playType = cue.playType,
                 trackList = cue.trackList.Select(track => track.Duplicate()!).ToList()
+                // cueId intentionally omitted; caller is responsible for assigning a new ID.
             };
         }
     }

@@ -31,6 +31,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 var asset = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(path);
                 CueSheetAssets.Add(path, asset);
                 CueSheetIds.Add(asset.cueSheet.Id);
+                MigrateCueIds(asset);
             }
         }
 
@@ -93,6 +94,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 if (!CueSheetIds.Contains(asset.cueSheet.Id))
                 {
                     // create new
+                    MigrateCueIds(asset);
                     CueSheetAssets.Add(importedAsset, asset);
                     CueSheetIds.Add(asset.cueSheet.Id);
                     continue;
@@ -105,6 +107,19 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 CueSheetAssets.Add(importedAsset, asset);
                 CueSheetIds.Add(asset.cueSheet.Id);
             }
+        }
+
+        private static void MigrateCueIds(CueSheetAsset asset)
+        {
+            if (!CueIdAssigner.HasDuplicateCueIds(asset.cueSheet.cueList))
+                return;
+
+            // Reset all IDs and re-assign to ensure uniqueness even if non-zero duplicates exist.
+            foreach (var cue in asset.cueSheet.cueList)
+                cue.cueId = 0;
+            CueIdAssigner.AssignMissingCueIds(asset.cueSheet.cueList);
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
         }
     }
 }
