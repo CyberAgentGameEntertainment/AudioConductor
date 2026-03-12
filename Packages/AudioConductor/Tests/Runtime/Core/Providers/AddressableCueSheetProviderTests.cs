@@ -66,6 +66,7 @@ namespace AudioConductor.Core.Providers.Tests
             entry.address = TestAddress;
 
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
             var buildContext = new AddressablesDataBuilderInput(settings);
             foreach (var db in settings.DataBuilders)
