@@ -23,7 +23,7 @@ namespace AudioConductor.Core.Providers.Tests
     public class AddressableCueSheetProviderTests : IPrebuildSetup, IPostBuildCleanup
     {
         private const string TestAddress = "TestCueSheetAddress";
-        private const string RootFolder = "Assets/gen/" + nameof(AddressableCueSheetProviderTests);
+        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(AddressableCueSheetProviderTests);
         private const string ConfigName = "AddressableAssetSettings.Tests";
 
         private AddressableCueSheetProvider _provider = null!;
@@ -35,8 +35,8 @@ namespace AudioConductor.Core.Providers.Tests
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
 
-            if (AssetDatabase.IsValidFolder("Assets/gen"))
-                AssetDatabase.DeleteAsset("Assets/gen");
+            if (AssetDatabase.IsValidFolder(GlobalSetUpFixture.GenFolder))
+                AssetDatabase.DeleteAsset(GlobalSetUpFixture.GenFolder);
 
             AssetDatabase.Refresh();
         }

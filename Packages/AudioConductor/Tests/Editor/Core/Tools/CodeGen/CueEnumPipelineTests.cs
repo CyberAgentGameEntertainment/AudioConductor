@@ -17,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumPipelineTests
     {
-        private const string RootFolder = "Assets/gen/" + nameof(CueEnumPipelineTests);
+        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(CueEnumPipelineTests);
         private readonly List<Object> _created = new();
 
         [SetUp]

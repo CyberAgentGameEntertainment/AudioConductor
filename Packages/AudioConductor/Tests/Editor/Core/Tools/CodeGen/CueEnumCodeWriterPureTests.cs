@@ -13,7 +13,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumCodeWriterPureTests
     {
-        private const string RootFolder = "Assets/gen/" + nameof(CueEnumCodeWriterPureTests);
+        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(CueEnumCodeWriterPureTests);
 
         [SetUp]
         public void SetUp()
