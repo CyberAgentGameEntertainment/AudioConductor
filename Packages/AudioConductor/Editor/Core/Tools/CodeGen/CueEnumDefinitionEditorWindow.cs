@@ -59,11 +59,13 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _definition = CueEnumDefinitionRepository.instance.Definition;
             InitTreeView();
             L.LanguageChanged += OnLanguageChanged;
+            EditorApplication.projectChanged += OnProjectChanged;
         }
 
         private void OnDisable()
         {
             L.LanguageChanged -= OnLanguageChanged;
+            EditorApplication.projectChanged -= OnProjectChanged;
         }
 
         private void CreateGUI()
@@ -515,6 +517,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         private void OnLanguageChanged()
         {
             ApplyTooltips();
+        }
+
+        private void OnProjectChanged()
+        {
+            _treeView?.Reload();
+            UpdateInspector();
         }
     }
 }
