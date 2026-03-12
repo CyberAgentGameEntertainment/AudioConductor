@@ -204,19 +204,20 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_enum_definition.file_entry.file_name", "Output file name (without extension).")]
         [TestCase("cue_enum_definition.file_entry.use_default_output_path",
             "Use the default output path from definition settings.")]
-        [TestCase("cue_enum_definition.file_entry.output_path", "Output directory for this file group.")]
+        [TestCase("cue_enum_definition.file_entry.output_path", "Output directory for this sheet group.")]
         [TestCase("cue_enum_definition.file_entry.use_default_namespace",
             "Use the default namespace from definition settings.")]
-        [TestCase("cue_enum_definition.file_entry.namespace", "Namespace for this file group.")]
+        [TestCase("cue_enum_definition.file_entry.namespace", "Namespace for this sheet group.")]
         [TestCase("cue_enum_definition.file_entry.use_default_class_suffix",
             "Use the default class suffix from definition settings.")]
         [TestCase("cue_enum_definition.file_entry.class_suffix",
-            "Suffix appended to enum type names in this file group.")]
+            "Suffix appended to enum type names in this sheet group.")]
         [TestCase("cue_enum_definition.file_entry.path_rule",
-            "Glob pattern to auto-assign CueSheetAssets to this file group.")]
+            "Glob pattern to auto-assign CueSheetAssets to this sheet group.")]
         [TestCase("cue_enum_definition.asset.asset", "The CueSheetAsset reference.")]
         [TestCase("cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet.")]
         [TestCase("cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet.")]
+        [TestCase("cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets.")]
         public void Tr_English_RemainingKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.English;
@@ -297,19 +298,20 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_enum_definition.file_entry.file_name", "出力ファイル名 (拡張子なし)")]
         [TestCase("cue_enum_definition.file_entry.use_default_output_path",
             "定義設定のデフォルト出力先ディレクトリを使用")]
-        [TestCase("cue_enum_definition.file_entry.output_path", "このファイルグループの出力先ディレクトリ")]
+        [TestCase("cue_enum_definition.file_entry.output_path", "このシートグループの出力先ディレクトリ")]
         [TestCase("cue_enum_definition.file_entry.use_default_namespace",
             "定義設定のデフォルト namespace を使用")]
-        [TestCase("cue_enum_definition.file_entry.namespace", "このファイルグループの namespace")]
+        [TestCase("cue_enum_definition.file_entry.namespace", "このシートグループの namespace")]
         [TestCase("cue_enum_definition.file_entry.use_default_class_suffix",
             "定義設定のデフォルト class suffix を使用")]
         [TestCase("cue_enum_definition.file_entry.class_suffix",
-            "このファイルグループの enum 型名に付与する suffix")]
+            "このシートグループの enum 型名に付与する suffix")]
         [TestCase("cue_enum_definition.file_entry.path_rule",
             "CueSheetAsset を自動振り分けする glob パターン")]
         [TestCase("cue_enum_definition.asset.asset", "CueSheetAsset の参照")]
         [TestCase("cue_enum_definition.asset.cue_sheet_name", "CueSheet の名前")]
         [TestCase("cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数")]
+        [TestCase("cue_enum_definition.excluded.path_rule", "CueSheetAsset を自動除外する glob パターン")]
         public void Tr_Japanese_RemainingKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.Japanese;

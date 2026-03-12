@@ -22,7 +22,7 @@
 
             <!-- Buttons -->
             <ui:VisualElement name="TreeViewButtons" style="flex-direction: row; margin-top: 2px;">
-                <ui:Button name="AddFileGroupButton" text="+ File Group" style="width: 100px;" />
+                <ui:Button name="AddFileGroupButton" text="+ Sheet Group" style="width: 100px;" />
                 <ui:Button name="RemoveButton" text="Remove" style="width: 80px;" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -34,7 +34,7 @@
 
             <!-- FileEntry inspector -->
             <ui:VisualElement name="FileEntryInspector" style="display: none;">
-                <ui:Label text="File Entry" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:Label text="Sheet Group" style="-unity-font-style: bold; margin-bottom: 2px;" />
                 <ui:TextField name="FileName" label="File Name" is-delayed="true" />
                 <ui:VisualElement style="flex-direction: row;">
                     <ui:Toggle name="UseDefaultOutputPath" label="Use Default Output Path" style="padding-top: 2px;" />

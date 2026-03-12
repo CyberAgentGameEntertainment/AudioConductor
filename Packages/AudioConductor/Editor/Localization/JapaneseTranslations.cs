@@ -85,15 +85,16 @@ namespace AudioConductor.Editor.Localization
             { "cue_enum_definition.generate", "現在の定義から enum ファイルを生成" },
             { "cue_enum_definition.file_entry.file_name", "出力ファイル名 (拡張子なし)" },
             { "cue_enum_definition.file_entry.use_default_output_path", "定義設定のデフォルト出力先ディレクトリを使用" },
-            { "cue_enum_definition.file_entry.output_path", "このファイルグループの出力先ディレクトリ" },
+            { "cue_enum_definition.file_entry.output_path", "このシートグループの出力先ディレクトリ" },
             { "cue_enum_definition.file_entry.use_default_namespace", "定義設定のデフォルト namespace を使用" },
-            { "cue_enum_definition.file_entry.namespace", "このファイルグループの namespace" },
+            { "cue_enum_definition.file_entry.namespace", "このシートグループの namespace" },
             { "cue_enum_definition.file_entry.use_default_class_suffix", "定義設定のデフォルト class suffix を使用" },
-            { "cue_enum_definition.file_entry.class_suffix", "このファイルグループの enum 型名に付与する suffix" },
+            { "cue_enum_definition.file_entry.class_suffix", "このシートグループの enum 型名に付与する suffix" },
             { "cue_enum_definition.file_entry.path_rule", "CueSheetAsset を自動振り分けする glob パターン" },
             { "cue_enum_definition.asset.asset", "CueSheetAsset の参照" },
             { "cue_enum_definition.asset.cue_sheet_name", "CueSheet の名前" },
-            { "cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数" }
+            { "cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数" },
+            { "cue_enum_definition.excluded.path_rule", "CueSheetAsset を自動除外する glob パターン" }
         };
     }
 }

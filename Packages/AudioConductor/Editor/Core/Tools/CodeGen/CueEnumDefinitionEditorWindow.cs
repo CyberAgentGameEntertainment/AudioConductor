@@ -328,9 +328,9 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 if (_definition == null)
                     return;
 
-                var newEntry = new FileEntry { fileName = "NewFileGroup" };
+                var newEntry = new FileEntry { fileName = "NewSheetGroup" };
                 _history.Register(
-                    "Add FileGroup",
+                    "Add SheetGroup",
                     () =>
                     {
                         _definition.fileEntries.Add(newEntry);

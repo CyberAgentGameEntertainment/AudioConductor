@@ -94,24 +94,27 @@ namespace AudioConductor.Editor.Localization
                 "cue_enum_definition.file_entry.use_default_output_path",
                 "Use the default output path from definition settings."
             },
-            { "cue_enum_definition.file_entry.output_path", "Output directory for this file group." },
+            { "cue_enum_definition.file_entry.output_path", "Output directory for this sheet group." },
             {
                 "cue_enum_definition.file_entry.use_default_namespace",
                 "Use the default namespace from definition settings."
             },
-            { "cue_enum_definition.file_entry.namespace", "Namespace for this file group." },
+            { "cue_enum_definition.file_entry.namespace", "Namespace for this sheet group." },
             {
                 "cue_enum_definition.file_entry.use_default_class_suffix",
                 "Use the default class suffix from definition settings."
             },
-            { "cue_enum_definition.file_entry.class_suffix", "Suffix appended to enum type names in this file group." },
+            {
+                "cue_enum_definition.file_entry.class_suffix", "Suffix appended to enum type names in this sheet group."
+            },
             {
                 "cue_enum_definition.file_entry.path_rule",
-                "Glob pattern to auto-assign CueSheetAssets to this file group."
+                "Glob pattern to auto-assign CueSheetAssets to this sheet group."
             },
             { "cue_enum_definition.asset.asset", "The CueSheetAsset reference." },
             { "cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet." },
-            { "cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet." }
+            { "cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet." },
+            { "cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets." }
         };
     }
 }
