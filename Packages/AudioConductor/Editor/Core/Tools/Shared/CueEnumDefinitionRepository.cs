@@ -19,7 +19,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
     /// </summary>
     internal sealed class CueEnumDefinitionRepository : ScriptableSingleton<CueEnumDefinitionRepository>
     {
-        private const string DefaultAssetPath = "Assets/AudioConductor/CueEnumDefinition.asset";
+        private const string DefaultAssetPath = "Assets/AudioConductor/Editor/CueEnumDefinition.asset";
 
         [SerializeField] private CueEnumDefinition? definition;
 
