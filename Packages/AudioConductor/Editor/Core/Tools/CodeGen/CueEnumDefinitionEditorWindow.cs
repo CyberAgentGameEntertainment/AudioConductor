@@ -4,9 +4,11 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
+using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -21,8 +23,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
     internal sealed class CueEnumDefinitionEditorWindow : EditorWindow
     {
         private const string WindowTitle = "Cue Enum Definition";
+        private const KeyCode UndoKey = KeyCode.Z;
+        private const KeyCode RedoKey = KeyCode.Y;
 
         [SerializeField] private CueEnumDefinitionTreeView.State? treeViewState;
+
+        private readonly AutoIncrementHistory _history = new();
 
         private ObjectField? _assetField;
         private VisualElement? _assetInspector;
@@ -66,6 +72,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         {
             L.LanguageChanged -= OnLanguageChanged;
             EditorApplication.projectChanged -= OnProjectChanged;
+            rootVisualElement.UnregisterCallback<KeyDownEvent>(HandleKeyDownEvent);
         }
 
         private void CreateGUI()
@@ -85,6 +92,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             UpdateDefaultSettingsVisibility();
             UpdateDefaultSettingsValues();
             UpdateInspector();
+
+            rootVisualElement.RegisterCallback<KeyDownEvent>(HandleKeyDownEvent);
         }
 
         [MenuItem("Tools/Audio Conductor/Cue Enum Definition")]
@@ -113,6 +122,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             if (window._definition != definition)
             {
                 window._definition = definition;
+                window._history.Clear();
                 CueEnumDefinitionRepository.instance.SetDefinition(definition);
                 window._treeView?.SetDefinition(definition);
                 window._definitionField?.SetValueWithoutNotify(definition);
@@ -167,6 +177,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _definitionField.RegisterValueChangedCallback(evt =>
             {
                 _definition = evt.newValue as CueEnumDefinition;
+                _history.Clear();
                 _treeView?.SetDefinition(_definition);
                 UpdateDefaultSettingsVisibility();
                 UpdateDefaultSettingsValues();
@@ -180,26 +191,70 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_definition == null)
                     return;
-                _definition.defaultOutputPath = evt.newValue;
-                MarkDirtyAndSave();
-                _treeView?.Reload();
+                var oldValue = evt.previousValue;
+                var newValue = evt.newValue;
+                _history.Register(
+                    $"Set Default OutputPath {newValue}",
+                    () =>
+                    {
+                        _definition.defaultOutputPath = newValue;
+                        _defaultOutputPathField?.SetValueWithoutNotify(newValue);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    },
+                    () =>
+                    {
+                        _definition.defaultOutputPath = oldValue;
+                        _defaultOutputPathField?.SetValueWithoutNotify(oldValue);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    });
             });
 
             _defaultNamespaceField?.RegisterValueChangedCallback(evt =>
             {
                 if (_definition == null)
                     return;
-                _definition.defaultNamespace = evt.newValue;
-                MarkDirtyAndSave();
+                var oldValue = evt.previousValue;
+                var newValue = evt.newValue;
+                _history.Register(
+                    $"Set Default Namespace {newValue}",
+                    () =>
+                    {
+                        _definition.defaultNamespace = newValue;
+                        _defaultNamespaceField?.SetValueWithoutNotify(newValue);
+                        MarkDirtyAndSave();
+                    },
+                    () =>
+                    {
+                        _definition.defaultNamespace = oldValue;
+                        _defaultNamespaceField?.SetValueWithoutNotify(oldValue);
+                        MarkDirtyAndSave();
+                    });
             });
 
             _defaultClassSuffixField?.RegisterValueChangedCallback(evt =>
             {
                 if (_definition == null)
                     return;
-                _definition.defaultClassSuffix = evt.newValue;
-                MarkDirtyAndSave();
-                _treeView?.Reload();
+                var oldValue = evt.previousValue;
+                var newValue = evt.newValue;
+                _history.Register(
+                    $"Set Default ClassSuffix {newValue}",
+                    () =>
+                    {
+                        _definition.defaultClassSuffix = newValue;
+                        _defaultClassSuffixField?.SetValueWithoutNotify(newValue);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    },
+                    () =>
+                    {
+                        _definition.defaultClassSuffix = oldValue;
+                        _defaultClassSuffixField?.SetValueWithoutNotify(oldValue);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    });
             });
         }
 
@@ -207,6 +262,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         {
             treeViewState ??= new CueEnumDefinitionTreeView.State();
             _treeView = new CueEnumDefinitionTreeView(treeViewState);
+            _treeView.SetHistory(_history);
             _treeView.OnSelectionChanged += item =>
             {
                 _selectedItem = item;
@@ -215,7 +271,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _treeView.OnStructureChanged += () =>
             {
                 if (_definition != null)
+                {
                     MarkDirtyAndSave();
+                    _treeView?.Reload();
+                    UpdateInspector();
+                }
             };
             _treeView.SetDefinition(_definition);
         }
@@ -235,6 +295,21 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
             var rect = _treeViewContainer!.contentRect;
             _treeView.OnGUI(rect);
+
+            var e = Event.current;
+            if (GetEventAction(e) && e.type == EventType.KeyDown)
+            {
+                if (e.keyCode == UndoKey)
+                {
+                    PerformUndo();
+                    e.Use();
+                }
+                else if (e.keyCode == RedoKey)
+                {
+                    PerformRedo();
+                    e.Use();
+                }
+            }
         }
 
         private void SetupTreeViewButtons()
@@ -245,9 +320,21 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 if (_definition == null)
                     return;
 
-                _definition.fileEntries.Add(new FileEntry { fileName = "NewFileGroup" });
-                MarkDirtyAndSave();
-                _treeView?.Reload();
+                var newEntry = new FileEntry { fileName = "NewFileGroup" };
+                _history.Register(
+                    "Add FileGroup",
+                    () =>
+                    {
+                        _definition.fileEntries.Add(newEntry);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    },
+                    () =>
+                    {
+                        _definition.fileEntries.Remove(newEntry);
+                        MarkDirtyAndSave();
+                        _treeView?.Reload();
+                    });
             });
 
             var removeButton = rootVisualElement.Q<Button>("RemoveButton");
@@ -261,9 +348,25 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.fileName = evt.newValue;
-                    MarkDirtyAndSave();
-                    _treeView?.Reload();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set FileName {newValue}",
+                        () =>
+                        {
+                            fe.fileName = newValue;
+                            _fileNameField?.SetValueWithoutNotify(newValue);
+                            MarkDirtyAndSave();
+                            _treeView?.Reload();
+                        },
+                        () =>
+                        {
+                            fe.fileName = oldValue;
+                            _fileNameField?.SetValueWithoutNotify(oldValue);
+                            MarkDirtyAndSave();
+                            _treeView?.Reload();
+                        });
                 }
             });
 
@@ -271,9 +374,25 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.useDefaultOutputPath = evt.newValue;
-                    _outputPathField?.SetEnabled(!evt.newValue);
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set UseDefaultOutputPath {newValue}",
+                        () =>
+                        {
+                            fe.useDefaultOutputPath = newValue;
+                            _useDefaultOutputPathToggle?.SetValueWithoutNotify(newValue);
+                            _outputPathField?.SetEnabled(!newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.useDefaultOutputPath = oldValue;
+                            _useDefaultOutputPathToggle?.SetValueWithoutNotify(oldValue);
+                            _outputPathField?.SetEnabled(!oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -281,8 +400,23 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.outputPath = evt.newValue;
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set OutputPath {newValue}",
+                        () =>
+                        {
+                            fe.outputPath = newValue;
+                            _outputPathField?.SetValueWithoutNotify(newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.outputPath = oldValue;
+                            _outputPathField?.SetValueWithoutNotify(oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -290,9 +424,25 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.useDefaultNamespace = evt.newValue;
-                    _namespaceField?.SetEnabled(!evt.newValue);
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set UseDefaultNamespace {newValue}",
+                        () =>
+                        {
+                            fe.useDefaultNamespace = newValue;
+                            _useDefaultNamespaceToggle?.SetValueWithoutNotify(newValue);
+                            _namespaceField?.SetEnabled(!newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.useDefaultNamespace = oldValue;
+                            _useDefaultNamespaceToggle?.SetValueWithoutNotify(oldValue);
+                            _namespaceField?.SetEnabled(!oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -300,8 +450,23 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.@namespace = evt.newValue;
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set Namespace {newValue}",
+                        () =>
+                        {
+                            fe.@namespace = newValue;
+                            _namespaceField?.SetValueWithoutNotify(newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.@namespace = oldValue;
+                            _namespaceField?.SetValueWithoutNotify(oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -309,9 +474,25 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.useDefaultClassSuffix = evt.newValue;
-                    _classSuffixField?.SetEnabled(!evt.newValue);
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set UseDefaultClassSuffix {newValue}",
+                        () =>
+                        {
+                            fe.useDefaultClassSuffix = newValue;
+                            _useDefaultClassSuffixToggle?.SetValueWithoutNotify(newValue);
+                            _classSuffixField?.SetEnabled(!newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.useDefaultClassSuffix = oldValue;
+                            _useDefaultClassSuffixToggle?.SetValueWithoutNotify(oldValue);
+                            _classSuffixField?.SetEnabled(!oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -319,8 +500,23 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.classSuffix = evt.newValue;
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set ClassSuffix {newValue}",
+                        () =>
+                        {
+                            fe.classSuffix = newValue;
+                            _classSuffixField?.SetValueWithoutNotify(newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.classSuffix = oldValue;
+                            _classSuffixField?.SetValueWithoutNotify(oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
 
@@ -328,8 +524,23 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 if (_selectedItem is FileEntryTreeItem feItem)
                 {
-                    feItem.FileEntry.pathRule = evt.newValue;
-                    MarkDirtyAndSave();
+                    var oldValue = evt.previousValue;
+                    var newValue = evt.newValue;
+                    var fe = feItem.FileEntry;
+                    _history.Register(
+                        $"Set PathRule {newValue}",
+                        () =>
+                        {
+                            fe.pathRule = newValue;
+                            _pathRuleField?.SetValueWithoutNotify(newValue);
+                            MarkDirtyAndSave();
+                        },
+                        () =>
+                        {
+                            fe.pathRule = oldValue;
+                            _pathRuleField?.SetValueWithoutNotify(oldValue);
+                            MarkDirtyAndSave();
+                        });
                 }
             });
         }
@@ -437,25 +648,91 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             if (selection == null || selection.Count == 0)
                 return;
 
+            // Capture removal targets
+            var removedAssets = new List<(CueSheetAsset asset, int rootIndex, int feIndex, int assetIndex)>();
+            var removedFileEntries = new List<(FileEntry fe, int index)>();
+
             foreach (var id in selection)
             {
                 var item = _treeView.FindItemById(id);
                 if (item is CueSheetAssetTreeItem assetItem && assetItem.Asset != null)
                 {
-                    _definition.rootEntries.Remove(assetItem.Asset);
-                    foreach (var fe in _definition.fileEntries)
-                        fe.assets.Remove(assetItem.Asset);
+                    var rootIdx = _definition.rootEntries.IndexOf(assetItem.Asset);
+                    if (rootIdx >= 0)
+                        removedAssets.Add((assetItem.Asset, rootIdx, -1, -1));
+                    else
+                        for (var fi = 0; fi < _definition.fileEntries.Count; fi++)
+                        {
+                            var ai = _definition.fileEntries[fi].assets.IndexOf(assetItem.Asset);
+                            if (ai >= 0)
+                            {
+                                removedAssets.Add((assetItem.Asset, -1, fi, ai));
+                                break;
+                            }
+                        }
                 }
                 else if (item is FileEntryTreeItem feItem)
                 {
-                    _definition.fileEntries.Remove(feItem.FileEntry);
+                    var idx = _definition.fileEntries.IndexOf(feItem.FileEntry);
+                    if (idx >= 0)
+                        removedFileEntries.Add((feItem.FileEntry, idx));
                 }
             }
 
-            MarkDirtyAndSave();
-            _treeView.Reload();
-            _selectedItem = null;
-            UpdateInspector();
+            _history.Register(
+                "Remove Selected",
+                () =>
+                {
+                    foreach (var (asset, rootIdx, feIdx, _) in removedAssets)
+                        if (rootIdx >= 0)
+                            _definition.rootEntries.Remove(asset);
+                        else if (feIdx >= 0 && feIdx < _definition.fileEntries.Count)
+                            _definition.fileEntries[feIdx].assets.Remove(asset);
+
+                    foreach (var (fe, _) in removedFileEntries)
+                        _definition.fileEntries.Remove(fe);
+
+                    MarkDirtyAndSave();
+                    _treeView?.Reload();
+                    _selectedItem = null;
+                    UpdateInspector();
+                },
+                () =>
+                {
+                    // Restore in reverse order
+                    for (var i = removedFileEntries.Count - 1; i >= 0; i--)
+                    {
+                        var (fe, idx) = removedFileEntries[i];
+                        if (idx <= _definition.fileEntries.Count)
+                            _definition.fileEntries.Insert(idx, fe);
+                        else
+                            _definition.fileEntries.Add(fe);
+                    }
+
+                    for (var i = removedAssets.Count - 1; i >= 0; i--)
+                    {
+                        var (asset, rootIdx, feIdx, assetIdx) = removedAssets[i];
+                        if (rootIdx >= 0)
+                        {
+                            if (rootIdx <= _definition.rootEntries.Count)
+                                _definition.rootEntries.Insert(rootIdx, asset);
+                            else
+                                _definition.rootEntries.Add(asset);
+                        }
+                        else if (feIdx >= 0 && feIdx < _definition.fileEntries.Count)
+                        {
+                            if (assetIdx <= _definition.fileEntries[feIdx].assets.Count)
+                                _definition.fileEntries[feIdx].assets.Insert(assetIdx, asset);
+                            else
+                                _definition.fileEntries[feIdx].assets.Add(asset);
+                        }
+                    }
+
+                    MarkDirtyAndSave();
+                    _treeView?.Reload();
+                    _selectedItem = null;
+                    UpdateInspector();
+                });
         }
 
         private void MarkDirtyAndSave()
@@ -512,6 +789,49 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             // Footer
             if (_generateButton != null)
                 _generateButton.tooltip = L.Tr("cue_enum_definition.generate");
+        }
+
+        private void HandleKeyDownEvent(KeyDownEvent e)
+        {
+            if (GetEventAction(e) && e.keyCode == UndoKey)
+            {
+                PerformUndo();
+                e.StopPropagation();
+            }
+
+            if (GetEventAction(e) && e.keyCode == RedoKey)
+            {
+                PerformRedo();
+                e.StopPropagation();
+            }
+        }
+
+        private void PerformUndo()
+        {
+            _history.Undo();
+        }
+
+        private void PerformRedo()
+        {
+            _history.Redo();
+        }
+
+        private static bool GetEventAction(Event e)
+        {
+#if UNITY_EDITOR_WIN
+            return e.control;
+#else
+            return e.command;
+#endif
+        }
+
+        private static bool GetEventAction(IKeyboardEvent e)
+        {
+#if UNITY_EDITOR_WIN
+            return e.ctrlKey;
+#else
+            return e.commandKey;
+#endif
         }
 
         private void OnLanguageChanged()

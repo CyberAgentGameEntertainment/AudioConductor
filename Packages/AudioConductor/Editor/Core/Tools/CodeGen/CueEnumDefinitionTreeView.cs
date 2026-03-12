@@ -7,7 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
+using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -20,6 +22,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
     internal sealed partial class CueEnumDefinitionTreeView : TreeView
     {
         private CueEnumDefinition? _definition;
+        private AutoIncrementHistory? _history;
         private int _nextId;
 
         internal CueEnumDefinitionTreeView(State state)
@@ -33,6 +36,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         internal event Action<CueEnumDefinitionTreeItem?>? OnSelectionChanged;
         internal event Action? OnStructureChanged;
+
+        internal void SetHistory(AutoIncrementHistory? history)
+        {
+            _history = history;
+        }
 
         internal TreeViewItem? FindItemById(int id)
         {
@@ -159,9 +167,30 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
             if (FindItem(args.itemID, rootItem) is FileEntryTreeItem feItem)
             {
-                feItem.FileEntry.fileName = args.newName;
-                feItem.displayName = args.newName;
-                OnStructureChanged?.Invoke();
+                var oldName = args.originalName;
+                var newName = args.newName;
+
+                if (_history != null)
+                {
+                    _history.Register(
+                        $"Rename FileEntry {newName}",
+                        () =>
+                        {
+                            feItem.FileEntry.fileName = newName;
+                            OnStructureChanged?.Invoke();
+                        },
+                        () =>
+                        {
+                            feItem.FileEntry.fileName = oldName;
+                            OnStructureChanged?.Invoke();
+                        });
+                }
+                else
+                {
+                    feItem.FileEntry.fileName = newName;
+                    feItem.displayName = newName;
+                    OnStructureChanged?.Invoke();
+                }
             }
         }
 
@@ -197,12 +226,42 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             {
                 var assetItems = items.OfType<CueSheetAssetTreeItem>().Where(i => i.Asset != null).ToArray();
 
-                if (args.parentItem is FileEntryTreeItem targetFe)
-                    MoveAssetsToFileEntry(assetItems, targetFe);
-                else
-                    MoveAssetsToRoot(assetItems);
+                if (_history != null)
+                {
+                    var snapshotBefore = SnapshotDefinitionStructure();
 
-                OnStructureChanged?.Invoke();
+                    // Perform the move first, then capture the after state
+                    if (args.parentItem is FileEntryTreeItem targetFe)
+                        MoveAssetsToFileEntry(assetItems, targetFe);
+                    else
+                        MoveAssetsToRoot(assetItems);
+
+                    var snapshotAfter = SnapshotDefinitionStructure();
+
+                    // Register with no-op redo (move already done), real undo via snapshot
+                    // Register calls redo immediately, but RestoreDefinitionStructure with snapshotAfter is idempotent
+                    _history.Register(
+                        "Move Assets",
+                        () =>
+                        {
+                            RestoreDefinitionStructure(snapshotAfter);
+                            OnStructureChanged?.Invoke();
+                        },
+                        () =>
+                        {
+                            RestoreDefinitionStructure(snapshotBefore);
+                            OnStructureChanged?.Invoke();
+                        });
+                }
+                else
+                {
+                    if (args.parentItem is FileEntryTreeItem targetFe2)
+                        MoveAssetsToFileEntry(assetItems, targetFe2);
+                    else
+                        MoveAssetsToRoot(assetItems);
+                    OnStructureChanged?.Invoke();
+                }
+
                 Reload();
             }
 
@@ -247,6 +306,37 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 // Add to root
                 _definition.rootEntries.Add(item.Asset);
             }
+        }
+
+        private DefinitionStructureSnapshot SnapshotDefinitionStructure()
+        {
+            var snapshot = new DefinitionStructureSnapshot();
+            snapshot.RootEntries = _definition!.rootEntries.ToList();
+            snapshot.FileEntryAssets = _definition.fileEntries
+                .Select(fe => fe.assets.ToList())
+                .ToList();
+            return snapshot;
+        }
+
+        private void RestoreDefinitionStructure(DefinitionStructureSnapshot snapshot)
+        {
+            if (_definition == null)
+                return;
+
+            _definition.rootEntries.Clear();
+            _definition.rootEntries.AddRange(snapshot.RootEntries);
+
+            for (var i = 0; i < _definition.fileEntries.Count && i < snapshot.FileEntryAssets.Count; i++)
+            {
+                _definition.fileEntries[i].assets.Clear();
+                _definition.fileEntries[i].assets.AddRange(snapshot.FileEntryAssets[i]);
+            }
+        }
+
+        private class DefinitionStructureSnapshot
+        {
+            public List<List<CueSheetAsset>> FileEntryAssets = new();
+            public List<CueSheetAsset> RootEntries = new();
         }
 
         // --- Drag and Drop ---
