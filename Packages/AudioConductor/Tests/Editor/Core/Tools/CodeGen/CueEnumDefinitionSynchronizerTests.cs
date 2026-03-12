@@ -77,6 +77,17 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         }
 
         [Test]
+        public void MatchesPathRule_SingleWildcardDirectory()
+        {
+            Assert.That(
+                CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Auto/NewCueSheet.asset", "*/Auto/*"),
+                Is.True);
+            Assert.That(
+                CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Other/NewCueSheet.asset", "*/Auto/*"),
+                Is.False);
+        }
+
+        [Test]
         public void MatchesPathRule_EmptyPattern_ReturnsFalse()
         {
             Assert.That(CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Audio/BGM.asset", ""), Is.False);

@@ -82,8 +82,24 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 if (IsContainedInDefinition(definition, asset))
                     continue;
 
-                // New CueSheetAsset not in any definition → add to rootEntries
-                definition.rootEntries.Add(asset);
+                // Check path rules first; add to matching FileEntry if found
+                var matched = false;
+                foreach (var fe in definition.fileEntries)
+                {
+                    if (string.IsNullOrEmpty(fe.pathRule))
+                        continue;
+
+                    if (!MatchesPathRule(path, fe.pathRule))
+                        continue;
+
+                    fe.assets.Add(asset);
+                    matched = true;
+                    break;
+                }
+
+                if (!matched)
+                    definition.rootEntries.Add(asset);
+
                 dirty = true;
             }
 
