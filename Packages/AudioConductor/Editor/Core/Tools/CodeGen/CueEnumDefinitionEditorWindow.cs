@@ -78,6 +78,20 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         [MenuItem("Tools/Audio Conductor/Cue Enum Definition")]
         private static void ShowWindow()
         {
+            if (CueEnumDefinitionRepository.instance.Definition == null)
+            {
+                var ok = EditorUtility.DisplayDialog(
+                    WindowTitle,
+                    "CueEnumDefinition asset does not exist. A new one will be created.",
+                    "OK",
+                    "Cancel");
+
+                if (!ok)
+                    return;
+
+                CueEnumDefinitionRepository.instance.GetOrCreate();
+            }
+
             var window = GetWindow<CueEnumDefinitionEditorWindow>();
             window.titleContent = new GUIContent(WindowTitle);
             window.minSize = new Vector2(700, 400);

@@ -6,6 +6,7 @@
 
 using System.Linq;
 using System.Text;
+using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using UnityEditor;
 using UnityEngine;
@@ -22,7 +23,22 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         [MenuItem("Tools/Audio Conductor/Generate Cue Enums")]
         private static void GenerateCueEnumsMenu()
         {
-            Execute(false);
+            var definition = CueEnumDefinitionRepository.instance.Definition;
+            if (definition == null)
+            {
+                var ok = EditorUtility.DisplayDialog(
+                    "Generate Cue Enums",
+                    "CueEnumDefinition asset does not exist. A new one will be created.",
+                    "OK",
+                    "Cancel");
+
+                if (!ok)
+                    return;
+
+                definition = CueEnumDefinitionRepository.instance.GetOrCreate();
+            }
+
+            Execute(definition, false);
         }
 
         /// <summary>
@@ -30,12 +46,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         /// </summary>
         public static void GenerateCueEnums()
         {
-            Execute(true);
+            var definition = CueEnumDefinitionRepository.instance.GetOrCreate();
+            Execute(definition, true);
         }
 
-        private static void Execute(bool exitWhenDone)
+        private static void Execute(CueEnumDefinition definition, bool exitWhenDone)
         {
-            var definition = CueEnumDefinitionRepository.instance.GetOrCreate();
             var result = CueEnumPipeline.Execute(definition);
             var logMessage = BuildMessage(result, int.MaxValue);
 
