@@ -7,18 +7,15 @@
 using NUnit.Framework;
 using UnityEditor;
 
-namespace AudioConductor.Editor.Core.Tests
+[SetUpFixture]
+internal sealed class GlobalSetUpFixture
 {
-    [SetUpFixture]
-    internal sealed class GlobalSetUpFixture
-    {
-        private const string GenFolder = "Assets/gen";
+    private const string GenFolder = "Assets/gen";
 
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            if (AssetDatabase.IsValidFolder(GenFolder))
-                AssetDatabase.DeleteAsset(GenFolder);
-        }
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        if (AssetDatabase.IsValidFolder(GenFolder))
+            AssetDatabase.DeleteAsset(GenFolder);
     }
 }
