@@ -183,5 +183,131 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
         }
+
+        [Test]
+        public void Stop_AfterPlay_PlayerBecomesInactive()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.IsPlaying, Is.True);
+
+            conductor.Stop(handle);
+
+            // StopPlayback() calls player.Stop() then Return() which calls ResetState(),
+            // so StopCount is reset to 0. Verify the inactive state instead.
+            Assert.That(player.IsPlaying, Is.False);
+            Assert.That(player.IsPaused, Is.False);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void Pause_AfterPlay_CallsFakePlayerPause()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.Pause(handle);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.PauseCount, Is.EqualTo(1));
+            Assert.That(player.IsPaused, Is.True);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void Resume_AfterPause_CallsFakePlayerResume()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.Pause(handle);
+            conductor.Resume(handle);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.ResumeCount, Is.EqualTo(1));
+            Assert.That(player.IsPlaying, Is.True);
+            Assert.That(player.IsPaused, Is.False);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void IsPlaying_AfterPlay_ReturnsTrue()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+
+            Assert.That(conductor.IsPlaying(handle), Is.True);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void IsPlaying_AfterStop_ReturnsFalse()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.Stop(handle);
+
+            Assert.That(conductor.IsPlaying(handle), Is.False);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void IsPlaying_AfterPause_ReturnsFalse()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.Pause(handle);
+
+            Assert.That(conductor.IsPlaying(handle), Is.False);
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
     }
 }
