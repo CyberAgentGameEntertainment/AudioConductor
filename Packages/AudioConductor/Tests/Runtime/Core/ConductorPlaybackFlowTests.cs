@@ -309,5 +309,107 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
         }
+
+        [Test]
+        public void SetVolume_AfterPlay_CallsFakePlayerSetVolume()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.SetVolume(handle, 0.6f);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.Volume, Is.EqualTo(0.6f).Within(0.001f));
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void SetPitch_AfterPlay_CallsFakePlayerSetPitch()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1");
+            conductor.SetPitch(handle, 1.5f);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.Pitch, Is.EqualTo(1.5f).Within(0.001f));
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void Update_WithActivePlayback_CallsManualUpdate()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            conductor.Play(sheet, "cue1");
+
+            conductor.Update(0.016f);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.ManualUpdateCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(player.LastDeltaTime, Is.EqualTo(0.016f).Within(0.0001f));
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void SetMasterVolume_WithActivePlayback_PropagatesToPlayer()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            conductor.Play(sheet, "cue1");
+            conductor.SetMasterVolume(0.7f);
+
+            var player = _managedProvider.Created[0];
+            Assert.That(player.MasterVolume, Is.EqualTo(0.7f).Within(0.001f));
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void SetMasterVolume_WithActiveOneShot_PropagatesToPlayer()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            conductor.PlayOneShot(sheet, "cue1");
+            conductor.SetMasterVolume(0.3f);
+
+            var player = _oneShotProvider.Created[0];
+            Assert.That(player.MasterVolume, Is.EqualTo(0.3f).Within(0.001f));
+
+            Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
     }
 }
