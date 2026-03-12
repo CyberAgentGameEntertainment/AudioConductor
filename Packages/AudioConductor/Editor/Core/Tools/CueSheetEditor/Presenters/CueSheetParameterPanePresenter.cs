@@ -5,13 +5,9 @@
 #nullable enable
 
 using System;
-using System.Linq;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
-using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
-using UnityEditor;
-using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
@@ -33,7 +29,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         {
             Unbind();
             CleanupViewEventHandlers();
-            AudioConductorEditorSettingsRepository.SettingsChanged -= OnEditorSettingsChanged;
             _view.Dispose();
         }
 
@@ -41,7 +36,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         {
             _view.Setup();
             SetupViewEventHandlers();
-            AudioConductorEditorSettingsRepository.SettingsChanged += OnEditorSettingsChanged;
             Bind();
         }
 
@@ -64,30 +58,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_bindDisposable);
             _model.PitchInvertObservable
                 .Subscribe(_view.SetPitchInvert)
-                .DisposeWith(_bindDisposable);
-            _model.CodeGenEnabledObservable
-                .Subscribe(_view.SetCodeGenEnabled)
-                .DisposeWith(_bindDisposable);
-            _model.CodeGenModeObservable
-                .Subscribe(_view.SetCodeGenMode)
-                .DisposeWith(_bindDisposable);
-            _model.UseDefaultCodeGenOutputPathObservable
-                .Subscribe(_view.SetUseDefaultCodeGenOutputPath)
-                .DisposeWith(_bindDisposable);
-            _model.CodeGenOutputPathObservable
-                .Subscribe(_view.SetCodeGenOutputPath)
-                .DisposeWith(_bindDisposable);
-            _model.UseDefaultCodeGenNamespaceObservable
-                .Subscribe(_view.SetUseDefaultCodeGenNamespace)
-                .DisposeWith(_bindDisposable);
-            _model.CodeGenNamespaceObservable
-                .Subscribe(_view.SetCodeGenNamespace)
-                .DisposeWith(_bindDisposable);
-            _model.UseDefaultCodeGenClassSuffixObservable
-                .Subscribe(_view.SetUseDefaultCodeGenClassSuffix)
-                .DisposeWith(_bindDisposable);
-            _model.CodeGenClassSuffixObservable
-                .Subscribe(_view.SetCodeGenClassSuffix)
                 .DisposeWith(_bindDisposable);
         }
 
@@ -116,33 +86,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.PitchInvertChangedAsObservable
                 .Subscribe(value => _model.PitchInvert = value)
                 .DisposeWith(_viewEventDisposable);
-            _view.CodeGenEnabledChangedAsObservable
-                .Subscribe(value => _model.CodeGenEnabled = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.CodeGenModeChangedAsObservable
-                .Subscribe(value => _model.CodeGenMode = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.UseDefaultCodeGenOutputPathChangedAsObservable
-                .Subscribe(value => _model.UseDefaultCodeGenOutputPath = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.CodeGenOutputPathChangedAsObservable
-                .Subscribe(value => _model.CodeGenOutputPath = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.UseDefaultCodeGenNamespaceChangedAsObservable
-                .Subscribe(value => _model.UseDefaultCodeGenNamespace = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.CodeGenNamespaceChangedAsObservable
-                .Subscribe(value => _model.CodeGenNamespace = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.UseDefaultCodeGenClassSuffixChangedAsObservable
-                .Subscribe(value => _model.UseDefaultCodeGenClassSuffix = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.CodeGenClassSuffixChangedAsObservable
-                .Subscribe(value => _model.CodeGenClassSuffix = value)
-                .DisposeWith(_viewEventDisposable);
-            _view.GenerateCodeClickedAsObservable
-                .Subscribe(_ => GenerateCode())
-                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()
@@ -158,30 +101,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         public void Close()
         {
             _view.Close();
-        }
-
-        private void GenerateCode()
-        {
-            if (!_model.CodeGenEnabled)
-                return;
-
-            var result = _model.GenerateCode();
-            if (!result.Success)
-            {
-                var message = string.Join("\n", result.Errors.DefaultIfEmpty("Unknown error."));
-                Debug.LogError(message);
-                EditorUtility.DisplayDialog("Cue enum generation failed.", message, "OK");
-                return;
-            }
-
-            var title = result.WroteFile ? "Cue enum generation success." : "Cue enum already up to date.";
-            var messageText = string.IsNullOrEmpty(result.OutputPath) ? result.EnumName : result.OutputPath;
-            EditorUtility.DisplayDialog(title, messageText, "OK");
-        }
-
-        private void OnEditorSettingsChanged()
-        {
-            _model.RefreshResolvedCodeGenDefaults();
         }
     }
 }

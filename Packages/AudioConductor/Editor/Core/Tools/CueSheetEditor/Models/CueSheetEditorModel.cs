@@ -29,7 +29,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         )
         {
             CueSheetParameterPaneModel =
-                new CueSheetParameterPaneModel(cueSheet, history, assetSaveService, asset);
+                new CueSheetParameterPaneModel(cueSheet, history, assetSaveService);
 
             CueListEditorPaneModel
                 = new CueListEditorPaneModel(cueSheet, history, assetSaveService, inspectorUnCollapsed,

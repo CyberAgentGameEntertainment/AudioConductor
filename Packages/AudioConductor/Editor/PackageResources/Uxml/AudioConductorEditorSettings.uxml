@@ -1,7 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <uie:EnumField name="Language" label="Language" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px;" />
-    <ui:TextField name="DefaultCodeGenOutputPath" label="CodeGen Output Path" is-delayed="true" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px;" />
-    <ui:TextField name="DefaultCodeGenNamespace" label="CodeGen Namespace" is-delayed="true" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px;" />
-    <ui:TextField name="DefaultCodeGenClassSuffix" label="CodeGen Class Suffix" is-delayed="true" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px;" />
     <ui:ListView focusable="true" reorderable="true" reorder-mode="Animated" show-border="true" show-add-remove-footer="true" show-foldout-header="true" header-title="Color Define" show-alternating-row-backgrounds="All" fixed-item-height="20" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 1px;" />
 </ui:UXML>

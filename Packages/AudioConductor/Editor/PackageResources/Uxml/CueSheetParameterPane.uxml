@@ -18,28 +18,5 @@
         <ui:VisualElement name="Row" style="flex-direction: row;">
             <ui:Toggle label="Pitch Invert" name="PitchInvert" style="flex-basis: 33.333%; padding-top: 2px;" />
         </ui:VisualElement>
-        <ui:VisualElement name="Row" style="flex-direction: row; margin-top: 8px;">
-            <ui:Toggle label="Code Gen Enabled" name="CodeGenEnabled" style="flex-basis: 33.333%; padding-top: 2px;" />
-        </ui:VisualElement>
-            <ui:VisualElement name="CodeGenSettings">
-                <ui:VisualElement name="Row" style="flex-direction: row;">
-                    <AudioConductor.Editor.Core.Tools.Shared.CueSheetCodeGenModeField style="flex-basis: 33.333%;" />
-                </ui:VisualElement>
-                <ui:VisualElement name="Row" style="flex-direction: row;">
-                    <ui:TextField picking-mode="Ignore" label="Output Path" value="" name="CodeGenOutputPath" is-delayed="true" style="width: 420px; max-width: 420px;" />
-                    <ui:Toggle label="Use Default" name="UseDefaultCodeGenOutputPath" style="margin-left: 8px; padding-top: 2px; min-width: 120px;" />
-                </ui:VisualElement>
-                <ui:VisualElement name="Row" style="flex-direction: row;">
-                    <ui:TextField picking-mode="Ignore" label="Namespace" value="" name="CodeGenNamespace" is-delayed="true" style="width: 420px; max-width: 420px;" />
-                    <ui:Toggle label="Use Default" name="UseDefaultCodeGenNamespace" style="margin-left: 8px; padding-top: 2px; min-width: 120px;" />
-                </ui:VisualElement>
-                <ui:VisualElement name="Row" style="flex-direction: row;">
-                    <ui:TextField picking-mode="Ignore" label="Class Suffix" value="" name="CodeGenClassSuffix" is-delayed="true" style="width: 420px; max-width: 420px;" />
-                    <ui:Toggle label="Use Default" name="UseDefaultCodeGenClassSuffix" style="margin-left: 8px; padding-top: 2px; min-width: 120px;" />
-                </ui:VisualElement>
-                <ui:VisualElement name="Row" style="flex-direction: row;">
-                    <ui:Button text="Generate Now" display-tooltip-when-elided="true" name="GenerateCode" style="max-width: 120px; margin-top: 3px; margin-bottom: 3px;" />
-                </ui:VisualElement>
-        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
