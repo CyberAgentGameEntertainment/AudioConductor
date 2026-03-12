@@ -78,7 +78,40 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
             { "other_operation.export_csv", "Export CueSheet data to CSV." },
-            { "other_operation.import_csv", "Import CueSheet data from CSV." }
+            { "other_operation.import_csv", "Import CueSheet data from CSV." },
+            { "cue_enum_definition.default_output_path", "Default output directory for generated enum files." },
+            {
+                "cue_enum_definition.default_namespace",
+                "Default namespace for generated enums. Empty means no namespace."
+            },
+            {
+                "cue_enum_definition.default_class_suffix",
+                "Default suffix appended to enum type names. e.g. BGM + Cues = BGMCues."
+            },
+            { "cue_enum_definition.generate", "Generate enum files from the current definition." },
+            { "cue_enum_definition.file_entry.file_name", "Output file name (without extension)." },
+            {
+                "cue_enum_definition.file_entry.use_default_output_path",
+                "Use the default output path from definition settings."
+            },
+            { "cue_enum_definition.file_entry.output_path", "Output directory for this file group." },
+            {
+                "cue_enum_definition.file_entry.use_default_namespace",
+                "Use the default namespace from definition settings."
+            },
+            { "cue_enum_definition.file_entry.namespace", "Namespace for this file group." },
+            {
+                "cue_enum_definition.file_entry.use_default_class_suffix",
+                "Use the default class suffix from definition settings."
+            },
+            { "cue_enum_definition.file_entry.class_suffix", "Suffix appended to enum type names in this file group." },
+            {
+                "cue_enum_definition.file_entry.path_rule",
+                "Glob pattern to auto-assign CueSheetAssets to this file group."
+            },
+            { "cue_enum_definition.asset.asset", "The CueSheetAsset reference." },
+            { "cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet." },
+            { "cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet." }
         };
     }
 }

@@ -195,6 +195,28 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction.")]
         [TestCase("other_operation.export_csv", "Export CueSheet data to CSV.")]
         [TestCase("other_operation.import_csv", "Import CueSheet data from CSV.")]
+        [TestCase("cue_enum_definition.default_output_path", "Default output directory for generated enum files.")]
+        [TestCase("cue_enum_definition.default_namespace",
+            "Default namespace for generated enums. Empty means no namespace.")]
+        [TestCase("cue_enum_definition.default_class_suffix",
+            "Default suffix appended to enum type names. e.g. BGM + Cues = BGMCues.")]
+        [TestCase("cue_enum_definition.generate", "Generate enum files from the current definition.")]
+        [TestCase("cue_enum_definition.file_entry.file_name", "Output file name (without extension).")]
+        [TestCase("cue_enum_definition.file_entry.use_default_output_path",
+            "Use the default output path from definition settings.")]
+        [TestCase("cue_enum_definition.file_entry.output_path", "Output directory for this file group.")]
+        [TestCase("cue_enum_definition.file_entry.use_default_namespace",
+            "Use the default namespace from definition settings.")]
+        [TestCase("cue_enum_definition.file_entry.namespace", "Namespace for this file group.")]
+        [TestCase("cue_enum_definition.file_entry.use_default_class_suffix",
+            "Use the default class suffix from definition settings.")]
+        [TestCase("cue_enum_definition.file_entry.class_suffix",
+            "Suffix appended to enum type names in this file group.")]
+        [TestCase("cue_enum_definition.file_entry.path_rule",
+            "Glob pattern to auto-assign CueSheetAssets to this file group.")]
+        [TestCase("cue_enum_definition.asset.asset", "The CueSheetAsset reference.")]
+        [TestCase("cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet.")]
+        [TestCase("cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet.")]
         public void Tr_English_RemainingKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.English;
@@ -266,6 +288,28 @@ namespace AudioConductor.Editor.Localization.Tests
         [TestCase("cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転")]
         [TestCase("other_operation.export_csv", "CueSheet データを CSV としてエクスポート")]
         [TestCase("other_operation.import_csv", "CSV から CueSheet データをインポート")]
+        [TestCase("cue_enum_definition.default_output_path", "生成する enum ファイルのデフォルト出力先ディレクトリ")]
+        [TestCase("cue_enum_definition.default_namespace",
+            "生成する enum のデフォルト namespace。空の場合は namespace なし")]
+        [TestCase("cue_enum_definition.default_class_suffix",
+            "enum 型名に付与するデフォルトの suffix。例: BGM + Cues = BGMCues")]
+        [TestCase("cue_enum_definition.generate", "現在の定義から enum ファイルを生成")]
+        [TestCase("cue_enum_definition.file_entry.file_name", "出力ファイル名 (拡張子なし)")]
+        [TestCase("cue_enum_definition.file_entry.use_default_output_path",
+            "定義設定のデフォルト出力先ディレクトリを使用")]
+        [TestCase("cue_enum_definition.file_entry.output_path", "このファイルグループの出力先ディレクトリ")]
+        [TestCase("cue_enum_definition.file_entry.use_default_namespace",
+            "定義設定のデフォルト namespace を使用")]
+        [TestCase("cue_enum_definition.file_entry.namespace", "このファイルグループの namespace")]
+        [TestCase("cue_enum_definition.file_entry.use_default_class_suffix",
+            "定義設定のデフォルト class suffix を使用")]
+        [TestCase("cue_enum_definition.file_entry.class_suffix",
+            "このファイルグループの enum 型名に付与する suffix")]
+        [TestCase("cue_enum_definition.file_entry.path_rule",
+            "CueSheetAsset を自動振り分けする glob パターン")]
+        [TestCase("cue_enum_definition.asset.asset", "CueSheetAsset の参照")]
+        [TestCase("cue_enum_definition.asset.cue_sheet_name", "CueSheet の名前")]
+        [TestCase("cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数")]
         public void Tr_Japanese_RemainingKeys_ReturnsExpectedText(string key, string expected)
         {
             L.Language = EditorLanguage.Japanese;

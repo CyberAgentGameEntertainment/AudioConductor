@@ -11,6 +11,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using L = AudioConductor.Editor.Localization.Localization;
 
 namespace AudioConductor.Editor.Core.Tools.CodeGen
 {
@@ -40,6 +41,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         private VisualElement? _emptyInspectorHelpBox;
         private VisualElement? _fileEntryInspector;
         private TextField? _fileNameField;
+        private Button? _generateButton;
         private TextField? _namespaceField;
         private TextField? _outputPathField;
         private TextField? _pathRuleField;
@@ -56,6 +58,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         {
             _definition = CueEnumDefinitionRepository.instance.Definition;
             InitTreeView();
+            L.LanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            L.LanguageChanged -= OnLanguageChanged;
         }
 
         private void CreateGUI()
@@ -71,6 +79,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             SetupInspector();
             SetupFooter();
 
+            ApplyTooltips();
             UpdateDefaultSettingsVisibility();
             UpdateDefaultSettingsValues();
             UpdateInspector();
@@ -121,6 +130,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _assetField = rootVisualElement.Q<ObjectField>("AssetField");
             _cueSheetNameField = rootVisualElement.Q<TextField>("CueSheetName");
             _cueCountField = rootVisualElement.Q<IntegerField>("CueCount");
+            _generateButton = rootVisualElement.Q<Button>("GenerateButton");
             _statusLabel = rootVisualElement.Q<Label>("StatusLabel");
         }
 
@@ -303,8 +313,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         private void SetupFooter()
         {
-            var generateButton = rootVisualElement.Q<Button>("GenerateButton");
-            generateButton?.RegisterCallback<ClickEvent>(_ =>
+            _generateButton?.RegisterCallback<ClickEvent>(_ =>
             {
                 if (_definition == null)
                     return;
@@ -439,6 +448,52 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         {
             if (element != null)
                 element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void ApplyTooltips()
+        {
+            // Default Settings
+            if (_defaultOutputPathField != null)
+                _defaultOutputPathField.tooltip = L.Tr("cue_enum_definition.default_output_path");
+            if (_defaultNamespaceField != null)
+                _defaultNamespaceField.tooltip = L.Tr("cue_enum_definition.default_namespace");
+            if (_defaultClassSuffixField != null)
+                _defaultClassSuffixField.tooltip = L.Tr("cue_enum_definition.default_class_suffix");
+
+            // FileEntry Inspector
+            if (_fileNameField != null)
+                _fileNameField.tooltip = L.Tr("cue_enum_definition.file_entry.file_name");
+            if (_useDefaultOutputPathToggle != null)
+                _useDefaultOutputPathToggle.tooltip = L.Tr("cue_enum_definition.file_entry.use_default_output_path");
+            if (_outputPathField != null)
+                _outputPathField.tooltip = L.Tr("cue_enum_definition.file_entry.output_path");
+            if (_useDefaultNamespaceToggle != null)
+                _useDefaultNamespaceToggle.tooltip = L.Tr("cue_enum_definition.file_entry.use_default_namespace");
+            if (_namespaceField != null)
+                _namespaceField.tooltip = L.Tr("cue_enum_definition.file_entry.namespace");
+            if (_useDefaultClassSuffixToggle != null)
+                _useDefaultClassSuffixToggle.tooltip = L.Tr("cue_enum_definition.file_entry.use_default_class_suffix");
+            if (_classSuffixField != null)
+                _classSuffixField.tooltip = L.Tr("cue_enum_definition.file_entry.class_suffix");
+            if (_pathRuleField != null)
+                _pathRuleField.tooltip = L.Tr("cue_enum_definition.file_entry.path_rule");
+
+            // Asset Inspector
+            if (_assetField != null)
+                _assetField.tooltip = L.Tr("cue_enum_definition.asset.asset");
+            if (_cueSheetNameField != null)
+                _cueSheetNameField.tooltip = L.Tr("cue_enum_definition.asset.cue_sheet_name");
+            if (_cueCountField != null)
+                _cueCountField.tooltip = L.Tr("cue_enum_definition.asset.cue_count");
+
+            // Footer
+            if (_generateButton != null)
+                _generateButton.tooltip = L.Tr("cue_enum_definition.generate");
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
         }
     }
 }

@@ -78,7 +78,22 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch", "CueSheet のデフォルトピッチスケール (0.01 〜 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転" },
             { "other_operation.export_csv", "CueSheet データを CSV としてエクスポート" },
-            { "other_operation.import_csv", "CSV から CueSheet データをインポート" }
+            { "other_operation.import_csv", "CSV から CueSheet データをインポート" },
+            { "cue_enum_definition.default_output_path", "生成する enum ファイルのデフォルト出力先ディレクトリ" },
+            { "cue_enum_definition.default_namespace", "生成する enum のデフォルト namespace。空の場合は namespace なし" },
+            { "cue_enum_definition.default_class_suffix", "enum 型名に付与するデフォルトの suffix。例: BGM + Cues = BGMCues" },
+            { "cue_enum_definition.generate", "現在の定義から enum ファイルを生成" },
+            { "cue_enum_definition.file_entry.file_name", "出力ファイル名 (拡張子なし)" },
+            { "cue_enum_definition.file_entry.use_default_output_path", "定義設定のデフォルト出力先ディレクトリを使用" },
+            { "cue_enum_definition.file_entry.output_path", "このファイルグループの出力先ディレクトリ" },
+            { "cue_enum_definition.file_entry.use_default_namespace", "定義設定のデフォルト namespace を使用" },
+            { "cue_enum_definition.file_entry.namespace", "このファイルグループの namespace" },
+            { "cue_enum_definition.file_entry.use_default_class_suffix", "定義設定のデフォルト class suffix を使用" },
+            { "cue_enum_definition.file_entry.class_suffix", "このファイルグループの enum 型名に付与する suffix" },
+            { "cue_enum_definition.file_entry.path_rule", "CueSheetAsset を自動振り分けする glob パターン" },
+            { "cue_enum_definition.asset.asset", "CueSheetAsset の参照" },
+            { "cue_enum_definition.asset.cue_sheet_name", "CueSheet の名前" },
+            { "cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数" }
         };
     }
 }
