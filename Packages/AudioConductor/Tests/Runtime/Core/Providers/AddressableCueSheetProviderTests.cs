@@ -16,6 +16,7 @@ using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Build.DataBuilders;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.TestTools;
 
 namespace AudioConductor.Core.Providers.Tests
@@ -30,6 +31,9 @@ namespace AudioConductor.Core.Providers.Tests
 
         void IPostBuildCleanup.Cleanup()
         {
+            PlayerPrefs.DeleteKey(Addressables.kAddressablesRuntimeDataPath);
+            PlayerPrefs.Save();
+
             EditorBuildSettings.RemoveConfigObject(ConfigName);
 
             if (AssetDatabase.IsValidFolder(RootFolder))
@@ -68,6 +72,7 @@ namespace AudioConductor.Core.Providers.Tests
                 if (db is BuildScriptFastMode builder)
                 {
                     builder.BuildData<AddressableAssetBuildResult>(buildContext);
+                    PlayerPrefs.Save();
                     break;
                 }
         }
