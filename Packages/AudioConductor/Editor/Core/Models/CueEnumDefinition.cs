@@ -29,5 +29,10 @@ namespace AudioConductor.Editor.Core.Models
         ///     Grouped entries. Each FileEntry generates a single file containing multiple enums.
         /// </summary>
         public List<FileEntry> fileEntries = new();
+
+        /// <summary>
+        ///     CueSheetAssets excluded from code generation. Visible in the TreeView but not generated.
+        /// </summary>
+        public List<CueSheetAsset> excludedEntries = new();
     }
 }

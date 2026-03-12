@@ -81,6 +81,15 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 root.AddChild(feItem);
             }
 
+            // excludedEntries
+            if (_definition.excludedEntries.Count > 0)
+            {
+                var excludedHeader = new ExcludedHeaderTreeItem(_nextId++, 0);
+                foreach (var asset in _definition.excludedEntries)
+                    excludedHeader.AddChild(new CueSheetAssetTreeItem(_nextId++, 1, asset));
+                root.AddChild(excludedHeader);
+            }
+
             SetupDepthsFromParentsAndChildren(root);
             return root;
         }
@@ -101,13 +110,32 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     var indent = GetContentIndent(args.item);
                     cellRect.xMin += indent;
 
-                    if (args.item is FileEntryTreeItem)
+                    if (args.item is ExcludedHeaderTreeItem)
+                    {
+                        var style = new GUIStyle(EditorStyles.label)
+                        {
+                            alignment = TextAnchor.MiddleCenter,
+                            fontStyle = FontStyle.Italic
+                        };
+                        var prevColor = GUI.color;
+                        GUI.color = new Color(1f, 1f, 1f, 0.5f);
+                        GUI.Label(cellRect, "── Excluded ──", style);
+                        GUI.color = prevColor;
+                    }
+                    else if (args.item is FileEntryTreeItem)
+                    {
                         GUI.Label(cellRect, EditorGUIUtility.IconContent("Folder Icon"));
+                    }
                     else
+                    {
                         DefaultGUI.Label(cellRect, args.label, args.selected, args.focused);
+                    }
+
                     break;
 
                 case ColumnType.OutputFile:
+                    if (args.item is ExcludedHeaderTreeItem)
+                        break;
                     if (args.item is CueSheetAssetTreeItem assetItem && assetItem.depth == 0 &&
                         assetItem.Asset != null)
                     {
@@ -188,12 +216,20 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         protected override bool CanBeParent(TreeViewItem item)
         {
-            return item is not CueSheetAssetTreeItem;
+            return item is FileEntryTreeItem or ExcludedHeaderTreeItem || item == rootItem;
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
-            return args.draggedItemIDs.Count > 0;
+            if (args.draggedItemIDs.Count == 0)
+                return false;
+
+            // ExcludedHeaderTreeItem itself cannot be dragged
+            foreach (var id in args.draggedItemIDs)
+                if (FindItem(id, rootItem) is ExcludedHeaderTreeItem)
+                    return false;
+
+            return true;
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
@@ -229,7 +265,15 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             List<CueSheetAsset> targetList;
             int insertIndex;
 
-            if (args.parentItem is FileEntryTreeItem targetFe)
+            if (args.parentItem is ExcludedHeaderTreeItem)
+            {
+                // Drop onto ExcludedHeader → move to excludedEntries
+                targetList = _definition.excludedEntries;
+                insertIndex = args.dragAndDropPosition == DragAndDropPosition.UponItem
+                    ? targetList.Count
+                    : args.insertAtIndex;
+            }
+            else if (args.parentItem is FileEntryTreeItem targetFe)
             {
                 // Drop onto or between items inside a FileEntry
                 targetList = targetFe.FileEntry.assets;
@@ -278,6 +322,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 _definition.rootEntries.Remove(asset);
                 foreach (var fe in _definition.fileEntries)
                     fe.assets.Remove(asset);
+                _definition.excludedEntries.Remove(asset);
             }
 
             // Insert at the adjusted position
@@ -313,6 +358,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             snapshot.FileEntryAssets = _definition.fileEntries
                 .Select(fe => fe.assets.ToList())
                 .ToList();
+            snapshot.ExcludedEntries = _definition.excludedEntries.ToList();
             return snapshot;
         }
 
@@ -329,20 +375,29 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 _definition.fileEntries[i].assets.Clear();
                 _definition.fileEntries[i].assets.AddRange(snapshot.FileEntryAssets[i]);
             }
+
+            _definition.excludedEntries.Clear();
+            _definition.excludedEntries.AddRange(snapshot.ExcludedEntries);
         }
 
         private List<CueSheetAsset> FindListContaining(CueSheetAsset? asset)
         {
             if (_definition != null && asset != null)
+            {
                 foreach (var fe in _definition.fileEntries)
                     if (fe.assets.Contains(asset))
                         return fe.assets;
+
+                if (_definition.excludedEntries.Contains(asset))
+                    return _definition.excludedEntries;
+            }
 
             return _definition!.rootEntries;
         }
 
         private class DefinitionStructureSnapshot
         {
+            public List<CueSheetAsset> ExcludedEntries = new();
             public List<List<CueSheetAsset>> FileEntryAssets = new();
             public List<CueSheetAsset> RootEntries = new();
         }

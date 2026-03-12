@@ -63,6 +63,12 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     dirty = true;
             }
 
+            // Clean up null references from excludedEntries
+            var excludedBefore = definition.excludedEntries.Count;
+            definition.excludedEntries.RemoveAll(a => a == null);
+            if (definition.excludedEntries.Count != excludedBefore)
+                dirty = true;
+
             return dirty;
         }
 
@@ -80,6 +86,9 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     continue;
 
                 if (IsContainedInDefinition(definition, asset))
+                    continue;
+
+                if (definition.excludedEntries.Contains(asset))
                     continue;
 
                 // Check path rules first; add to matching FileEntry if found

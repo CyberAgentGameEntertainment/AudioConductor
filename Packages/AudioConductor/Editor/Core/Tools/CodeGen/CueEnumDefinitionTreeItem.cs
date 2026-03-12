@@ -22,7 +22,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         internal enum ItemKind
         {
             CueSheetAsset,
-            FileEntry
+            FileEntry,
+            ExcludedHeader
         }
     }
 
@@ -37,6 +38,17 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         internal CueSheetAsset? Asset { get; }
 
         internal override ItemKind Kind => ItemKind.CueSheetAsset;
+    }
+
+    internal sealed class ExcludedHeaderTreeItem : CueEnumDefinitionTreeItem
+    {
+        internal ExcludedHeaderTreeItem(int id, int depth)
+            : base(id, depth, "Excluded")
+        {
+            children = new List<TreeViewItem>();
+        }
+
+        internal override ItemKind Kind => ItemKind.ExcludedHeader;
     }
 
     internal sealed class FileEntryTreeItem : CueEnumDefinitionTreeItem

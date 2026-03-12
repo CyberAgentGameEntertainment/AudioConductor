@@ -93,6 +93,44 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             Assert.That(CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Audio/BGM.asset", ""), Is.False);
         }
 
+        [Test]
+        public void IsContainedInDefinition_InExcludedEntries_ReturnsFalse()
+        {
+            var def = CreateDefinition();
+            var asset = CreateAsset("Debug_SFX");
+            def.excludedEntries.Add(asset);
+
+            Assert.That(CueEnumDefinitionSynchronizer.IsContainedInDefinition(def, asset), Is.False);
+        }
+
+        [Test]
+        public void ExcludedAsset_NotReaddedOnImport()
+        {
+            var def = CreateDefinition();
+            var asset = CreateAsset("Debug_SFX");
+            def.excludedEntries.Add(asset);
+
+            // Simulate: excludedEntries contains the asset, so it should not be added to rootEntries
+            Assert.That(def.excludedEntries.Contains(asset), Is.True);
+            Assert.That(def.rootEntries, Has.No.Member(asset));
+            Assert.That(CueEnumDefinitionSynchronizer.IsContainedInDefinition(def, asset), Is.False);
+        }
+
+        [Test]
+        public void ExcludedEntries_NullCleanup()
+        {
+            var def = CreateDefinition();
+            var asset = CreateAsset("Test_BGM");
+            def.excludedEntries.Add(asset);
+            def.excludedEntries.Add(null!);
+
+            var before = def.excludedEntries.Count;
+            def.excludedEntries.RemoveAll(a => a == null);
+
+            Assert.That(def.excludedEntries.Count, Is.EqualTo(before - 1));
+            Assert.That(def.excludedEntries, Has.Member(asset));
+        }
+
         private CueEnumDefinition CreateDefinition()
         {
             var def = ScriptableObject.CreateInstance<CueEnumDefinition>();

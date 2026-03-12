@@ -53,6 +53,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         private Button? _openCueSheetEditorButton;
         private TextField? _outputPathField;
         private TextField? _pathRuleField;
+        private Button? _removeButton;
         private CueEnumDefinitionTreeItem? _selectedItem;
         private Label? _statusLabel;
         private string _statusMessage = "Ready";
@@ -340,8 +341,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     });
             });
 
-            var removeButton = rootVisualElement.Q<Button>("RemoveButton");
-            removeButton?.RegisterCallback<ClickEvent>(_ => RemoveSelected());
+            _removeButton = rootVisualElement.Q<Button>("RemoveButton");
+            _removeButton?.RegisterCallback<ClickEvent>(_ => RemoveSelected());
         }
 
         private void SetupInspector()
@@ -588,13 +589,15 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         private void UpdateInspector()
         {
-            var showEmpty = _selectedItem == null;
+            var showEmpty = _selectedItem == null || _selectedItem is ExcludedHeaderTreeItem;
             var showFileEntry = _selectedItem is FileEntryTreeItem;
             var showAsset = _selectedItem is CueSheetAssetTreeItem;
 
             SetDisplay(_emptyInspectorHelpBox, showEmpty);
             SetDisplay(_fileEntryInspector, showFileEntry);
             SetDisplay(_assetInspector, showAsset);
+
+            _removeButton?.SetEnabled(_selectedItem is not (null or ExcludedHeaderTreeItem));
 
             if (showFileEntry)
                 PopulateFileEntryInspector((FileEntryTreeItem)_selectedItem!);
@@ -658,15 +661,21 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             if (selection == null || selection.Count == 0)
                 return;
 
-            // Capture removal targets
+            // Capture removal targets (skip ExcludedHeaderTreeItem and assets already in excludedEntries)
             var removedAssets = new List<(CueSheetAsset asset, int rootIndex, int feIndex, int assetIndex)>();
-            var removedFileEntries = new List<(FileEntry fe, int index)>();
+            var removedFileEntries = new List<(FileEntry fe, int index, List<CueSheetAsset> childAssets)>();
 
             foreach (var id in selection)
             {
                 var item = _treeView.FindItemById(id);
+                if (item is ExcludedHeaderTreeItem)
+                    continue;
                 if (item is CueSheetAssetTreeItem assetItem && assetItem.Asset != null)
                 {
+                    // Skip assets already in excludedEntries
+                    if (_definition.excludedEntries.Contains(assetItem.Asset))
+                        continue;
+
                     var rootIdx = _definition.rootEntries.IndexOf(assetItem.Asset);
                     if (rootIdx >= 0)
                         removedAssets.Add((assetItem.Asset, rootIdx, -1, -1));
@@ -685,22 +694,35 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 {
                     var idx = _definition.fileEntries.IndexOf(feItem.FileEntry);
                     if (idx >= 0)
-                        removedFileEntries.Add((feItem.FileEntry, idx));
+                        removedFileEntries.Add(
+                            (feItem.FileEntry, idx, new List<CueSheetAsset>(feItem.FileEntry.assets)));
                 }
             }
+
+            if (removedAssets.Count == 0 && removedFileEntries.Count == 0)
+                return;
 
             _history.Register(
                 "Remove Selected",
                 () =>
                 {
+                    // Move assets to excludedEntries
                     foreach (var (asset, rootIdx, feIdx, _) in removedAssets)
+                    {
                         if (rootIdx >= 0)
                             _definition.rootEntries.Remove(asset);
                         else if (feIdx >= 0 && feIdx < _definition.fileEntries.Count)
                             _definition.fileEntries[feIdx].assets.Remove(asset);
+                        _definition.excludedEntries.Add(asset);
+                    }
 
-                    foreach (var (fe, _) in removedFileEntries)
+                    // Remove FileEntries and move their child assets to excludedEntries
+                    foreach (var (fe, _, childAssets) in removedFileEntries)
+                    {
                         _definition.fileEntries.Remove(fe);
+                        foreach (var child in childAssets)
+                            _definition.excludedEntries.Add(child);
+                    }
 
                     MarkDirtyAndSave();
                     _treeView?.Reload();
@@ -709,19 +731,30 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 },
                 () =>
                 {
-                    // Restore in reverse order
+                    // Restore FileEntries in reverse order
                     for (var i = removedFileEntries.Count - 1; i >= 0; i--)
                     {
-                        var (fe, idx) = removedFileEntries[i];
+                        var (fe, idx, childAssets) = removedFileEntries[i];
+
+                        // Remove child assets from excludedEntries
+                        foreach (var child in childAssets)
+                            _definition.excludedEntries.Remove(child);
+
+                        // Restore the FileEntry with its original children
+                        fe.assets.Clear();
+                        fe.assets.AddRange(childAssets);
                         if (idx <= _definition.fileEntries.Count)
                             _definition.fileEntries.Insert(idx, fe);
                         else
                             _definition.fileEntries.Add(fe);
                     }
 
+                    // Restore assets in reverse order
                     for (var i = removedAssets.Count - 1; i >= 0; i--)
                     {
                         var (asset, rootIdx, feIdx, assetIdx) = removedAssets[i];
+                        _definition.excludedEntries.Remove(asset);
+
                         if (rootIdx >= 0)
                         {
                             if (rootIdx <= _definition.rootEntries.Count)
