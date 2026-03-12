@@ -157,5 +157,39 @@ namespace AudioConductor.Core.Tests
             // After dispose, fade-out tracking is cleared.
             Assert.That(_fadeManager.IsFadingOut(player), Is.False);
         }
+
+        [Test]
+        public void StartFade_MultiplePlayers_AllProgressIndependently()
+        {
+            var player1 = new FakePlayer();
+            var player2 = new FakePlayer();
+
+            _fadeManager.StartFade(player1, Faders.Linear, 0f, 1f, 1f);
+            _fadeManager.StartFade(player2, Faders.Linear, 0f, 1f, 2f);
+
+            _fadeManager.Update(1f);
+
+            // player1 (duration 1f): elapsed 1f/1f = 1.0 → VolumeFade == 1f, IsFading == false
+            Assert.That(player1.VolumeFade, Is.EqualTo(1f).Within(0.01f));
+            Assert.That(player1.IsFading, Is.False);
+
+            // player2 (duration 2f): elapsed 1f/2f = 0.5 → VolumeFade == 0.5f, IsFading == true
+            Assert.That(player2.VolumeFade, Is.EqualTo(0.5f).Within(0.01f));
+            Assert.That(player2.IsFading, Is.True);
+        }
+
+        [Test]
+        public void StartFade_SamePlayerTwice_SecondOverridesFirst()
+        {
+            var player = new FakePlayer();
+
+            _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
+            var firstFadeId = player.ActiveFadeId;
+
+            _fadeManager.StartFade(player, Faders.Linear, 1f, 0f, 1f);
+
+            Assert.That(player.ActiveFadeId, Is.Not.EqualTo(firstFadeId));
+            Assert.That(player.ActiveFadeId, Is.Not.EqualTo(0u));
+        }
     }
 }
