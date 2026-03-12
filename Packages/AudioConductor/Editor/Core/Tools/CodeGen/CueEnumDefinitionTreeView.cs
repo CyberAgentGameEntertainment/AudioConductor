@@ -34,6 +34,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         internal event Action<CueEnumDefinitionTreeItem?>? OnSelectionChanged;
         internal event Action? OnStructureChanged;
 
+        internal TreeViewItem? FindItemById(int id)
+        {
+            return FindItem(id, rootItem);
+        }
+
         internal void SetDefinition(CueEnumDefinition? definition)
         {
             _definition = definition;
