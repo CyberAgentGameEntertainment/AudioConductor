@@ -114,7 +114,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                         var baseName = !string.IsNullOrEmpty(assetItem.Asset.cueSheet.name)
                             ? assetItem.Asset.cueSheet.name
                             : assetItem.Asset.name;
-                        var enumName = IdentifierConverter.ToPascalCase(baseName);
+                        var suffix = _definition != null ? _definition.defaultClassSuffix ?? "" : "";
+                        var enumName = IdentifierConverter.ToPascalCase(baseName) + suffix;
                         DefaultGUI.Label(cellRect, $"{enumName}.cs", args.selected, args.focused);
                     }
                     else if (args.item is FileEntryTreeItem feItem)

@@ -72,6 +72,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             SetupFooter();
 
             UpdateDefaultSettingsVisibility();
+            UpdateDefaultSettingsValues();
             UpdateInspector();
         }
 
@@ -148,6 +149,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     return;
                 _definition.defaultOutputPath = evt.newValue;
                 MarkDirtyAndSave();
+                _treeView?.Reload();
             });
 
             _defaultNamespaceField?.RegisterValueChangedCallback(evt =>
@@ -164,6 +166,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                     return;
                 _definition.defaultClassSuffix = evt.newValue;
                 MarkDirtyAndSave();
+                _treeView?.Reload();
             });
         }
 
