@@ -91,6 +91,15 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 if (definition.excludedEntries.Contains(asset))
                     continue;
 
+                // Auto-exclude by excludePathRule
+                if (!string.IsNullOrEmpty(definition.excludePathRule) &&
+                    MatchesPathRule(path, definition.excludePathRule))
+                {
+                    definition.excludedEntries.Add(asset);
+                    dirty = true;
+                    continue;
+                }
+
                 // Check path rules first; add to matching FileEntry if found
                 var matched = false;
                 foreach (var fe in definition.fileEntries)

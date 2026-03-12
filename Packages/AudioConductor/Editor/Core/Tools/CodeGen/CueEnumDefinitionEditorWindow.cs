@@ -46,6 +46,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         // UI elements
         private ObjectField? _definitionField;
         private VisualElement? _emptyInspectorHelpBox;
+        private TextField? _excludePathRuleField;
+        private VisualElement? _excludedInspector;
         private VisualElement? _fileEntryInspector;
         private TextField? _fileNameField;
         private Button? _generateButton;
@@ -154,6 +156,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _treeViewContainer = rootVisualElement.Q<IMGUIContainer>("TreeViewContainer");
             _emptyInspectorHelpBox = rootVisualElement.Q<VisualElement>("EmptyInspectorHelpBox");
             _fileEntryInspector = rootVisualElement.Q<VisualElement>("FileEntryInspector");
+            _excludedInspector = rootVisualElement.Q<VisualElement>("ExcludedInspector");
+            _excludePathRuleField = rootVisualElement.Q<TextField>("ExcludePathRule");
             _assetInspector = rootVisualElement.Q<VisualElement>("AssetInspector");
             _fileNameField = rootVisualElement.Q<TextField>("FileName");
             _useDefaultOutputPathToggle = rootVisualElement.Q<Toggle>("UseDefaultOutputPath");
@@ -547,6 +551,29 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                         });
                 }
             });
+
+            // Excluded inspector
+            _excludePathRuleField?.RegisterValueChangedCallback(evt =>
+            {
+                if (_definition == null)
+                    return;
+                var oldValue = evt.previousValue;
+                var newValue = evt.newValue;
+                _history.Register(
+                    $"Set ExcludePathRule {newValue}",
+                    () =>
+                    {
+                        _definition.excludePathRule = newValue;
+                        _excludePathRuleField?.SetValueWithoutNotify(newValue);
+                        MarkDirtyAndSave();
+                    },
+                    () =>
+                    {
+                        _definition.excludePathRule = oldValue;
+                        _excludePathRuleField?.SetValueWithoutNotify(oldValue);
+                        MarkDirtyAndSave();
+                    });
+            });
         }
 
         private void SetupFooter()
@@ -589,20 +616,32 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         private void UpdateInspector()
         {
-            var showEmpty = _selectedItem == null || _selectedItem is ExcludedHeaderTreeItem;
+            var showEmpty = _selectedItem == null;
             var showFileEntry = _selectedItem is FileEntryTreeItem;
+            var showExcluded = _selectedItem is ExcludedHeaderTreeItem;
             var showAsset = _selectedItem is CueSheetAssetTreeItem;
 
             SetDisplay(_emptyInspectorHelpBox, showEmpty);
             SetDisplay(_fileEntryInspector, showFileEntry);
+            SetDisplay(_excludedInspector, showExcluded);
             SetDisplay(_assetInspector, showAsset);
 
             _removeButton?.SetEnabled(_selectedItem is not (null or ExcludedHeaderTreeItem));
 
             if (showFileEntry)
                 PopulateFileEntryInspector((FileEntryTreeItem)_selectedItem!);
+            else if (showExcluded)
+                PopulateExcludedInspector();
             else if (showAsset)
                 PopulateAssetInspector((CueSheetAssetTreeItem)_selectedItem!);
+        }
+
+        private void PopulateExcludedInspector()
+        {
+            if (_definition == null)
+                return;
+
+            _excludePathRuleField?.SetValueWithoutNotify(_definition.excludePathRule);
         }
 
         private void PopulateFileEntryInspector(FileEntryTreeItem feItem)
@@ -820,6 +859,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 _classSuffixField.tooltip = L.Tr("cue_enum_definition.file_entry.class_suffix");
             if (_pathRuleField != null)
                 _pathRuleField.tooltip = L.Tr("cue_enum_definition.file_entry.path_rule");
+
+            // Excluded Inspector
+            if (_excludePathRuleField != null)
+                _excludePathRuleField.tooltip = L.Tr("cue_enum_definition.excluded.path_rule");
 
             // Asset Inspector
             if (_assetField != null)

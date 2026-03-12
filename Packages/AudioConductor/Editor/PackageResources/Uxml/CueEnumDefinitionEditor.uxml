@@ -51,6 +51,12 @@
                 <ui:TextField name="PathRule" label="Path Rule (glob)" is-delayed="true" />
             </ui:VisualElement>
 
+            <!-- Excluded inspector -->
+            <ui:VisualElement name="ExcludedInspector" style="display: none;">
+                <ui:Label text="Excluded" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:TextField name="ExcludePathRule" label="Path Rule (glob)" is-delayed="true" />
+            </ui:VisualElement>
+
             <!-- Asset inspector -->
             <ui:VisualElement name="AssetInspector" style="display: none;">
                 <ui:Label text="CueSheet Asset" style="-unity-font-style: bold; margin-bottom: 2px;" />

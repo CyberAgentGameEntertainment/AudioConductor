@@ -34,5 +34,11 @@ namespace AudioConductor.Editor.Core.Models
         ///     CueSheetAssets excluded from code generation. Visible in the TreeView but not generated.
         /// </summary>
         public List<CueSheetAsset> excludedEntries = new();
+
+        /// <summary>
+        ///     Glob pattern for auto-excluding CueSheetAssets on import.
+        ///     Assets whose path matches this pattern are added to excludedEntries instead of rootEntries.
+        /// </summary>
+        public string excludePathRule = string.Empty;
     }
 }

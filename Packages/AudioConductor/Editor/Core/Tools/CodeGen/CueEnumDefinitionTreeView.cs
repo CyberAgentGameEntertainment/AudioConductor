@@ -81,14 +81,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 root.AddChild(feItem);
             }
 
-            // excludedEntries
-            if (_definition.excludedEntries.Count > 0)
-            {
-                var excludedHeader = new ExcludedHeaderTreeItem(_nextId++, 0);
-                foreach (var asset in _definition.excludedEntries)
-                    excludedHeader.AddChild(new CueSheetAssetTreeItem(_nextId++, 1, asset));
-                root.AddChild(excludedHeader);
-            }
+            // excludedEntries (always visible)
+            var excludedHeader = new ExcludedHeaderTreeItem(_nextId++, 0);
+            foreach (var asset in _definition.excludedEntries)
+                excludedHeader.AddChild(new CueSheetAssetTreeItem(_nextId++, 1, asset));
+            root.AddChild(excludedHeader);
 
             SetupDepthsFromParentsAndChildren(root);
             return root;
@@ -112,19 +109,24 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
                     if (args.item is ExcludedHeaderTreeItem)
                     {
+                        var icon = EditorGUIUtility.IconContent("d_SceneViewVisibility@2x");
+                        var content = new GUIContent("Excluded", icon.image);
                         var style = new GUIStyle(EditorStyles.label)
                         {
-                            alignment = TextAnchor.MiddleCenter,
                             fontStyle = FontStyle.Italic
                         };
                         var prevColor = GUI.color;
                         GUI.color = new Color(1f, 1f, 1f, 0.5f);
-                        GUI.Label(cellRect, "── Excluded ──", style);
+                        GUI.Label(cellRect, content, style);
                         GUI.color = prevColor;
                     }
-                    else if (args.item is FileEntryTreeItem)
+                    else if (args.item is FileEntryTreeItem feNameItem)
                     {
-                        GUI.Label(cellRect, EditorGUIUtility.IconContent("Folder Icon"));
+                        var icon = EditorGUIUtility.IconContent("Folder Icon");
+                        var fileName = !string.IsNullOrEmpty(feNameItem.FileEntry.fileName)
+                            ? feNameItem.FileEntry.fileName
+                            : "(Unnamed)";
+                        GUI.Label(cellRect, new GUIContent(fileName, icon.image));
                     }
                     else
                     {

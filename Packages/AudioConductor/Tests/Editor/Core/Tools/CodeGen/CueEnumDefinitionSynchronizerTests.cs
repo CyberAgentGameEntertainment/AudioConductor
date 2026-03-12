@@ -117,6 +117,30 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         }
 
         [Test]
+        public void ExcludePathRule_MatchingAsset_MatchesPathRuleReturnsTrue()
+        {
+            Assert.That(
+                CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Debug/SFX.asset", "*/Debug/*"),
+                Is.True);
+        }
+
+        [Test]
+        public void ExcludePathRule_NonMatchingAsset_MatchesPathRuleReturnsFalse()
+        {
+            Assert.That(
+                CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Audio/BGM.asset", "*/Debug/*"),
+                Is.False);
+        }
+
+        [Test]
+        public void ExcludePathRule_Empty_MatchesPathRuleReturnsFalse()
+        {
+            Assert.That(
+                CueEnumDefinitionSynchronizer.MatchesPathRule("Assets/Debug/SFX.asset", ""),
+                Is.False);
+        }
+
+        [Test]
         public void ExcludedEntries_NullCleanup()
         {
             var def = CreateDefinition();
