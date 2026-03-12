@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using UnityEditor;
@@ -49,6 +50,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         private TextField? _fileNameField;
         private Button? _generateButton;
         private TextField? _namespaceField;
+        private Button? _openCueSheetEditorButton;
         private TextField? _outputPathField;
         private TextField? _pathRuleField;
         private CueEnumDefinitionTreeItem? _selectedItem;
@@ -163,6 +165,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _assetField = rootVisualElement.Q<ObjectField>("AssetField");
             _cueSheetNameField = rootVisualElement.Q<TextField>("CueSheetName");
             _cueCountField = rootVisualElement.Q<IntegerField>("CueCount");
+            _openCueSheetEditorButton = rootVisualElement.Q<Button>("OpenCueSheetEditorButton");
             _generateButton = rootVisualElement.Q<Button>("GenerateButton");
             _statusLabel = rootVisualElement.Q<Label>("StatusLabel");
         }
@@ -631,6 +634,13 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _cueSheetNameField?.SetEnabled(false);
             _cueCountField?.SetValueWithoutNotify(assetItem.Asset.cueSheet.cueList.Count);
             _cueCountField?.SetEnabled(false);
+
+            if (_openCueSheetEditorButton != null)
+                _openCueSheetEditorButton.clickable = new Clickable(() =>
+                {
+                    if (assetItem.Asset != null)
+                        CueSheetAssetEditorWindow.Open(assetItem.Asset);
+                });
         }
 
         private void UpdateStatusLabel()

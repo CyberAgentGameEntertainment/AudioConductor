@@ -54,6 +54,7 @@
             <!-- Asset inspector -->
             <ui:VisualElement name="AssetInspector" style="display: none;">
                 <ui:Label text="CueSheet Asset" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:Button name="OpenCueSheetEditorButton" text="Open EditorWindow" style="margin-bottom: 4px;" />
                 <uie:ObjectField name="AssetField" label="Asset" />
                 <ui:TextField name="CueSheetName" label="CueSheet Name" />
                 <uie:IntegerField name="CueCount" label="Cue Count" />
