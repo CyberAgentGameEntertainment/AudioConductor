@@ -102,10 +102,31 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
                 CueEnumDefinitionRepository.instance.GetOrCreate();
             }
 
+            OpenWindow();
+        }
+
+        internal static void Open(CueEnumDefinition definition)
+        {
+            var window = OpenWindow();
+            if (window._definition != definition)
+            {
+                window._definition = definition;
+                CueEnumDefinitionRepository.instance.SetDefinition(definition);
+                window._treeView?.SetDefinition(definition);
+                window._definitionField?.SetValueWithoutNotify(definition);
+                window.UpdateDefaultSettingsVisibility();
+                window.UpdateDefaultSettingsValues();
+                window.UpdateInspector();
+            }
+        }
+
+        private static CueEnumDefinitionEditorWindow OpenWindow()
+        {
             var window = GetWindow<CueEnumDefinitionEditorWindow>();
             window.titleContent = new GUIContent(WindowTitle);
             window.minSize = new Vector2(700, 400);
             window.Show();
+            return window;
         }
 
         private void QueryElements()
