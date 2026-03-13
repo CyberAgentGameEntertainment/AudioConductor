@@ -4,11 +4,9 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Editor.Localization;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -18,28 +16,17 @@ namespace AudioConductor.Editor.Core.CustomEditors
     [CustomEditor(typeof(AudioConductorEditorSettings))]
     internal sealed class AudioConductorEditorSettingsEditor : UnityEditor.Editor
     {
-        private EnumField? _languageField;
         private AudioConductorEditorSettings _settings = null!;
 
         private void OnEnable()
         {
             _settings = (AudioConductorEditorSettings)target;
-            Localization.Localization.LanguageChanged += OnLanguageChanged;
-        }
-
-        private void OnDisable()
-        {
-            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         public override VisualElement CreateInspectorGUI()
         {
             var treeAsset = AssetLoader.LoadUxml("AudioConductorEditorSettings");
             var container = treeAsset.CloneTree();
-
-            _languageField = container.Q<EnumField>("Language");
-            _languageField.Init(Localization.Localization.Language);
-            _languageField.RegisterValueChangedCallback(OnLanguageFieldChanged);
 
             var colorDefineListView = container.Q<ListView>();
             colorDefineListView.bindingPath = nameof(AudioConductorEditorSettings.colorDefineList);
@@ -54,18 +41,6 @@ namespace AudioConductor.Editor.Core.CustomEditors
                 .Every(1000);
 
             return container;
-        }
-
-        private void OnLanguageFieldChanged(ChangeEvent<Enum> evt)
-        {
-            Localization.Localization.Language = (EditorLanguage)evt.newValue;
-        }
-
-        private void OnLanguageChanged()
-        {
-            if (_languageField == null)
-                return;
-            _languageField.SetValueWithoutNotify(Localization.Localization.Language);
         }
 
         private void OnColorDefineListItemsAdded(IEnumerable<int> indices)
