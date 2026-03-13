@@ -21,7 +21,7 @@ using UnityEngine.TestTools;
 
 namespace AudioConductor.Core.Providers.Tests
 {
-    public class AddressableCueSheetProviderTests : IPrebuildSetup, IPostBuildCleanup
+    public class AddressableCueSheetProviderTests
     {
         private const string TestAddress = "TestCueSheetAddress";
         private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(AddressableCueSheetProviderTests);
@@ -29,23 +29,8 @@ namespace AudioConductor.Core.Providers.Tests
 
         private AddressableCueSheetProvider _provider = null!;
 
-        void IPostBuildCleanup.Cleanup()
-        {
-            PlayerPrefs.DeleteKey(Addressables.kAddressablesRuntimeDataPath);
-            PlayerPrefs.Save();
-
-            EditorBuildSettings.RemoveConfigObject(ConfigName);
-
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
-
-            if (AssetDatabase.IsValidFolder(GlobalSetUpFixture.GenFolder))
-                AssetDatabase.DeleteAsset(GlobalSetUpFixture.GenFolder);
-
-            AssetDatabase.Refresh();
-        }
-
-        void IPrebuildSetup.Setup()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             if (AssetDatabase.IsValidFolder(RootFolder))
                 AssetDatabase.DeleteAsset(RootFolder);
@@ -76,6 +61,23 @@ namespace AudioConductor.Core.Providers.Tests
                     PlayerPrefs.Save();
                     break;
                 }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            PlayerPrefs.DeleteKey(Addressables.kAddressablesRuntimeDataPath);
+            PlayerPrefs.Save();
+
+            EditorBuildSettings.RemoveConfigObject(ConfigName);
+
+            if (AssetDatabase.IsValidFolder(RootFolder))
+                AssetDatabase.DeleteAsset(RootFolder);
+
+            if (AssetDatabase.IsValidFolder(GlobalSetUpFixture.GenFolder))
+                AssetDatabase.DeleteAsset(GlobalSetUpFixture.GenFolder);
+
+            AssetDatabase.Refresh();
         }
 
         [SetUp]
