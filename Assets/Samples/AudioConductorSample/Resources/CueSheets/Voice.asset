@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a2a166b4c2c548b991995a3cb1b2885, type: 3}
+  m_Name: Voice
+  m_EditorClassIdentifier: 
+  cueSheet:
+    name: Voice
+    throttleType: 0
+    throttleLimit: 0
+    volume: 1
+    pitch: 1
+    pitchInvert: 0
+    cueList:
+    - name: Voice
+      categoryId: 2
+      throttleType: 0
+      throttleLimit: 0
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      cueId: 1
+      trackList:
+      - name: Voice01
+        audioClip: {fileID: 8300000, guid: 1c45ff23d7ee04bbf8efc17168d443a1, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 0
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 5d2deefd-b5e8-454c-8a3c-1a3a879ea7f5
+        colorId: 
+      - name: Voice02
+        audioClip: {fileID: 8300000, guid: 51ad22bd14d9f41c1ad2d43354dc6d8a, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 0
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: dc07908e-9639-41eb-9371-7724863976a2
+        colorId: 
+      id: c1b33fcf-1c20-46ff-99d2-6dad900341ac
+      colorId: 
+    id: 077c9337-a3c3-4eeb-8e56-8ef7911850ab

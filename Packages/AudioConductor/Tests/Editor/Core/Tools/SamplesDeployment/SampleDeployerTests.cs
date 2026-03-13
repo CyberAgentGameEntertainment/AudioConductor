@@ -46,7 +46,7 @@ namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
         }
 
         [Test]
-        public void Deploy_ExcludesMetaFiles()
+        public void Deploy_CopiesMetaFiles()
         {
             var sourceDir = Path.Combine(_tempDir, "source");
             Directory.CreateDirectory(sourceDir);
@@ -58,8 +58,8 @@ namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
             var result = SampleDeployer.Deploy(sourceDir, destDir);
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.CopiedFileCount, Is.EqualTo(1));
-            Assert.That(File.Exists(Path.Combine(destDir, "test.txt.meta")), Is.False);
+            Assert.That(result.CopiedFileCount, Is.EqualTo(2));
+            Assert.That(File.Exists(Path.Combine(destDir, "test.txt.meta")), Is.True);
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
             var result = SampleDeployer.Deploy(sourceDir, destDir);
 
             Assert.That(result.CopiedFileCount, Is.EqualTo(result.CopiedFiles.Count));
-            Assert.That(result.CopiedFileCount, Is.EqualTo(2));
+            Assert.That(result.CopiedFileCount, Is.EqualTo(3));
         }
     }
 }

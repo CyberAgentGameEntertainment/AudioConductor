@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a2a166b4c2c548b991995a3cb1b2885, type: 3}
+  m_Name: SE
+  m_EditorClassIdentifier: 
+  cueSheet:
+    name: SE
+    throttleType: 0
+    throttleLimit: 0
+    volume: 1
+    pitch: 1
+    pitchInvert: 0
+    cueList:
+    - name: SE
+      categoryId: 1
+      throttleType: 0
+      throttleLimit: 0
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 1
+      cueId: 1
+      trackList:
+      - name: SE01
+        audioClip: {fileID: 8300000, guid: 81aac31329de649279ed070dd09192d6, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 0
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 353ddefd-f094-478c-a333-d16dfb37271b
+        colorId: 
+      - name: SE02
+        audioClip: {fileID: 8300000, guid: 8e03a037200214ac0af462fda28f22f2, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 0
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 179d5c2c-3c9d-41c4-b273-7cad938b59e0
+        colorId: 
+      - name: SE03
+        audioClip: {fileID: 8300000, guid: 79418f84333ea4d068a9e8ac160b4232, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 0
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: f839c47c-8e09-4687-9ab8-3fc3ed2e980d
+        colorId: 
+      id: ac7ad60c-42da-4ef7-ab09-4a501e96bf9b
+      colorId: 
+    id: 0369ced4-1e1d-46f5-8c12-d8c5e7462ba5

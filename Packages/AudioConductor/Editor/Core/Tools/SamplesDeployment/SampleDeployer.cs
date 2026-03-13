@@ -43,10 +43,6 @@ namespace AudioConductor.Editor.SamplesDeployment
 
                 foreach (var sourceFile in allFiles)
                 {
-                    // Skip .meta files since Unity generates them automatically
-                    if (sourceFile.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
                     var relativePath = Path.GetRelativePath(sourcePath, sourceFile);
                     var destFile = Path.Combine(destinationPath, relativePath);
 

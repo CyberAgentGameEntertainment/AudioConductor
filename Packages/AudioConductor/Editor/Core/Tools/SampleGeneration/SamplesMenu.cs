@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using AudioConductor.Editor.SamplesDeployment;
 using UnityEditor;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.SampleGeneration
@@ -151,57 +152,60 @@ namespace AudioConductor.Editor.SampleGeneration
 #endif
         private static void GenerateAndDeploy()
         {
-            var samples = SampleRegistry.All;
-            var totalCreatedFiles = 0;
-
-            foreach (var sample in samples)
+            var sample = SampleRegistry.FindByName("AudioConductorSample") as AudioConductorSample;
+            if (sample == null)
             {
-                sample.Clean();
-
-                var result = sample.Generate();
-
-                if (!result.IsSuccess)
-                {
-                    var errorMessage = string.Join("\n", result.Errors);
-                    EditorUtility.DisplayDialog(
-                        "Generate and Deploy - Error",
-                        $"Failed to generate '{sample.DisplayName}':\n{errorMessage}",
-                        "OK"
-                    );
-                    return;
-                }
-
-                totalCreatedFiles += result.CreatedFiles.Count;
-            }
-
-            var scanResult = SampleScanner.Scan(SampleRegistry.SamplesRootPath);
-
-            if (!scanResult.IsValid)
-            {
-                var errorMessage = string.Join("\n", scanResult.Errors);
                 EditorUtility.DisplayDialog(
                     "Generate and Deploy - Error",
-                    $"Validation failed:\n{errorMessage}",
+                    "AudioConductorSample not found in registry.",
                     "OK"
                 );
                 return;
             }
 
-            if (!EditorUtility.DisplayDialog(
-                    "Generate and Deploy",
-                    "All samples generated successfully.\n" +
-                    $"Files created: {totalCreatedFiles}\n\n" +
-                    "Deploy to package?",
-                    "Deploy",
-                    "Skip"))
-                return;
+            sample.Clean();
 
+            // postDeploy=true: Phase 2 automatically runs Deploy after domain reload.
+            var result = sample.Generate(true);
+
+            if (!result.IsSuccess)
+            {
+                var errorMessage = string.Join("\n", result.Errors);
+                EditorUtility.DisplayDialog(
+                    "Generate and Deploy - Error",
+                    $"Failed to generate '{sample.DisplayName}':\n{errorMessage}",
+                    "OK"
+                );
+                return;
+            }
+
+            EditorUtility.DisplayDialog(
+                "Generate and Deploy",
+                "Phase 1 complete. Unity is recompiling scripts.\n" +
+                "Deploy will run automatically after recompile.",
+                "OK"
+            );
+        }
+
+        /// <summary>
+        ///     Executes Deploy to Package without confirmation dialogs.
+        ///     Called automatically by AudioConductorSample Phase 2 when postDeploy is true.
+        /// </summary>
+        internal static void ExecuteDeployInternal()
+        {
 #if AUDIOCONDUCTOR_DEVELOPER
-            if (!DeploySamples(scanResult))
-                return;
-#endif
+            var scanResult = SampleScanner.Scan(SampleRegistry.SamplesRootPath);
 
+            if (!scanResult.IsValid)
+            {
+                var errorMessage = string.Join("\n", scanResult.Errors);
+                Debug.LogError($"[AudioConductorSample] Deploy failed - validation error:\n{errorMessage}");
+                return;
+            }
+
+            DeploySamples(scanResult);
             AssetDatabase.Refresh();
+#endif
         }
 
         // --- Shared logic ---

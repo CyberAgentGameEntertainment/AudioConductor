@@ -1,0 +1,16 @@
+{
+    "name": "AudioConductor.Samples",
+    "rootNamespace": "AudioConductor.Samples",
+    "references": [
+        "AudioConductor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

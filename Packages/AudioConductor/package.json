@@ -9,9 +9,9 @@
   },
   "samples": [
     {
-      "displayName": "Sample",
-      "description": "",
-      "path": "Samples~/Sample"
+      "displayName": "Audio Conductor Sample",
+      "description": "Sample demonstrating Audio Conductor Sample features",
+      "path": "Samples~/AudioConductorSample"
     }
   ]
 }

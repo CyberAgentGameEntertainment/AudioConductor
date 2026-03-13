@@ -10,6 +10,7 @@ using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace AudioConductor.Editor.SampleGeneration
@@ -18,12 +19,42 @@ namespace AudioConductor.Editor.SampleGeneration
     ///     Generates an AudioConductor v2 sample demonstrating multiple Conductors,
     ///     ICueSheetProvider, CueEnumDefinition, and various playback patterns.
     /// </summary>
+    /// <remarks>
+    ///     Generation is split into two phases due to Unity's domain reload:
+    ///     Phase 1 generates all assets and scripts, then triggers a domain reload via AssetDatabase.Refresh().
+    ///     Phase 2 runs automatically after the domain reload via [InitializeOnLoad], creates the .unity scene
+    ///     file, and wires up the SampleScene component references.
+    /// </remarks>
+    [InitializeOnLoad]
     internal class AudioConductorSample : ISample
     {
         private const string SoundSourcePath =
             "Packages/jp.co.cyberagent.audioconductor/Editor/PackageResources/SoundAssets";
 
         private const string VoiceResourcesPath = "CueSheets/Voice";
+
+        private const string PrefKeyPending = "AudioConductorSample.Phase2Pending";
+        private const string PrefKeySamplePath = "AudioConductorSample.Phase2SamplePath";
+        private const string PrefKeyPostDeploy = "AudioConductorSample.Phase2PostDeploy";
+
+        static AudioConductorSample()
+        {
+            if (!EditorPrefs.GetBool(PrefKeyPending, false))
+                return;
+
+            // Clear the flag first to prevent infinite loops on repeated domain reloads.
+            var samplePath = EditorPrefs.GetString(PrefKeySamplePath, string.Empty);
+            var postDeploy = EditorPrefs.GetBool(PrefKeyPostDeploy, false);
+            EditorPrefs.DeleteKey(PrefKeyPending);
+            EditorPrefs.DeleteKey(PrefKeySamplePath);
+            EditorPrefs.DeleteKey(PrefKeyPostDeploy);
+
+            if (string.IsNullOrEmpty(samplePath))
+                return;
+
+            // Defer execution to avoid running inside a constructor context.
+            EditorApplication.delayCall += () => RunPhase2(samplePath, postDeploy);
+        }
 
         /// <inheritdoc />
         public string SampleName => "AudioConductorSample";
@@ -33,6 +64,23 @@ namespace AudioConductor.Editor.SampleGeneration
 
         /// <inheritdoc />
         public SampleGenerationResult Generate()
+        {
+            return Generate(false);
+        }
+
+        /// <inheritdoc />
+        public void Clean()
+        {
+            var samplePath = Path.Combine(SampleRegistry.SamplesRootPath, SampleName);
+            if (AssetDatabase.IsValidFolder(samplePath))
+                AssetDatabase.DeleteAsset(samplePath);
+        }
+
+        /// <summary>
+        ///     Runs Phase 1 of generation. Phase 2 continues automatically after domain reload.
+        /// </summary>
+        /// <param name="postDeploy">When true, Deploy is executed automatically after Phase 2 completes.</param>
+        internal SampleGenerationResult Generate(bool postDeploy)
         {
             var result = new SampleGenerationResult();
 
@@ -47,14 +95,18 @@ namespace AudioConductor.Editor.SampleGeneration
                 AssetDatabase.Refresh();
 
                 CreateSettings(samplePath, result);
-                var bgmFieldSheet = CreateBgmFieldCueSheet(samplePath, result);
-                var bgmBattleSheet = CreateBgmBattleCueSheet(samplePath, result);
-                var seSheet = CreateSeCueSheet(samplePath, result);
+                CreateBgmFieldCueSheet(samplePath, result);
+                CreateBgmBattleCueSheet(samplePath, result);
+                CreateSeCueSheet(samplePath, result);
                 var voiceResourcesSheet = CreateVoiceResourcesCueSheet(samplePath, result);
-                CreateCueEnumDefinition(samplePath, bgmFieldSheet, bgmBattleSheet, seSheet, voiceResourcesSheet,
-                    result);
+                CreateCueEnumDefinition(samplePath, voiceResourcesSheet, result);
                 CreateSampleScene(samplePath, result);
                 CreateReadme(samplePath, result);
+
+                // Store phase 2 state so it can resume after domain reload triggered by AssetDatabase.Refresh().
+                EditorPrefs.SetBool(PrefKeyPending, true);
+                EditorPrefs.SetString(PrefKeySamplePath, samplePath);
+                EditorPrefs.SetBool(PrefKeyPostDeploy, postDeploy);
 
                 AssetDatabase.Refresh();
 
@@ -63,6 +115,9 @@ namespace AudioConductor.Editor.SampleGeneration
             }
             catch (Exception ex)
             {
+                EditorPrefs.DeleteKey(PrefKeyPending);
+                EditorPrefs.DeleteKey(PrefKeySamplePath);
+                EditorPrefs.DeleteKey(PrefKeyPostDeploy);
                 result.IsSuccess = false;
                 result.Errors.Add($"Failed to generate sample: {ex.Message}");
             }
@@ -70,12 +125,42 @@ namespace AudioConductor.Editor.SampleGeneration
             return result;
         }
 
-        /// <inheritdoc />
-        public void Clean()
+        private static void RunPhase2(string samplePath, bool postDeploy)
         {
-            var samplePath = Path.Combine(SampleRegistry.SamplesRootPath, SampleName);
-            if (AssetDatabase.IsValidFolder(samplePath))
-                AssetDatabase.DeleteAsset(samplePath);
+            try
+            {
+                var settingsPath = Path.Combine(samplePath, "AudioConductorSettings.asset").Replace('\\', '/');
+                var settings = AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(settingsPath);
+
+                var bgmFieldSheetPath = Path.Combine(samplePath, "BGM_Field.asset").Replace('\\', '/');
+                var bgmFieldSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(bgmFieldSheetPath);
+
+                var bgmBattleSheetPath = Path.Combine(samplePath, "BGM_Battle.asset").Replace('\\', '/');
+                var bgmBattleSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(bgmBattleSheetPath);
+
+                var seSheetPath = Path.Combine(samplePath, "SE.asset").Replace('\\', '/');
+                var seSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(seSheetPath);
+
+                if (settings == null || bgmFieldSheet == null || bgmBattleSheet == null || seSheet == null)
+                {
+                    Debug.LogError(
+                        "[AudioConductorSample] Phase 2 failed: required assets not found. Re-run Generate.");
+                    return;
+                }
+
+                CreateSampleSceneFile(samplePath, settings, bgmFieldSheet, bgmBattleSheet, seSheet);
+
+                AssetDatabase.Refresh();
+
+                Debug.Log($"[AudioConductorSample] Phase 2 complete. Scene created at {samplePath}/SampleScene.unity");
+
+                if (postDeploy)
+                    SamplesMenu.ExecuteDeployInternal();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[AudioConductorSample] Phase 2 failed: {ex.Message}");
+            }
         }
 
         private static void EnsureDirectoryExists(string path)
@@ -263,12 +348,16 @@ namespace AudioConductor.Editor.SampleGeneration
 
         private static void CreateCueEnumDefinition(
             string samplePath,
-            CueSheetAsset bgmFieldSheet,
-            CueSheetAsset bgmBattleSheet,
-            CueSheetAsset seSheet,
             CueSheetAsset voiceResourcesSheet,
             SampleGenerationResult result)
         {
+            var bgmFieldSheetPath = Path.Combine(samplePath, "BGM_Field.asset").Replace('\\', '/');
+            var bgmFieldSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(bgmFieldSheetPath);
+            var bgmBattleSheetPath = Path.Combine(samplePath, "BGM_Battle.asset").Replace('\\', '/');
+            var bgmBattleSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(bgmBattleSheetPath);
+            var seSheetPath = Path.Combine(samplePath, "SE.asset").Replace('\\', '/');
+            var seSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(seSheetPath);
+
             var defPath = Path.Combine(samplePath, "CueEnumDefinition.asset");
             var definition = ScriptableObject.CreateInstance<CueEnumDefinition>();
 
@@ -290,7 +379,12 @@ namespace AudioConductor.Editor.SampleGeneration
             bgmFileEntry.assets.Add(bgmBattleSheet);
             definition.fileEntries.Add(bgmFileEntry);
 
+            // excludePathRule: auto-exclude CueSheets under Resources/ on import
+            definition.excludePathRule = "**/Resources/**";
+
             // excludedEntries: Voice CueSheet excluded (loaded dynamically, no enum needed)
+            // In normal workflow, excludePathRule handles this automatically on import.
+            // Here we add it explicitly because programmatic asset creation does not trigger the import rule.
             definition.excludedEntries.Add(voiceResourcesSheet);
 
             AssetDatabase.CreateAsset(definition, defPath);
@@ -368,13 +462,6 @@ namespace AudioConductor.Samples
             _voiceSheetHandle = await _voiceConductor.RegisterCueSheetAsync(""{VoiceResourcesPath}"");
         }}
 
-        private void Update()
-        {{
-            _bgmConductor?.Update();
-            _seConductor?.Update();
-            _voiceConductor?.Update();
-        }}
-
         private void OnDestroy()
         {{
             _bgmConductor?.Dispose();
@@ -394,7 +481,7 @@ namespace AudioConductor.Samples
         }}
 
         /// <summary>
-        ///     Plays battle BGM (looping) with fade-in.
+        ///     Plays battle BGM (looping)with fade-in.
         /// </summary>
         public void PlayBattleBGM()
         {{
@@ -435,6 +522,49 @@ namespace AudioConductor.Samples
             result.CreatedFiles.Add(scriptPath);
         }
 
+        private static void CreateSampleSceneFile(
+            string samplePath,
+            AudioConductorSettings settings,
+            CueSheetAsset bgmFieldSheet,
+            CueSheetAsset bgmBattleSheet,
+            CueSheetAsset seSheet)
+        {
+            var scenePath = Path.Combine(samplePath, "SampleScene.unity").Replace('\\', '/');
+            var previousScenePath = EditorSceneManager.GetActiveScene().path;
+
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+
+            var go = new GameObject("SampleScene");
+
+            var sampleSceneType = Type.GetType("AudioConductor.Samples.SampleScene, AudioConductor.Samples");
+            if (sampleSceneType == null)
+            {
+                // SampleScene type is still not compiled. Save the scene without the component.
+                Debug.LogWarning(
+                    "[AudioConductorSample] SampleScene type not found after domain reload. Scene saved without component.");
+                EditorSceneManager.SaveScene(scene, scenePath);
+                if (!string.IsNullOrEmpty(previousScenePath))
+                    EditorSceneManager.OpenScene(previousScenePath);
+                return;
+            }
+
+            var component = (MonoBehaviour)go.AddComponent(sampleSceneType);
+            var so = new SerializedObject(component);
+
+            so.FindProperty("_bgmSettings").objectReferenceValue = settings;
+            so.FindProperty("_seSettings").objectReferenceValue = settings;
+            so.FindProperty("_voiceSettings").objectReferenceValue = settings;
+            so.FindProperty("_bgmFieldCueSheet").objectReferenceValue = bgmFieldSheet;
+            so.FindProperty("_bgmBattleCueSheet").objectReferenceValue = bgmBattleSheet;
+            so.FindProperty("_seCueSheet").objectReferenceValue = seSheet;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            EditorSceneManager.SaveScene(scene, scenePath);
+
+            if (!string.IsNullOrEmpty(previousScenePath))
+                EditorSceneManager.OpenScene(previousScenePath);
+        }
+
         private static void CreateReadme(string samplePath, SampleGenerationResult result)
         {
             var readmePath = Path.Combine(samplePath, "README.md");
@@ -460,6 +590,7 @@ AudioConductorSample/
 │       └── Voice.asset            # Voice CueSheet for ResourcesCueSheetProvider
 ├── Generated/                     # Generated enum code (after running codegen)
 ├── SampleScene.cs                 # MonoBehaviour demo script
+├── SampleScene.unity              # Demo scene with SampleScene component wired up
 └── README.md
 ```
 
@@ -496,6 +627,7 @@ var handle = await conductor.RegisterCueSheetAsync(""CueSheets/Voice"");
 The definition is configured as follows:
 - **rootEntries**: SE CueSheet → generates `SE.cs` individually
 - **fileEntries**: BGM_Field + BGM_Battle → generates `BGMCues.cs` (combined, scene-switching use case)
+- **excludePathRule**: `**/Resources/**` → auto-excludes CueSheets under Resources/ on import
 - **excludedEntries**: Voice CueSheet → excluded (loaded dynamically, no enum needed)
 ";
 
