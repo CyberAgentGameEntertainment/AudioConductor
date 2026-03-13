@@ -40,14 +40,14 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 1960309
         loopStartSample: 0
         isLoop: 1
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: e9807456-153b-4261-9f6a-10e41061493b
+        id: 3a08f7d7-84d4-4ab3-be15-268069c9068e
         colorId: 
-      id: 37419937-ce1a-486a-9748-73e44a8297a3
+      id: 55500ded-1ac3-4536-9020-4b8cbca4ba40
       colorId: 
-    id: 6b96a341-fd9e-46d5-a967-c705fe6e444f
+    id: 7f09aca1-301c-4213-a107-cd91b3eb725b

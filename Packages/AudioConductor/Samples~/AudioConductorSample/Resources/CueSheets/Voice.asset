@@ -40,13 +40,13 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 148337
         loopStartSample: 0
         isLoop: 0
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 5d2deefd-b5e8-454c-8a3c-1a3a879ea7f5
+        id: ad7b56aa-0c56-4318-b4f6-6ebc86288cce
         colorId: 
       - name: Voice02
         audioClip: {fileID: 8300000, guid: 51ad22bd14d9f41c1ad2d43354dc6d8a, type: 3}
@@ -56,14 +56,14 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 204829
         loopStartSample: 0
         isLoop: 0
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: dc07908e-9639-41eb-9371-7724863976a2
+        id: b6a5058d-0df9-492e-b1e5-b520329f8d14
         colorId: 
-      id: c1b33fcf-1c20-46ff-99d2-6dad900341ac
+      id: 6d7d6802-c47f-4c72-bb4f-d61e8c867559
       colorId: 
-    id: 077c9337-a3c3-4eeb-8e56-8ef7911850ab
+    id: 3b3241da-b78c-408d-8635-93dac04b2d86

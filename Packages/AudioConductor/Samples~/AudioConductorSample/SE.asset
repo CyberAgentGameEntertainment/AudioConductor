@@ -40,13 +40,13 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 18151
         loopStartSample: 0
         isLoop: 0
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 353ddefd-f094-478c-a333-d16dfb37271b
+        id: 104268de-11e6-4fad-b26b-4bb6f0faab86
         colorId: 
       - name: SE02
         audioClip: {fileID: 8300000, guid: 8e03a037200214ac0af462fda28f22f2, type: 3}
@@ -56,13 +56,13 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 29913
         loopStartSample: 0
         isLoop: 0
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 179d5c2c-3c9d-41c4-b273-7cad938b59e0
+        id: 45615188-3896-4b09-8ee9-b57774ad9fc5
         colorId: 
       - name: SE03
         audioClip: {fileID: 8300000, guid: 79418f84333ea4d068a9e8ac160b4232, type: 3}
@@ -72,14 +72,14 @@ MonoBehaviour:
         pitchRange: 0
         pitchInvert: 0
         startSample: 0
-        endSample: 0
+        endSample: 74306
         loopStartSample: 0
         isLoop: 0
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: f839c47c-8e09-4687-9ab8-3fc3ed2e980d
+        id: b806e52d-06bb-448b-82ee-ca76bd9ec7e7
         colorId: 
-      id: ac7ad60c-42da-4ef7-ab09-4a501e96bf9b
+      id: 9791988b-e069-4c1e-9ef6-73bb30ecc034
       colorId: 
-    id: 0369ced4-1e1d-46f5-8c12-d8c5e7462ba5
+    id: a5f714f3-0648-4d5a-ad62-3b2d3c7c4422

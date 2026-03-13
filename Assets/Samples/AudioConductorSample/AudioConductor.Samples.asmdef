@@ -2,7 +2,8 @@
     "name": "AudioConductor.Samples",
     "rootNamespace": "AudioConductor.Samples",
     "references": [
-        "AudioConductor"
+        "AudioConductor",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

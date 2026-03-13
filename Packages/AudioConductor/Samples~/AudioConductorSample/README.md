@@ -46,6 +46,22 @@ var conductor = new Conductor(voiceSettings, provider);
 var handle = await conductor.RegisterCueSheetAsync("CueSheets/Voice");
 ```
 
+## Operation UI (Canvas + UGUI)
+
+The scene includes a Canvas-based control panel (auto-scaled via CanvasScaler).
+Enter Play Mode to interact with it in the Game view:
+
+| Section | Controls |
+|---------|----------|
+| **BGM Conductor** | Play Field BGM / Play Battle BGM / Pause-Resume / Stop (Fade) |
+| **SE Conductor** | Play SE (Random / OneShot) |
+| **Voice Conductor** | Play Voice / Pause-Resume / Stop |
+| **Master Volume** | Slider (0.0 – 1.0) applied to all Conductors |
+
+- BGM and Voice sections show real-time playback status (Playing / Paused / ---).
+- Master Volume slider calls `SetMasterVolume()` on all three Conductors simultaneously.
+- UI scales automatically to any screen resolution via `CanvasScaler (Scale With Screen Size)`.
+
 ## CueEnumDefinition Usage
 
 1. Select `CueEnumDefinition.asset` in the Project window
