@@ -20,7 +20,6 @@ namespace AudioConductor.Editor.Core.CustomEditors
     {
         private HashSet<int> _existIds = null!;
         private IntegerField? _managedPoolCapacityField;
-        private FloatField? _masterVolumeField;
         private IntegerField? _oneShotPoolCapacityField;
         private AudioConductorSettings _settings = null!;
         private IntegerField? _throttleLimitField;
@@ -49,9 +48,6 @@ namespace AudioConductor.Editor.Core.CustomEditors
 
             _throttleLimitField = container.Q<IntegerField>("ThrottleLimit");
             _throttleLimitField.bindingPath = nameof(AudioConductorSettings.throttleLimit);
-
-            _masterVolumeField = container.Q<FloatField>("MasterVolume");
-            _masterVolumeField.bindingPath = nameof(AudioConductorSettings.masterVolume);
 
             _managedPoolCapacityField = container.Q<IntegerField>("ManagedPoolCapacity");
             _managedPoolCapacityField.bindingPath = nameof(AudioConductorSettings.managedPoolCapacity);
@@ -83,8 +79,6 @@ namespace AudioConductor.Editor.Core.CustomEditors
                 _throttleTypeField.tooltip = Localization.Localization.Tr("settings.throttle_type");
             if (_throttleLimitField != null)
                 _throttleLimitField.tooltip = Localization.Localization.Tr("settings.throttle_limit");
-            if (_masterVolumeField != null)
-                _masterVolumeField.tooltip = Localization.Localization.Tr("settings.master_volume");
             if (_managedPoolCapacityField != null)
                 _managedPoolCapacityField.tooltip = Localization.Localization.Tr("settings.managed_pool_size");
             if (_oneShotPoolCapacityField != null)

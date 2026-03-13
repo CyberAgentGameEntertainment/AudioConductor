@@ -106,7 +106,6 @@ namespace AudioConductor.Editor.Localization.Tests
 
         [TestCase("settings.throttle_type", "Concurrent play control type.")]
         [TestCase("settings.throttle_limit", "Limit of concurrent play.")]
-        [TestCase("settings.master_volume", "Master volume scale applied to all audio. (0.0 to 1.0)")]
         [TestCase("settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction.")]
         [TestCase("settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction.")]
         public void Tr_English_SettingsKeys_ReturnsExpectedText(string key, string expected)
@@ -120,7 +119,6 @@ namespace AudioConductor.Editor.Localization.Tests
 
         [TestCase("settings.throttle_type", "同時発音の制御方式")]
         [TestCase("settings.throttle_limit", "同時発音数の上限")]
-        [TestCase("settings.master_volume", "全オーディオに適用されるマスターボリューム (0.0 〜 1.0)")]
         [TestCase("settings.managed_pool_size", "構築時に事前生成するマネージド AudioClipPlayer の数")]
         [TestCase("settings.oneshot_pool_size", "構築時に事前生成するワンショット AudioClipPlayer の数")]
         public void Tr_Japanese_SettingsKeys_ReturnsExpectedText(string key, string expected)

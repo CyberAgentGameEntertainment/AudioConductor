@@ -29,11 +29,6 @@ namespace AudioConductor.Core.Models
         public int throttleLimit;
 
         /// <summary>
-        ///     Master volume scale applied to all audio. (Value range 0.00 to 1.00)
-        /// </summary>
-        public float masterVolume = 1f;
-
-        /// <summary>
         ///     Number of managed AudioClipPlayers to pre-create on construction.
         /// </summary>
         public int managedPoolCapacity;
