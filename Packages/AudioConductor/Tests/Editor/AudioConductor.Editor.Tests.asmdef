@@ -18,6 +18,12 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "",
+            "define": "AUDIOCONDUCTOR_NEWTONSOFT_JSON"
+        }
+    ],
     "noEngineReferences": false
 }

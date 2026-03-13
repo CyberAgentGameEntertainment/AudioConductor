@@ -2,7 +2,7 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
 
 #nullable enable
 

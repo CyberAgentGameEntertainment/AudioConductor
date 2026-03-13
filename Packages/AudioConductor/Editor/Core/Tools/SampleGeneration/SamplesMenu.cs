@@ -113,7 +113,7 @@ namespace AudioConductor.Editor.SampleGeneration
 
         // --- Deploy ---
 
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
         [MenuItem("Tools/Audio Conductor/Development/Samples/Deploy to Package")]
 #endif
         private static void DeployToPackage()
@@ -137,7 +137,7 @@ namespace AudioConductor.Editor.SampleGeneration
             if (!EditorUtility.DisplayDialog("Deploy Samples", confirmMessage, "Deploy", "Cancel"))
                 return;
 
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
             if (!DeploySamples(scanResult))
                 return;
 #endif
@@ -147,7 +147,7 @@ namespace AudioConductor.Editor.SampleGeneration
 
         // --- Generate and Deploy ---
 
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
         [MenuItem("Tools/Audio Conductor/Development/Samples/Generate and Deploy")]
 #endif
         private static void GenerateAndDeploy()
@@ -193,7 +193,7 @@ namespace AudioConductor.Editor.SampleGeneration
         /// </summary>
         internal static void ExecuteDeployInternal()
         {
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
             var scanResult = SampleScanner.Scan(SampleRegistry.SamplesRootPath);
 
             if (!scanResult.IsValid)
@@ -256,7 +256,7 @@ namespace AudioConductor.Editor.SampleGeneration
             }
         }
 
-#if AUDIOCONDUCTOR_DEVELOPER
+#if AUDIOCONDUCTOR_DEVELOPER && AUDIOCONDUCTOR_NEWTONSOFT_JSON
         private static bool DeploySamples(SampleScanner.ScanResult scanResult)
         {
             var samplesDestinationPath = Path.Combine(PackagePath, SamplesDestinationFolder);
