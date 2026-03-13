@@ -16,8 +16,10 @@ namespace AudioConductor.Editor.SampleGeneration
     {
         internal const string SamplesRootPath = "Assets/Samples";
 
-        // AudioConductorSample will be registered in Commit 4
-        private static readonly ISample[] Samples = Array.Empty<ISample>();
+        private static readonly ISample[] Samples =
+        {
+            new AudioConductorSample()
+        };
 
         /// <summary>
         ///     All registered samples.
