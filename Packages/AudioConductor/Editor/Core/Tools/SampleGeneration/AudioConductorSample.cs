@@ -217,6 +217,8 @@ namespace AudioConductor.Editor.SampleGeneration
             var settingsPath = Path.Combine(samplePath, "AudioConductorSettings.asset");
 
             var settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
+            settings.managedPoolCapacity = 1;
+            settings.oneShotPoolCapacity = 8;
 
             // BGM category: throttleLimit=1 (only one BGM at a time)
             settings.categoryList.Add(new Category { id = 0, name = "BGM", throttleLimit = 1 });
