@@ -29,5 +29,6 @@ MonoBehaviour:
     assets:
     - {fileID: 11400000, guid: 2923eb242658b4a7b9c88128bb8d5beb, type: 2}
     - {fileID: 11400000, guid: cdfbd4109d1454762a9c01933f0c8b68, type: 2}
-  excludedEntries: []
+  excludedEntries:
+  - {fileID: 11400000, guid: 711409896ccc14a778ef4368831ea310, type: 2}
   excludePathRule: '**/Resources/**'

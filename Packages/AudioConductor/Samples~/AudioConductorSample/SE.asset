@@ -46,7 +46,7 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 104268de-11e6-4fad-b26b-4bb6f0faab86
+        id: a2dcb7b5-a0c8-4d22-8ca0-051be8bde499
         colorId: 
       - name: SE02
         audioClip: {fileID: 8300000, guid: 8e03a037200214ac0af462fda28f22f2, type: 3}
@@ -62,7 +62,7 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 45615188-3896-4b09-8ee9-b57774ad9fc5
+        id: 0956c252-9b08-4138-8261-12030978434f
         colorId: 
       - name: SE03
         audioClip: {fileID: 8300000, guid: 79418f84333ea4d068a9e8ac160b4232, type: 3}
@@ -78,8 +78,8 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: b806e52d-06bb-448b-82ee-ca76bd9ec7e7
+        id: a2b966f2-8e34-4c5b-befc-a94d1b34383d
         colorId: 
-      id: 9791988b-e069-4c1e-9ef6-73bb30ecc034
-      colorId: 
-    id: a5f714f3-0648-4d5a-ad62-3b2d3c7c4422
+      id: c3c93e34-cb1e-4349-aeb0-2220b8aed931
+      colorId: 0e68d949-b619-4bd2-9b15-1113ca1baf39
+    id: a8a74295-bba4-4050-8ecf-0db03a1dc220

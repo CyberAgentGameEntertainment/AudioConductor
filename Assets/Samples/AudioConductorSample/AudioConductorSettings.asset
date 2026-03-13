@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   throttleType: 0
   throttleLimit: 0
-  masterVolume: 1
   managedPoolCapacity: 0
   oneShotPoolCapacity: 0
   deactivatePooledObjects: 0

@@ -99,10 +99,11 @@ namespace AudioConductor.Editor.SampleGeneration
                 AssetDatabase.Refresh();
 
                 CreateSettings(samplePath, result);
-                CreateBgmFieldCueSheet(samplePath, result);
-                CreateBgmBattleCueSheet(samplePath, result);
-                CreateSeCueSheet(samplePath, result);
-                var voiceResourcesSheet = CreateVoiceResourcesCueSheet(samplePath, result);
+                var (inGameColorId, cutsceneColorId) = CreateEditorSettings(samplePath, result);
+                CreateBgmFieldCueSheet(samplePath, result, inGameColorId);
+                CreateBgmBattleCueSheet(samplePath, result, inGameColorId);
+                CreateSeCueSheet(samplePath, result, inGameColorId);
+                var voiceResourcesSheet = CreateVoiceResourcesCueSheet(samplePath, result, cutsceneColorId);
                 CreateCueEnumDefinition(samplePath, voiceResourcesSheet, result);
                 CreateSampleScene(samplePath, result);
                 CreateReadme(samplePath, result);
@@ -230,7 +231,29 @@ namespace AudioConductor.Editor.SampleGeneration
             result.CreatedFiles.Add(settingsPath);
         }
 
-        private static CueSheetAsset CreateBgmFieldCueSheet(string samplePath, SampleGenerationResult result)
+        private static (string inGame, string cutscene) CreateEditorSettings(string samplePath,
+            SampleGenerationResult result)
+        {
+            var settingsPath = Path.Combine(samplePath, "AudioConductorEditorSettings.asset");
+
+            var settings = ScriptableObject.CreateInstance<AudioConductorEditorSettings>();
+
+            var wip = new ColorDefine { name = "WIP", color = new Color(0.9f, 0.3f, 0.3f) };
+            var inGame = new ColorDefine { name = "InGame", color = new Color(0.3f, 0.5f, 0.9f) };
+            var cutscene = new ColorDefine { name = "Cutscene", color = new Color(0.3f, 0.8f, 0.4f) };
+
+            settings.colorDefineList.Add(wip);
+            settings.colorDefineList.Add(inGame);
+            settings.colorDefineList.Add(cutscene);
+
+            AssetDatabase.CreateAsset(settings, settingsPath);
+            result.CreatedFiles.Add(settingsPath);
+
+            return (inGame.Id, cutscene.Id);
+        }
+
+        private static CueSheetAsset CreateBgmFieldCueSheet(string samplePath, SampleGenerationResult result,
+            string colorId)
         {
             var sheetPath = Path.Combine(samplePath, "BGM_Field.asset");
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
@@ -240,7 +263,8 @@ namespace AudioConductor.Editor.SampleGeneration
             var cue = new Cue
             {
                 name = "FieldBGM",
-                categoryId = 0 // BGM category
+                categoryId = 0, // BGM category
+                colorId = colorId
             };
             var track = new Track { name = "FieldBGM" };
             cue.trackList.Add(track);
@@ -254,7 +278,8 @@ namespace AudioConductor.Editor.SampleGeneration
             return asset;
         }
 
-        private static CueSheetAsset CreateBgmBattleCueSheet(string samplePath, SampleGenerationResult result)
+        private static CueSheetAsset CreateBgmBattleCueSheet(string samplePath, SampleGenerationResult result,
+            string colorId)
         {
             var sheetPath = Path.Combine(samplePath, "BGM_Battle.asset");
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
@@ -264,7 +289,8 @@ namespace AudioConductor.Editor.SampleGeneration
             var cue = new Cue
             {
                 name = "BattleBGM",
-                categoryId = 0 // BGM category
+                categoryId = 0, // BGM category
+                colorId = colorId
             };
             var track = new Track { name = "BattleBGM", isLoop = true };
             cue.trackList.Add(track);
@@ -278,7 +304,8 @@ namespace AudioConductor.Editor.SampleGeneration
             return asset;
         }
 
-        private static CueSheetAsset CreateSeCueSheet(string samplePath, SampleGenerationResult result)
+        private static CueSheetAsset CreateSeCueSheet(string samplePath, SampleGenerationResult result,
+            string colorId)
         {
             var sheetPath = Path.Combine(samplePath, "SE.asset");
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
@@ -289,7 +316,8 @@ namespace AudioConductor.Editor.SampleGeneration
             {
                 name = "SE",
                 categoryId = 1, // SE category
-                playType = CuePlayType.Random
+                playType = CuePlayType.Random,
+                colorId = colorId
             };
             cue.trackList.Add(new Track { name = "SE01" });
             cue.trackList.Add(new Track { name = "SE02" });
@@ -306,7 +334,8 @@ namespace AudioConductor.Editor.SampleGeneration
             return asset;
         }
 
-        private static CueSheetAsset CreateVoiceResourcesCueSheet(string samplePath, SampleGenerationResult result)
+        private static CueSheetAsset CreateVoiceResourcesCueSheet(string samplePath, SampleGenerationResult result,
+            string colorId)
         {
             var resourcesDir = Path.Combine(samplePath, "Resources", "CueSheets");
             EnsureDirectoryExists(resourcesDir);
@@ -319,7 +348,8 @@ namespace AudioConductor.Editor.SampleGeneration
             var cue = new Cue
             {
                 name = "Voice",
-                categoryId = 2 // Voice category
+                categoryId = 2, // Voice category
+                colorId = colorId
             };
             cue.trackList.Add(new Track { name = "Voice01" });
             cue.trackList.Add(new Track { name = "Voice02" });
