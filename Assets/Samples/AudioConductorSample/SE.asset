@@ -21,7 +21,7 @@ MonoBehaviour:
     pitchInvert: 0
     cueList:
     - name: SE
-      categoryId: 1
+      categoryId: 0
       throttleType: 0
       throttleLimit: 0
       volume: 1
@@ -46,7 +46,7 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: a2dcb7b5-a0c8-4d22-8ca0-051be8bde499
+        id: 1f3da121-dcff-4771-b2eb-9c56fbf74a23
         colorId: 
       - name: SE02
         audioClip: {fileID: 8300000, guid: 8e03a037200214ac0af462fda28f22f2, type: 3}
@@ -62,7 +62,7 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 0956c252-9b08-4138-8261-12030978434f
+        id: 495adac4-20e9-45f6-abce-6987a4dfa4c5
         colorId: 
       - name: SE03
         audioClip: {fileID: 8300000, guid: 79418f84333ea4d068a9e8ac160b4232, type: 3}
@@ -78,8 +78,8 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: a2b966f2-8e34-4c5b-befc-a94d1b34383d
+        id: 86fbe3bb-d879-4cd0-871a-20c5b36f5bc6
         colorId: 
-      id: c3c93e34-cb1e-4349-aeb0-2220b8aed931
-      colorId: 0e68d949-b619-4bd2-9b15-1113ca1baf39
-    id: a8a74295-bba4-4050-8ecf-0db03a1dc220
+      id: cccf070b-a440-479d-a111-194940fe2aca
+      colorId: c0fee783-8eb8-48b8-bc35-fb1abc82e3cc
+    id: cc4865a0-ab6a-4775-bd69-94112d630c71

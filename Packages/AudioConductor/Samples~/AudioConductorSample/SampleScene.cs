@@ -14,8 +14,10 @@ namespace AudioConductor.Samples
 {
     /// <summary>
     ///     Demonstrates AudioConductor v2 features:
-    ///     - Multiple Conductors (BGM, SE, Voice)
-    ///     - Scene-switch BGM demo (BGM_Field / BGM_Battle)
+    ///     - Multiple Conductors (BGM, SE, Voice) with separate Settings
+    ///     - Settings_BGM: dedicated BGM settings (managedPoolCapacity=2 for crossfade)
+    ///     - Settings_SEVoice: shared SE+Voice settings (different throttle strategy)
+    ///     - Scene-switch BGM demo with crossfade (BGM_Field / BGM_Battle)
     ///     - Direct RegisterCueSheet (BGM, SE)
     ///     - ResourcesCueSheetProvider + RegisterCueSheetAsync (Voice)
     ///     - PlayOptions with IsLoop and FadeTime (BGM)

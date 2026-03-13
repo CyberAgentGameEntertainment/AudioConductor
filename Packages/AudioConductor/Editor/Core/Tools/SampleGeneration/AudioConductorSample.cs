@@ -98,7 +98,8 @@ namespace AudioConductor.Editor.SampleGeneration
 
                 AssetDatabase.Refresh();
 
-                CreateSettings(samplePath, result);
+                CreateBgmSettings(samplePath, result);
+                CreateSeVoiceSettings(samplePath, result);
                 var (inGameColorId, cutsceneColorId) = CreateEditorSettings(samplePath, result);
                 CreateBgmFieldCueSheet(samplePath, result, inGameColorId);
                 CreateBgmBattleCueSheet(samplePath, result, inGameColorId);
@@ -134,8 +135,11 @@ namespace AudioConductor.Editor.SampleGeneration
         {
             try
             {
-                var settingsPath = Path.Combine(samplePath, "AudioConductorSettings.asset").Replace('\\', '/');
-                var settings = AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(settingsPath);
+                var bgmSettingsPath = Path.Combine(samplePath, "Settings_BGM.asset").Replace('\\', '/');
+                var bgmSettings = AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(bgmSettingsPath);
+
+                var seVoiceSettingsPath = Path.Combine(samplePath, "Settings_SEVoice.asset").Replace('\\', '/');
+                var seVoiceSettings = AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(seVoiceSettingsPath);
 
                 var bgmFieldSheetPath = Path.Combine(samplePath, "BGM_Field.asset").Replace('\\', '/');
                 var bgmFieldSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(bgmFieldSheetPath);
@@ -146,14 +150,16 @@ namespace AudioConductor.Editor.SampleGeneration
                 var seSheetPath = Path.Combine(samplePath, "SE.asset").Replace('\\', '/');
                 var seSheet = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(seSheetPath);
 
-                if (settings == null || bgmFieldSheet == null || bgmBattleSheet == null || seSheet == null)
+                if (bgmSettings == null || seVoiceSettings == null ||
+                    bgmFieldSheet == null || bgmBattleSheet == null || seSheet == null)
                 {
                     Debug.LogError(
                         "[AudioConductorSample] Phase 2 failed: required assets not found. Re-run Generate.");
                     return;
                 }
 
-                CreateSampleSceneFile(samplePath, settings, bgmFieldSheet, bgmBattleSheet, seSheet);
+                CreateSampleSceneFile(samplePath, bgmSettings, seVoiceSettings, bgmFieldSheet, bgmBattleSheet,
+                    seSheet);
 
                 AssetDatabase.Refresh();
 
@@ -212,22 +218,39 @@ namespace AudioConductor.Editor.SampleGeneration
             }
         }
 
-        private static void CreateSettings(string samplePath, SampleGenerationResult result)
+        private static void CreateBgmSettings(string samplePath, SampleGenerationResult result)
         {
-            var settingsPath = Path.Combine(samplePath, "AudioConductorSettings.asset");
+            var settingsPath = Path.Combine(samplePath, "Settings_BGM.asset");
 
             var settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
+            settings.throttleType = ThrottleType.PriorityOrder;
+            settings.managedPoolCapacity = 2;
+            settings.oneShotPoolCapacity = 0;
+            settings.deactivatePooledObjects = false;
+
+            // BGM category: throttleLimit=2 for crossfade (fade-out + fade-in coexist)
+            settings.categoryList.Add(new Category { id = 0, name = "BGM", throttleLimit = 2 });
+
+            AssetDatabase.CreateAsset(settings, settingsPath);
+            result.CreatedFiles.Add(settingsPath);
+        }
+
+        private static void CreateSeVoiceSettings(string samplePath, SampleGenerationResult result)
+        {
+            var settingsPath = Path.Combine(samplePath, "Settings_SEVoice.asset");
+
+            var settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
+            settings.throttleType = ThrottleType.FirstComeFirstServed;
             settings.managedPoolCapacity = 1;
             settings.oneShotPoolCapacity = 8;
+            settings.deactivatePooledObjects = true;
 
-            // BGM category: throttleLimit=1 (only one BGM at a time)
-            settings.categoryList.Add(new Category { id = 0, name = "BGM", throttleLimit = 1 });
-
-            // SE category: throttleType=PriorityOrder
-            settings.categoryList.Add(new Category { id = 1, name = "SE", throttleType = ThrottleType.PriorityOrder });
+            // SE category: throttleType=PriorityOrder, no throttle limit
+            settings.categoryList.Add(new Category
+                { id = 0, name = "SE", throttleType = ThrottleType.PriorityOrder });
 
             // Voice category: throttleLimit=1 (only one voice at a time)
-            settings.categoryList.Add(new Category { id = 2, name = "Voice", throttleLimit = 1 });
+            settings.categoryList.Add(new Category { id = 1, name = "Voice", throttleLimit = 1 });
 
             AssetDatabase.CreateAsset(settings, settingsPath);
             result.CreatedFiles.Add(settingsPath);
@@ -317,7 +340,7 @@ namespace AudioConductor.Editor.SampleGeneration
             var cue = new Cue
             {
                 name = "SE",
-                categoryId = 1, // SE category
+                categoryId = 0, // SE category (id=0 in Settings_SEVoice)
                 playType = CuePlayType.Random,
                 colorId = colorId
             };
@@ -350,7 +373,7 @@ namespace AudioConductor.Editor.SampleGeneration
             var cue = new Cue
             {
                 name = "Voice",
-                categoryId = 2, // Voice category
+                categoryId = 1, // Voice category (id=1 in Settings_SEVoice)
                 colorId = colorId
             };
             cue.trackList.Add(new Track { name = "Voice01" });
@@ -450,8 +473,10 @@ namespace AudioConductor.Samples
 {{
     /// <summary>
     ///     Demonstrates AudioConductor v2 features:
-    ///     - Multiple Conductors (BGM, SE, Voice)
-    ///     - Scene-switch BGM demo (BGM_Field / BGM_Battle)
+    ///     - Multiple Conductors (BGM, SE, Voice) with separate Settings
+    ///     - Settings_BGM: dedicated BGM settings (managedPoolCapacity=2 for crossfade)
+    ///     - Settings_SEVoice: shared SE+Voice settings (different throttle strategy)
+    ///     - Scene-switch BGM demo with crossfade (BGM_Field / BGM_Battle)
     ///     - Direct RegisterCueSheet (BGM, SE)
     ///     - ResourcesCueSheetProvider + RegisterCueSheetAsync (Voice)
     ///     - PlayOptions with IsLoop and FadeTime (BGM)
@@ -656,7 +681,8 @@ namespace AudioConductor.Samples
 
         private static void CreateSampleSceneFile(
             string samplePath,
-            AudioConductorSettings settings,
+            AudioConductorSettings bgmSettings,
+            AudioConductorSettings seVoiceSettings,
             CueSheetAsset bgmFieldSheet,
             CueSheetAsset bgmBattleSheet,
             CueSheetAsset seSheet)
@@ -795,9 +821,9 @@ namespace AudioConductor.Samples
             // --- Wire SampleScene serialized fields ---
             var so = new SerializedObject(component);
 
-            so.FindProperty("_bgmSettings").objectReferenceValue = settings;
-            so.FindProperty("_seSettings").objectReferenceValue = settings;
-            so.FindProperty("_voiceSettings").objectReferenceValue = settings;
+            so.FindProperty("_bgmSettings").objectReferenceValue = bgmSettings;
+            so.FindProperty("_seSettings").objectReferenceValue = seVoiceSettings;
+            so.FindProperty("_voiceSettings").objectReferenceValue = seVoiceSettings;
             so.FindProperty("_bgmFieldCueSheet").objectReferenceValue = bgmFieldSheet;
             so.FindProperty("_bgmBattleCueSheet").objectReferenceValue = bgmBattleSheet;
             so.FindProperty("_seCueSheet").objectReferenceValue = seSheet;
@@ -909,8 +935,9 @@ namespace AudioConductor.Samples
                 @"# Audio Conductor Sample
 
 This sample demonstrates AudioConductor v2 features:
-multiple Conductors (BGM / SE / Voice), scene-switching BGM with crossfade,
-ResourcesCueSheetProvider for runtime loading, and CueEnumDefinition for type-safe cue access.
+multiple Conductors (BGM / SE / Voice) with separate Settings,
+crossfade BGM playback, ResourcesCueSheetProvider for runtime loading,
+and CueEnumDefinition for type-safe cue access.
 
 ## How to Use
 
@@ -924,7 +951,8 @@ ResourcesCueSheetProvider for runtime loading, and CueEnumDefinition for type-sa
 ```
 AudioConductorSample/
 ├── AudioConductor.Samples.asmdef
-├── AudioConductorSettings.asset        # Shared settings (BGM / SE / Voice categories)
+├── Settings_BGM.asset                   # BGM-dedicated settings
+├── Settings_SEVoice.asset               # Shared SE + Voice settings
 ├── AudioConductorEditorSettings.asset   # Editor settings (ColorDefine for CueSheet coloring)
 ├── BGM_Field.asset                      # Field BGM CueSheet
 ├── BGM_Battle.asset                     # Battle BGM CueSheet (loop)
@@ -944,8 +972,27 @@ AudioConductorSample/
 
 ### Settings
 
-`AudioConductorSettings.asset` defines three categories (BGM / SE / Voice),
-shared by all three Conductors.
+This sample uses **two separate Settings** to demonstrate both dedicated and shared patterns:
+
+| Settings | Used by | throttleType | managedPoolCapacity | oneShotPoolCapacity | deactivatePooledObjects |
+|----------|---------|-------------|--------------------|--------------------|------------------------|
+| `Settings_BGM.asset` | BGM Conductor | PriorityOrder | 2 | 0 | false |
+| `Settings_SEVoice.asset` | SE + Voice Conductors | FirstComeFirstServed | 1 | 8 | true |
+
+**Key differences:**
+
+- **throttleType**: BGM uses `PriorityOrder` (newer BGM replaces older); SE/Voice uses `FirstComeFirstServed` (first sound wins).
+- **managedPoolCapacity**: BGM needs `2` for crossfade (fade-out + fade-in coexist simultaneously); Voice needs only `1`.
+- **oneShotPoolCapacity**: BGM does not use PlayOneShot (`0`); SE uses PlayOneShot heavily (`8`).
+- **deactivatePooledObjects**: BGM players stay active (`false`); SE/Voice deactivate when idle (`true`).
+- **categoryList**: Each Settings defines its own Category IDs independently.
+
+#### Why managedPoolCapacity = 2 for BGM?
+
+When switching BGM (e.g., Field → Battle), the old BGM fades out while the new BGM fades in.
+During this crossfade period, two managed players must exist simultaneously:
+one for the fade-out track and one for the fade-in track.
+The BGM Category's `throttleLimit = 2` also allows two sounds in the same category.
 
 ### Editor Settings
 
@@ -954,26 +1001,32 @@ shared by all three Conductors.
 
 ### CueSheets
 
-| CueSheet | Role |
-|----------|------|
-| BGM_Field.asset | Field BGM (one-shot or loop) |
-| BGM_Battle.asset | Battle BGM (loop) |
-| SE.asset | Sound effects (random track selection) |
-| Resources/CueSheets/Voice.asset | Voice lines (loaded at runtime via ResourcesCueSheetProvider) |
+| CueSheet | Settings | Category (id) | Role |
+|----------|----------|---------------|------|
+| BGM_Field.asset | Settings_BGM | BGM (0) | Field BGM (one-shot or loop) |
+| BGM_Battle.asset | Settings_BGM | BGM (0) | Battle BGM (loop) |
+| SE.asset | Settings_SEVoice | SE (0) | Sound effects (random track selection) |
+| Resources/CueSheets/Voice.asset | Settings_SEVoice | Voice (1) | Voice lines (loaded at runtime via ResourcesCueSheetProvider) |
+
+> **Note:** Category IDs are scoped to each Settings. SE is `id=0` in Settings_SEVoice,
+> while BGM is also `id=0` in Settings_BGM — they do not conflict.
 
 ### Scene
 
 The scene uses three Conductors:
 
-| Conductor | CueSheet(s) | Registration | Playback |
-|-----------|-------------|--------------|----------|
-| BGM | BGM_Field + BGM_Battle | RegisterCueSheet (both at startup) | PlayFieldBGM / PlayBattleBGM with crossfade, Stop with fade |
-| SE | SE | RegisterCueSheet | PlayOneShot (random track) |
-| Voice | Resources/CueSheets/Voice | RegisterCueSheetAsync (ResourcesCueSheetProvider) | Play / Stop |
+| Conductor | Settings | CueSheet(s) | Registration | Playback |
+|-----------|----------|-------------|--------------|----------|
+| BGM | Settings_BGM | BGM_Field + BGM_Battle | RegisterCueSheet (both at startup) | PlayFieldBGM / PlayBattleBGM with crossfade, Stop with fade |
+| SE | Settings_SEVoice | SE | RegisterCueSheet | PlayOneShot (random track) |
+| Voice | Settings_SEVoice | Resources/CueSheets/Voice | RegisterCueSheetAsync (ResourcesCueSheetProvider) | Play / Stop |
 
 BGM Conductor registers both Field and Battle sheets at startup.
 Calling `PlayFieldBGM()` or `PlayBattleBGM()` fades out the current BGM and fades in the new one,
 demonstrating typical scene-transition audio management.
+
+SE and Voice Conductors share `Settings_SEVoice`, demonstrating how multiple Conductors
+can reference the same Settings when they have compatible requirements.
 
 ## Operation UI (Canvas + UGUI)
 

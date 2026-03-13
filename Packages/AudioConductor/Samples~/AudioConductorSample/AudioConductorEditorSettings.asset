@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: AudioConductorEditorSettings
   m_EditorClassIdentifier: 
   colorDefineList:
-  - id: f51995b4-bd4c-4954-af97-9b1f96abb206
+  - id: b0ce2ea1-e700-403e-9bd9-33b3a3cbb9c2
     name: WIP
     color: {r: 0.9, g: 0.3, b: 0.3, a: 1}
-  - id: 0e68d949-b619-4bd2-9b15-1113ca1baf39
+  - id: c0fee783-8eb8-48b8-bc35-fb1abc82e3cc
     name: InGame
     color: {r: 0.3, g: 0.5, b: 0.9, a: 1}
-  - id: 27ce9051-8bad-4c18-befd-f124dee295eb
+  - id: 4ee4412a-906c-45ec-b35e-be1aa2bf9ae9
     name: Cutscene
     color: {r: 0.3, g: 0.8, b: 0.4, a: 1}
