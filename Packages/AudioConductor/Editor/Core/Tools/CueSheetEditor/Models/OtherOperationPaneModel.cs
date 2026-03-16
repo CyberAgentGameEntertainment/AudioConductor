@@ -46,6 +46,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             "PitchRange",
             "PitchInvert",
             "PlayType",
+            "CueId",
             "TrackCount"
         };
 
@@ -118,6 +119,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     cue.pitchRange,
                     cue.pitchInvert,
                     cue.playType,
+                    cue.cueId,
                     cue.trackList.Count
                 );
 
@@ -215,10 +217,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 // Parameters
                 row = ParseCueSheetParameters(cueSheet, lines, row);
 
+                // Detect v1/v2 format by checking for "CueId" in the CueList header row
+                var headerColumns = lines[row + 2].Split(',');
+                var hasCueId = Array.IndexOf(headerColumns, "CueId") >= 0;
+
                 // Skip header
                 row += 3;
 
-                ParseCueList(cueSheet, lines, row);
+                ParseCueList(cueSheet, lines, row, hasCueId);
+
+                CueIdAssigner.AssignMissingCueIds(cueSheet.cueList);
             }
             catch (Exception e)
             {
@@ -243,9 +251,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             return currentRow;
         }
 
-        private static void ParseCueList(CueSheet cueSheet, IReadOnlyList<string> lines, int currentRow)
+        private static void ParseCueList(CueSheet cueSheet, IReadOnlyList<string> lines, int currentRow,
+            bool hasCueId)
         {
-            var preDelimiterNum = CueListParameters.Length - TrackParameters.Length;
+            var cueParamCount = hasCueId ? CueParameters.Length : CueParameters.Length - 1;
+            var preDelimiterNum = cueParamCount;
+
             for (var row = currentRow; row < lines.Count; ++row)
             {
                 if (string.IsNullOrEmpty(lines[row]))
@@ -268,6 +279,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     pitchInvert = Convert.ToBoolean(cueStrings[columnIndex++]),
                     playType = (CuePlayType)Enum.Parse(typeof(CuePlayType), cueStrings[columnIndex++])
                 };
+
+                if (hasCueId)
+                    cue.cueId = Convert.ToInt32(cueStrings[columnIndex++]);
 
                 var trackCount = Convert.ToInt32(cueStrings[columnIndex]);
 
