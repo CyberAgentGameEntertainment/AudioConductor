@@ -14,9 +14,9 @@ namespace AudioConductor.Samples
 {
     /// <summary>
     ///     Demonstrates AudioConductor v2 features:
-    ///     - Multiple Conductors (BGM, SE, Voice) with separate Settings
+    ///     - Two Conductors (BGM / SEVoice) with separate Settings
     ///     - Settings_BGM: dedicated BGM settings (managedPoolCapacity=2 for crossfade)
-    ///     - Settings_SEVoice: shared SE+Voice settings (different throttle strategy)
+    ///     - Settings_SEVoice: shared SE+Voice settings with CategoryVolume per category
     ///     - Scene-switch BGM demo with crossfade (BGM_Field / BGM_Battle)
     ///     - Direct RegisterCueSheet (BGM, SE)
     ///     - ResourcesCueSheetProvider + RegisterCueSheetAsync (Voice)
@@ -24,14 +24,13 @@ namespace AudioConductor.Samples
     ///     - PlayOneShot (SE)
     ///     - Stop with fade (BGM)
     ///     - Pause / Resume
-    ///     - Master Volume control
+    ///     - MasterVolume (per-Conductor) and CategoryVolume (per-Category)
     ///     - Dispose pattern
     /// </summary>
     public class SampleScene : MonoBehaviour
     {
         [SerializeField] private AudioConductorSettings? _bgmSettings;
-        [SerializeField] private AudioConductorSettings? _seSettings;
-        [SerializeField] private AudioConductorSettings? _voiceSettings;
+        [SerializeField] private AudioConductorSettings? _seVoiceSettings;
 
         [SerializeField] private CueSheetAsset? _bgmFieldCueSheet;
         [SerializeField] private CueSheetAsset? _bgmBattleCueSheet;
@@ -41,12 +40,19 @@ namespace AudioConductor.Samples
         [SerializeField] private Text? _bgmStatusText;
         [SerializeField] private Text? _bgmCurrentText;
         [SerializeField] private Text? _voiceStatusText;
-        [SerializeField] private Slider? _masterVolumeSlider;
-        [SerializeField] private Text? _volumeValueText;
+        [SerializeField] private Slider? _bgmMasterVolumeSlider;
+        [SerializeField] private Text? _bgmMasterVolumeValueText;
+        [SerializeField] private Slider? _bgmCategoryVolumeSlider;
+        [SerializeField] private Text? _bgmCategoryVolumeValueText;
+        [SerializeField] private Slider? _seVolumeSlider;
+        [SerializeField] private Text? _seVolumeValueText;
+        [SerializeField] private Slider? _voiceVolumeSlider;
+        [SerializeField] private Text? _voiceVolumeValueText;
+        [SerializeField] private Slider? _seVoiceMasterVolumeSlider;
+        [SerializeField] private Text? _seVoiceMasterVolumeValueText;
 
         private Conductor? _bgmConductor;
-        private Conductor? _seConductor;
-        private Conductor? _voiceConductor;
+        private Conductor? _seVoiceConductor;
 
         private CueSheetHandle _bgmFieldSheetHandle;
         private CueSheetHandle _bgmBattleSheetHandle;
@@ -62,7 +68,7 @@ namespace AudioConductor.Samples
 
         private async void Start()
         {
-            if (_bgmSettings == null || _seSettings == null || _voiceSettings == null) return;
+            if (_bgmSettings == null || _seVoiceSettings == null) return;
             if (_bgmFieldCueSheet == null || _bgmBattleCueSheet == null || _seCueSheet == null) return;
 
             // BGM Conductor: registers both Field and Battle sheets for scene-switching
@@ -70,17 +76,22 @@ namespace AudioConductor.Samples
             _bgmFieldSheetHandle = _bgmConductor.RegisterCueSheet(_bgmFieldCueSheet);
             _bgmBattleSheetHandle = _bgmConductor.RegisterCueSheet(_bgmBattleCueSheet);
 
-            // SE Conductor: direct RegisterCueSheet
-            _seConductor = new Conductor(_seSettings);
-            _seSheetHandle = _seConductor.RegisterCueSheet(_seCueSheet);
-
-            // Voice Conductor: ResourcesCueSheetProvider + RegisterCueSheetAsync
+            // SEVoice Conductor: SE (direct) + Voice (ResourcesCueSheetProvider)
             var provider = new ResourcesCueSheetProvider();
-            _voiceConductor = new Conductor(_voiceSettings, provider);
-            _voiceSheetHandle = await _voiceConductor.RegisterCueSheetAsync("CueSheets/Voice");
+            _seVoiceConductor = new Conductor(_seVoiceSettings, provider);
+            _seSheetHandle = _seVoiceConductor.RegisterCueSheet(_seCueSheet);
+            _voiceSheetHandle = await _seVoiceConductor.RegisterCueSheetAsync("CueSheets/Voice");
 
-            if (_masterVolumeSlider != null)
-                _masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
+            if (_bgmMasterVolumeSlider != null)
+                _bgmMasterVolumeSlider.onValueChanged.AddListener(OnBgmMasterVolumeChanged);
+            if (_bgmCategoryVolumeSlider != null)
+                _bgmCategoryVolumeSlider.onValueChanged.AddListener(OnBgmCategoryVolumeChanged);
+            if (_seVolumeSlider != null)
+                _seVolumeSlider.onValueChanged.AddListener(OnSeVolumeChanged);
+            if (_voiceVolumeSlider != null)
+                _voiceVolumeSlider.onValueChanged.AddListener(OnVoiceVolumeChanged);
+            if (_seVoiceMasterVolumeSlider != null)
+                _seVoiceMasterVolumeSlider.onValueChanged.AddListener(OnSeVoiceMasterVolumeChanged);
         }
 
         private void Update()
@@ -96,8 +107,7 @@ namespace AudioConductor.Samples
         private void OnDestroy()
         {
             _bgmConductor?.Dispose();
-            _seConductor?.Dispose();
-            _voiceConductor?.Dispose();
+            _seVoiceConductor?.Dispose();
         }
 
         /// <summary>
@@ -154,7 +164,7 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PlaySE()
         {
-            _seConductor?.PlayOneShot(_seSheetHandle, "SE");
+            _seVoiceConductor?.PlayOneShot(_seSheetHandle, "SE");
         }
 
         /// <summary>
@@ -162,8 +172,8 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PlayVoice()
         {
-            if (_voiceConductor == null) return;
-            _voicePlayback = _voiceConductor.Play(_voiceSheetHandle, "Voice");
+            if (_seVoiceConductor == null) return;
+            _voicePlayback = _seVoiceConductor.Play(_voiceSheetHandle, "Voice");
             _voicePaused = false;
         }
 
@@ -172,11 +182,11 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PauseResumeVoice()
         {
-            if (_voiceConductor == null) return;
+            if (_seVoiceConductor == null) return;
             if (_voicePaused)
-                _voiceConductor.Resume(_voicePlayback);
+                _seVoiceConductor.Resume(_voicePlayback);
             else
-                _voiceConductor.Pause(_voicePlayback);
+                _seVoiceConductor.Pause(_voicePlayback);
             _voicePaused = !_voicePaused;
         }
 
@@ -185,17 +195,43 @@ namespace AudioConductor.Samples
         /// </summary>
         public void StopVoice()
         {
-            _voiceConductor?.Stop(_voicePlayback);
+            _seVoiceConductor?.Stop(_voicePlayback);
             _voicePaused = false;
         }
 
-        private void OnMasterVolumeChanged(float volume)
+        private void OnBgmMasterVolumeChanged(float volume)
         {
             _bgmConductor?.SetMasterVolume(volume);
-            _seConductor?.SetMasterVolume(volume);
-            _voiceConductor?.SetMasterVolume(volume);
-            if (_volumeValueText != null)
-                _volumeValueText.text = volume.ToString("F2");
+            if (_bgmMasterVolumeValueText != null)
+                _bgmMasterVolumeValueText.text = volume.ToString("F2");
+        }
+
+        private void OnBgmCategoryVolumeChanged(float volume)
+        {
+            _bgmConductor?.SetCategoryVolume(0, volume);
+            if (_bgmCategoryVolumeValueText != null)
+                _bgmCategoryVolumeValueText.text = volume.ToString("F2");
+        }
+
+        private void OnSeVolumeChanged(float volume)
+        {
+            _seVoiceConductor?.SetCategoryVolume(0, volume);
+            if (_seVolumeValueText != null)
+                _seVolumeValueText.text = volume.ToString("F2");
+        }
+
+        private void OnVoiceVolumeChanged(float volume)
+        {
+            _seVoiceConductor?.SetCategoryVolume(1, volume);
+            if (_voiceVolumeValueText != null)
+                _voiceVolumeValueText.text = volume.ToString("F2");
+        }
+
+        private void OnSeVoiceMasterVolumeChanged(float volume)
+        {
+            _seVoiceConductor?.SetMasterVolume(volume);
+            if (_seVoiceMasterVolumeValueText != null)
+                _seVoiceMasterVolumeValueText.text = volume.ToString("F2");
         }
 
         private string GetBgmStatus()
@@ -209,7 +245,7 @@ namespace AudioConductor.Samples
         private string GetVoiceStatus()
         {
             if (_voicePaused) return "Paused";
-            if (_voiceConductor != null && _voiceConductor.IsPlaying(_voicePlayback)) return "Playing";
+            if (_seVoiceConductor != null && _seVoiceConductor.IsPlaying(_voicePlayback)) return "Playing";
             return "---";
         }
     }

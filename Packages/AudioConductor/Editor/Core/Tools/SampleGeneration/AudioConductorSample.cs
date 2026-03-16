@@ -473,9 +473,9 @@ namespace AudioConductor.Samples
 {{
     /// <summary>
     ///     Demonstrates AudioConductor v2 features:
-    ///     - Multiple Conductors (BGM, SE, Voice) with separate Settings
+    ///     - Two Conductors (BGM / SEVoice) with separate Settings
     ///     - Settings_BGM: dedicated BGM settings (managedPoolCapacity=2 for crossfade)
-    ///     - Settings_SEVoice: shared SE+Voice settings (different throttle strategy)
+    ///     - Settings_SEVoice: shared SE+Voice settings with CategoryVolume per category
     ///     - Scene-switch BGM demo with crossfade (BGM_Field / BGM_Battle)
     ///     - Direct RegisterCueSheet (BGM, SE)
     ///     - ResourcesCueSheetProvider + RegisterCueSheetAsync (Voice)
@@ -483,14 +483,13 @@ namespace AudioConductor.Samples
     ///     - PlayOneShot (SE)
     ///     - Stop with fade (BGM)
     ///     - Pause / Resume
-    ///     - Master Volume control
+    ///     - MasterVolume (per-Conductor) and CategoryVolume (per-Category)
     ///     - Dispose pattern
     /// </summary>
     public class SampleScene : MonoBehaviour
     {{
         [SerializeField] private AudioConductorSettings? _bgmSettings;
-        [SerializeField] private AudioConductorSettings? _seSettings;
-        [SerializeField] private AudioConductorSettings? _voiceSettings;
+        [SerializeField] private AudioConductorSettings? _seVoiceSettings;
 
         [SerializeField] private CueSheetAsset? _bgmFieldCueSheet;
         [SerializeField] private CueSheetAsset? _bgmBattleCueSheet;
@@ -500,12 +499,19 @@ namespace AudioConductor.Samples
         [SerializeField] private Text? _bgmStatusText;
         [SerializeField] private Text? _bgmCurrentText;
         [SerializeField] private Text? _voiceStatusText;
-        [SerializeField] private Slider? _masterVolumeSlider;
-        [SerializeField] private Text? _volumeValueText;
+        [SerializeField] private Slider? _bgmMasterVolumeSlider;
+        [SerializeField] private Text? _bgmMasterVolumeValueText;
+        [SerializeField] private Slider? _bgmCategoryVolumeSlider;
+        [SerializeField] private Text? _bgmCategoryVolumeValueText;
+        [SerializeField] private Slider? _seVolumeSlider;
+        [SerializeField] private Text? _seVolumeValueText;
+        [SerializeField] private Slider? _voiceVolumeSlider;
+        [SerializeField] private Text? _voiceVolumeValueText;
+        [SerializeField] private Slider? _seVoiceMasterVolumeSlider;
+        [SerializeField] private Text? _seVoiceMasterVolumeValueText;
 
         private Conductor? _bgmConductor;
-        private Conductor? _seConductor;
-        private Conductor? _voiceConductor;
+        private Conductor? _seVoiceConductor;
 
         private CueSheetHandle _bgmFieldSheetHandle;
         private CueSheetHandle _bgmBattleSheetHandle;
@@ -521,7 +527,7 @@ namespace AudioConductor.Samples
 
         private async void Start()
         {{
-            if (_bgmSettings == null || _seSettings == null || _voiceSettings == null) return;
+            if (_bgmSettings == null || _seVoiceSettings == null) return;
             if (_bgmFieldCueSheet == null || _bgmBattleCueSheet == null || _seCueSheet == null) return;
 
             // BGM Conductor: registers both Field and Battle sheets for scene-switching
@@ -529,17 +535,22 @@ namespace AudioConductor.Samples
             _bgmFieldSheetHandle = _bgmConductor.RegisterCueSheet(_bgmFieldCueSheet);
             _bgmBattleSheetHandle = _bgmConductor.RegisterCueSheet(_bgmBattleCueSheet);
 
-            // SE Conductor: direct RegisterCueSheet
-            _seConductor = new Conductor(_seSettings);
-            _seSheetHandle = _seConductor.RegisterCueSheet(_seCueSheet);
-
-            // Voice Conductor: ResourcesCueSheetProvider + RegisterCueSheetAsync
+            // SEVoice Conductor: SE (direct) + Voice (ResourcesCueSheetProvider)
             var provider = new ResourcesCueSheetProvider();
-            _voiceConductor = new Conductor(_voiceSettings, provider);
-            _voiceSheetHandle = await _voiceConductor.RegisterCueSheetAsync(""{VoiceResourcesPath}"");
+            _seVoiceConductor = new Conductor(_seVoiceSettings, provider);
+            _seSheetHandle = _seVoiceConductor.RegisterCueSheet(_seCueSheet);
+            _voiceSheetHandle = await _seVoiceConductor.RegisterCueSheetAsync(""{VoiceResourcesPath}"");
 
-            if (_masterVolumeSlider != null)
-                _masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
+            if (_bgmMasterVolumeSlider != null)
+                _bgmMasterVolumeSlider.onValueChanged.AddListener(OnBgmMasterVolumeChanged);
+            if (_bgmCategoryVolumeSlider != null)
+                _bgmCategoryVolumeSlider.onValueChanged.AddListener(OnBgmCategoryVolumeChanged);
+            if (_seVolumeSlider != null)
+                _seVolumeSlider.onValueChanged.AddListener(OnSeVolumeChanged);
+            if (_voiceVolumeSlider != null)
+                _voiceVolumeSlider.onValueChanged.AddListener(OnVoiceVolumeChanged);
+            if (_seVoiceMasterVolumeSlider != null)
+                _seVoiceMasterVolumeSlider.onValueChanged.AddListener(OnSeVoiceMasterVolumeChanged);
         }}
 
         private void Update()
@@ -555,8 +566,7 @@ namespace AudioConductor.Samples
         private void OnDestroy()
         {{
             _bgmConductor?.Dispose();
-            _seConductor?.Dispose();
-            _voiceConductor?.Dispose();
+            _seVoiceConductor?.Dispose();
         }}
 
         /// <summary>
@@ -613,7 +623,7 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PlaySE()
         {{
-            _seConductor?.PlayOneShot(_seSheetHandle, ""SE"");
+            _seVoiceConductor?.PlayOneShot(_seSheetHandle, ""SE"");
         }}
 
         /// <summary>
@@ -621,8 +631,8 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PlayVoice()
         {{
-            if (_voiceConductor == null) return;
-            _voicePlayback = _voiceConductor.Play(_voiceSheetHandle, ""Voice"");
+            if (_seVoiceConductor == null) return;
+            _voicePlayback = _seVoiceConductor.Play(_voiceSheetHandle, ""Voice"");
             _voicePaused = false;
         }}
 
@@ -631,11 +641,11 @@ namespace AudioConductor.Samples
         /// </summary>
         public void PauseResumeVoice()
         {{
-            if (_voiceConductor == null) return;
+            if (_seVoiceConductor == null) return;
             if (_voicePaused)
-                _voiceConductor.Resume(_voicePlayback);
+                _seVoiceConductor.Resume(_voicePlayback);
             else
-                _voiceConductor.Pause(_voicePlayback);
+                _seVoiceConductor.Pause(_voicePlayback);
             _voicePaused = !_voicePaused;
         }}
 
@@ -644,17 +654,43 @@ namespace AudioConductor.Samples
         /// </summary>
         public void StopVoice()
         {{
-            _voiceConductor?.Stop(_voicePlayback);
+            _seVoiceConductor?.Stop(_voicePlayback);
             _voicePaused = false;
         }}
 
-        private void OnMasterVolumeChanged(float volume)
+        private void OnBgmMasterVolumeChanged(float volume)
         {{
             _bgmConductor?.SetMasterVolume(volume);
-            _seConductor?.SetMasterVolume(volume);
-            _voiceConductor?.SetMasterVolume(volume);
-            if (_volumeValueText != null)
-                _volumeValueText.text = volume.ToString(""F2"");
+            if (_bgmMasterVolumeValueText != null)
+                _bgmMasterVolumeValueText.text = volume.ToString(""F2"");
+        }}
+
+        private void OnBgmCategoryVolumeChanged(float volume)
+        {{
+            _bgmConductor?.SetCategoryVolume(0, volume);
+            if (_bgmCategoryVolumeValueText != null)
+                _bgmCategoryVolumeValueText.text = volume.ToString(""F2"");
+        }}
+
+        private void OnSeVolumeChanged(float volume)
+        {{
+            _seVoiceConductor?.SetCategoryVolume(0, volume);
+            if (_seVolumeValueText != null)
+                _seVolumeValueText.text = volume.ToString(""F2"");
+        }}
+
+        private void OnVoiceVolumeChanged(float volume)
+        {{
+            _seVoiceConductor?.SetCategoryVolume(1, volume);
+            if (_voiceVolumeValueText != null)
+                _voiceVolumeValueText.text = volume.ToString(""F2"");
+        }}
+
+        private void OnSeVoiceMasterVolumeChanged(float volume)
+        {{
+            _seVoiceConductor?.SetMasterVolume(volume);
+            if (_seVoiceMasterVolumeValueText != null)
+                _seVoiceMasterVolumeValueText.text = volume.ToString(""F2"");
         }}
 
         private string GetBgmStatus()
@@ -668,7 +704,7 @@ namespace AudioConductor.Samples
         private string GetVoiceStatus()
         {{
             if (_voicePaused) return ""Paused"";
-            if (_voiceConductor != null && _voiceConductor.IsPlaying(_voicePlayback)) return ""Playing"";
+            if (_seVoiceConductor != null && _seVoiceConductor.IsPlaying(_voicePlayback)) return ""Playing"";
             return ""---"";
         }}
     }}
@@ -761,52 +797,65 @@ namespace AudioConductor.Samples
                 TextAnchor.MiddleLeft, 30);
             var bgmCurrentText = CreateUIText(bgmPanel.transform, "BGMCurrent", "Current: ---", 20, FontStyle.Normal,
                 TextAnchor.MiddleLeft, 30);
+            var (bgmMasterVolumeSlider, bgmMasterVolumeValueText) =
+                CreateVolumeSlider(bgmPanel.transform, "BgmMasterVolume", "Master Volume:");
+            var (bgmCategoryVolumeSlider, bgmCategoryVolumeValueText) =
+                CreateVolumeSlider(bgmPanel.transform, "BgmCategoryVolume", "Category Volume:");
 
-            // --- SE Column ---
-            var sePanel = CreateColumnPanel(columnsPanel.transform, "SEPanel");
-            CreateUIText(sePanel.transform, "SETitle", "SE Conductor", 26, FontStyle.Bold, TextAnchor.MiddleCenter, 40);
+            // --- SE & Voice Column ---
+            var seVoicePanel = CreateColumnPanel(columnsPanel.transform, "SEVoicePanel");
+            CreateUIText(seVoicePanel.transform, "SEVoiceTitle", "SE & Voice Conductor", 26, FontStyle.Bold,
+                TextAnchor.MiddleCenter, 40);
+            var (seVoiceMasterVolumeSlider, seVoiceMasterVolumeValueText) =
+                CreateVolumeSlider(seVoicePanel.transform, "SeVoiceMasterVolume", "Master Volume:",
+                    stackLabel: true);
+
+            // SE / Voice sub-columns
+            var subColumns = CreateUIPanel(seVoicePanel.transform, "SubColumns");
+            var subColumnsLayout = subColumns.AddComponent<HorizontalLayoutGroup>();
+            subColumnsLayout.childControlWidth = true;
+            subColumnsLayout.childControlHeight = true;
+            subColumnsLayout.childForceExpandWidth = true;
+            subColumnsLayout.childForceExpandHeight = false;
+            subColumnsLayout.spacing = 12;
+            var subColumnsLe = subColumns.AddComponent<LayoutElement>();
+            subColumnsLe.flexibleHeight = 1;
+
+            // SE sub-panel
+            var sePanel = CreateUIPanel(subColumns.transform, "SEPanel");
+            var seLayout = sePanel.AddComponent<VerticalLayoutGroup>();
+            seLayout.childControlWidth = true;
+            seLayout.childControlHeight = true;
+            seLayout.childForceExpandWidth = true;
+            seLayout.childForceExpandHeight = false;
+            seLayout.spacing = 8;
+            sePanel.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            CreateUIText(sePanel.transform, "SETitle", "SE", 22, FontStyle.Bold, TextAnchor.MiddleCenter, 30);
             var btnPlaySe = CreateUIButton(sePanel.transform, "PlaySEBtn", "Play SE", 22);
             CreateUIText(sePanel.transform, "SEInfo", "(Random / OneShot)", 20, FontStyle.Italic,
                 TextAnchor.MiddleCenter, 30);
+            var (seVolumeSlider, seVolumeValueText) =
+                CreateVolumeSlider(sePanel.transform, "SeVolume", "Category Volume:");
 
-            // --- Voice Column ---
-            var voicePanel = CreateColumnPanel(columnsPanel.transform, "VoicePanel");
-            CreateUIText(voicePanel.transform, "VoiceTitle", "Voice Conductor", 26, FontStyle.Bold,
-                TextAnchor.MiddleCenter, 40);
+            // Voice sub-panel
+            var voicePanel = CreateUIPanel(subColumns.transform, "VoicePanel");
+            var voiceLayout = voicePanel.AddComponent<VerticalLayoutGroup>();
+            voiceLayout.childControlWidth = true;
+            voiceLayout.childControlHeight = true;
+            voiceLayout.childForceExpandWidth = true;
+            voiceLayout.childForceExpandHeight = false;
+            voiceLayout.spacing = 8;
+            voicePanel.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            CreateUIText(voicePanel.transform, "VoiceTitle", "Voice", 22, FontStyle.Bold, TextAnchor.MiddleCenter, 30);
             var btnPlayVoice = CreateUIButton(voicePanel.transform, "PlayVoiceBtn", "Play Voice", 22);
             var btnPauseVoice = CreateUIButton(voicePanel.transform, "PauseResumeVoiceBtn", "Pause / Resume", 22);
             var btnStopVoice = CreateUIButton(voicePanel.transform, "StopVoiceBtn", "Stop", 22);
             var voiceStatusText = CreateUIText(voicePanel.transform, "VoiceStatus", "Status: ---", 20, FontStyle.Normal,
                 TextAnchor.MiddleLeft, 30);
-
-            // --- Volume panel ---
-            var volumePanel = CreateUIPanel(mainPanel.transform, "VolumePanel");
-            var volumeLayout = volumePanel.AddComponent<HorizontalLayoutGroup>();
-            volumeLayout.childControlWidth = false;
-            volumeLayout.childControlHeight = true;
-            volumeLayout.childForceExpandWidth = false;
-            volumeLayout.childForceExpandHeight = false;
-            volumeLayout.spacing = 16;
-            volumeLayout.padding = new RectOffset(10, 10, 5, 5);
-            var volumePanelLe = volumePanel.AddComponent<LayoutElement>();
-            volumePanelLe.preferredHeight = 50;
-
-            var volumeLabel = CreateUIText(volumePanel.transform, "VolumeLabel", "Master Volume:", 22, FontStyle.Normal,
-                TextAnchor.MiddleLeft, 0);
-            volumeLabel.AddComponent<LayoutElement>().preferredWidth = 220;
-
-            var sliderGo = DefaultControls.CreateSlider(new DefaultControls.Resources());
-            sliderGo.name = "VolumeSlider";
-            sliderGo.transform.SetParent(volumePanel.transform, false);
-            var slider = sliderGo.GetComponent<Slider>();
-            slider.value = 1f;
-            var sliderLe = sliderGo.AddComponent<LayoutElement>();
-            sliderLe.flexibleWidth = 1;
-            sliderLe.preferredWidth = 400;
-
-            var volumeValueText = CreateUIText(volumePanel.transform, "VolumeValue", "1.00", 22, FontStyle.Normal,
-                TextAnchor.MiddleLeft, 0);
-            volumeValueText.AddComponent<LayoutElement>().preferredWidth = 80;
+            var (voiceVolumeSlider, voiceVolumeValueText) =
+                CreateVolumeSlider(voicePanel.transform, "VoiceVolume", "Category Volume:");
 
             // --- Wire button onClick persistent listeners ---
             WireButtonOnClick(btnPlayField, component, sampleSceneType, "PlayFieldBGM");
@@ -822,8 +871,7 @@ namespace AudioConductor.Samples
             var so = new SerializedObject(component);
 
             so.FindProperty("_bgmSettings").objectReferenceValue = bgmSettings;
-            so.FindProperty("_seSettings").objectReferenceValue = seVoiceSettings;
-            so.FindProperty("_voiceSettings").objectReferenceValue = seVoiceSettings;
+            so.FindProperty("_seVoiceSettings").objectReferenceValue = seVoiceSettings;
             so.FindProperty("_bgmFieldCueSheet").objectReferenceValue = bgmFieldSheet;
             so.FindProperty("_bgmBattleCueSheet").objectReferenceValue = bgmBattleSheet;
             so.FindProperty("_seCueSheet").objectReferenceValue = seSheet;
@@ -831,8 +879,16 @@ namespace AudioConductor.Samples
             so.FindProperty("_bgmStatusText").objectReferenceValue = bgmStatusText.GetComponent<Text>();
             so.FindProperty("_bgmCurrentText").objectReferenceValue = bgmCurrentText.GetComponent<Text>();
             so.FindProperty("_voiceStatusText").objectReferenceValue = voiceStatusText.GetComponent<Text>();
-            so.FindProperty("_masterVolumeSlider").objectReferenceValue = slider;
-            so.FindProperty("_volumeValueText").objectReferenceValue = volumeValueText.GetComponent<Text>();
+            so.FindProperty("_bgmMasterVolumeSlider").objectReferenceValue = bgmMasterVolumeSlider;
+            so.FindProperty("_bgmMasterVolumeValueText").objectReferenceValue = bgmMasterVolumeValueText;
+            so.FindProperty("_bgmCategoryVolumeSlider").objectReferenceValue = bgmCategoryVolumeSlider;
+            so.FindProperty("_bgmCategoryVolumeValueText").objectReferenceValue = bgmCategoryVolumeValueText;
+            so.FindProperty("_seVolumeSlider").objectReferenceValue = seVolumeSlider;
+            so.FindProperty("_seVolumeValueText").objectReferenceValue = seVolumeValueText;
+            so.FindProperty("_voiceVolumeSlider").objectReferenceValue = voiceVolumeSlider;
+            so.FindProperty("_voiceVolumeValueText").objectReferenceValue = voiceVolumeValueText;
+            so.FindProperty("_seVoiceMasterVolumeSlider").objectReferenceValue = seVoiceMasterVolumeSlider;
+            so.FindProperty("_seVoiceMasterVolumeValueText").objectReferenceValue = seVoiceMasterVolumeValueText;
 
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -916,6 +972,107 @@ namespace AudioConductor.Samples
             return buttonGo;
         }
 
+        private static (Slider slider, Text valueText) CreateVolumeSlider(
+            Transform parent,
+            string name,
+            string label,
+            float labelWidth = 160f,
+            bool stackLabel = false)
+        {
+            Transform sliderParent;
+            if (stackLabel)
+            {
+                // Label above, slider row below — keeps label centered over the full width
+                var outerPanel = CreateUIPanel(parent, name);
+                var outerLayout = outerPanel.AddComponent<VerticalLayoutGroup>();
+                outerLayout.childControlWidth = true;
+                outerLayout.childControlHeight = true;
+                outerLayout.childForceExpandWidth = true;
+                outerLayout.childForceExpandHeight = false;
+                outerLayout.spacing = 4;
+                var outerLe = outerPanel.AddComponent<LayoutElement>();
+                outerLe.preferredHeight = 60;
+                outerLe.flexibleHeight = 0;
+
+                CreateUIText(outerPanel.transform, name + "Label", label, 18, FontStyle.Normal,
+                    TextAnchor.MiddleCenter, 24);
+
+                var row = CreateUIPanel(outerPanel.transform, name + "Row");
+                var rowLayout = row.AddComponent<HorizontalLayoutGroup>();
+                rowLayout.childControlWidth = true;
+                rowLayout.childControlHeight = false;
+                rowLayout.childForceExpandWidth = false;
+                rowLayout.childForceExpandHeight = false;
+                rowLayout.spacing = 8;
+                rowLayout.padding = new RectOffset(4, 4, 0, 0);
+                var rowLe = row.AddComponent<LayoutElement>();
+                rowLe.preferredHeight = 30;
+                rowLe.flexibleHeight = 0;
+
+                sliderParent = row.transform;
+            }
+            else
+            {
+                // Label and slider in one row
+                var panel = CreateUIPanel(parent, name);
+                var layout = panel.AddComponent<HorizontalLayoutGroup>();
+                layout.childControlWidth = true;
+                layout.childControlHeight = false;
+                layout.childForceExpandWidth = false;
+                layout.childForceExpandHeight = false;
+                layout.spacing = 8;
+                layout.padding = new RectOffset(4, 4, 2, 2);
+                var panelLe = panel.AddComponent<LayoutElement>();
+                panelLe.preferredHeight = 40;
+                panelLe.flexibleHeight = 0;
+
+                var labelGo = CreateUIText(panel.transform, name + "Label", label, 18, FontStyle.Normal,
+                    TextAnchor.MiddleLeft, 0);
+                labelGo.AddComponent<LayoutElement>().preferredWidth = labelWidth;
+
+                sliderParent = panel.transform;
+            }
+
+            var sliderGo = DefaultControls.CreateSlider(new DefaultControls.Resources());
+            sliderGo.name = name + "Slider";
+            sliderGo.transform.SetParent(sliderParent, false);
+            var slider = sliderGo.GetComponent<Slider>();
+            slider.value = 1f;
+
+            // Slider visibility: DefaultControls creates Sliced images that render nothing without a sprite.
+            // Switch to Simple type and apply colors.
+            var bgImage = sliderGo.transform.Find("Background")?.GetComponent<Image>();
+            if (bgImage != null)
+            {
+                bgImage.type = Image.Type.Simple;
+                bgImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            }
+
+            var fillImage = sliderGo.transform.Find("Fill Area/Fill")?.GetComponent<Image>();
+            if (fillImage != null)
+            {
+                fillImage.type = Image.Type.Simple;
+                fillImage.color = new Color(0.3f, 0.7f, 1.0f, 1f);
+            }
+
+            var handleImage = sliderGo.transform.Find("Handle Slide Area/Handle")?.GetComponent<Image>();
+            if (handleImage != null)
+            {
+                handleImage.type = Image.Type.Simple;
+                handleImage.color = Color.white;
+            }
+
+            var sliderLe = sliderGo.AddComponent<LayoutElement>();
+            sliderLe.flexibleWidth = 1;
+            sliderLe.preferredWidth = 200;
+
+            var valueGo = CreateUIText(sliderParent, name + "Value", "1.00", 18, FontStyle.Normal,
+                TextAnchor.MiddleLeft, 0);
+            valueGo.AddComponent<LayoutElement>().preferredWidth = 50;
+
+            return (slider, valueGo.GetComponent<Text>());
+        }
+
         private static void WireButtonOnClick(GameObject buttonGo, MonoBehaviour target, Type targetType,
             string methodName)
         {
@@ -935,8 +1092,9 @@ namespace AudioConductor.Samples
                 @"# Audio Conductor Sample
 
 This sample demonstrates AudioConductor v2 features:
-multiple Conductors (BGM / SE / Voice) with separate Settings,
-crossfade BGM playback, ResourcesCueSheetProvider for runtime loading,
+two Conductors (BGM / SEVoice) with separate Settings,
+MasterVolume and CategoryVolume control, crossfade BGM playback,
+ResourcesCueSheetProvider for runtime loading,
 and CueEnumDefinition for type-safe cue access.
 
 ## How to Use
@@ -977,7 +1135,7 @@ This sample uses **two separate Settings** to demonstrate both dedicated and sha
 | Settings | Used by | throttleType | managedPoolCapacity | oneShotPoolCapacity | deactivatePooledObjects |
 |----------|---------|-------------|--------------------|--------------------|------------------------|
 | `Settings_BGM.asset` | BGM Conductor | PriorityOrder | 2 | 0 | false |
-| `Settings_SEVoice.asset` | SE + Voice Conductors | FirstComeFirstServed | 1 | 8 | true |
+| `Settings_SEVoice.asset` | SEVoice Conductor | FirstComeFirstServed | 1 | 8 | true |
 
 **Key differences:**
 
@@ -1013,35 +1171,35 @@ The BGM Category's `throttleLimit = 2` also allows two sounds in the same catego
 
 ### Scene
 
-The scene uses three Conductors:
+The scene uses two Conductors:
 
 | Conductor | Settings | CueSheet(s) | Registration | Playback |
 |-----------|----------|-------------|--------------|----------|
 | BGM | Settings_BGM | BGM_Field + BGM_Battle | RegisterCueSheet (both at startup) | PlayFieldBGM / PlayBattleBGM with crossfade, Stop with fade |
-| SE | Settings_SEVoice | SE | RegisterCueSheet | PlayOneShot (random track) |
-| Voice | Settings_SEVoice | Resources/CueSheets/Voice | RegisterCueSheetAsync (ResourcesCueSheetProvider) | Play / Stop |
+| SEVoice | Settings_SEVoice | SE + Resources/CueSheets/Voice | RegisterCueSheet (SE) + RegisterCueSheetAsync (Voice) | PlayOneShot (SE), Play / Stop (Voice) |
 
 BGM Conductor registers both Field and Battle sheets at startup.
 Calling `PlayFieldBGM()` or `PlayBattleBGM()` fades out the current BGM and fades in the new one,
 demonstrating typical scene-transition audio management.
 
-SE and Voice Conductors share `Settings_SEVoice`, demonstrating how multiple Conductors
-can reference the same Settings when they have compatible requirements.
+SEVoice Conductor handles both SE and Voice in a single Conductor,
+demonstrating MasterVolume (affects all sounds) and CategoryVolume (affects only SE or Voice).
 
 ## Operation UI (Canvas + UGUI)
 
 The scene includes a Canvas-based control panel (auto-scaled via CanvasScaler).
 Enter Play Mode to interact with it in the Game view:
 
-| Section | Controls |
-|---------|----------|
-| **BGM Conductor** | Play Field BGM / Play Battle BGM / Pause-Resume / Stop (Fade) |
-| **SE Conductor** | Play SE (Random / OneShot) |
-| **Voice Conductor** | Play Voice / Pause-Resume / Stop |
-| **Master Volume** | Slider (0.0 – 1.0) applied to all Conductors |
+| Section | Controls | Volume API |
+|---------|----------|-----------|
+| **BGM Conductor** | Play Field BGM / Play Battle BGM / Pause-Resume / Stop (Fade) | Master Volume → `SetMasterVolume()`, Category Volume → `SetCategoryVolume(0, volume)` |
+| **SE & Voice Conductor** | (contains SE and Voice sub-panels) | Master Volume → `SetMasterVolume()` |
+| SE | Play SE (Random / OneShot) | Category Volume → `SetCategoryVolume(0, volume)` |
+| Voice | Play Voice / Pause-Resume / Stop | Category Volume → `SetCategoryVolume(1, volume)` |
 
 - BGM and Voice sections show real-time playback status (Playing / Paused / ---).
-- Master Volume slider calls `SetMasterVolume()` on all three Conductors simultaneously.
+- Each Conductor has both MasterVolume and CategoryVolume sliders, demonstrating the difference.
+- SE and Voice share a single Conductor; individual volume is controlled via `SetCategoryVolume()`.
 - UI scales automatically to any screen resolution via `CanvasScaler (Scale With Screen Size)`.
 ";
 

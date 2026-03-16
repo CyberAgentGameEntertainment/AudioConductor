@@ -1,8 +1,9 @@
 # Audio Conductor Sample
 
 This sample demonstrates AudioConductor v2 features:
-multiple Conductors (BGM / SE / Voice) with separate Settings,
-crossfade BGM playback, ResourcesCueSheetProvider for runtime loading,
+two Conductors (BGM / SEVoice) with separate Settings,
+MasterVolume and CategoryVolume control, crossfade BGM playback,
+ResourcesCueSheetProvider for runtime loading,
 and CueEnumDefinition for type-safe cue access.
 
 ## How to Use
@@ -43,7 +44,7 @@ This sample uses **two separate Settings** to demonstrate both dedicated and sha
 | Settings | Used by | throttleType | managedPoolCapacity | oneShotPoolCapacity | deactivatePooledObjects |
 |----------|---------|-------------|--------------------|--------------------|------------------------|
 | `Settings_BGM.asset` | BGM Conductor | PriorityOrder | 2 | 0 | false |
-| `Settings_SEVoice.asset` | SE + Voice Conductors | FirstComeFirstServed | 1 | 8 | true |
+| `Settings_SEVoice.asset` | SEVoice Conductor | FirstComeFirstServed | 1 | 8 | true |
 
 **Key differences:**
 
@@ -79,33 +80,33 @@ The BGM Category's `throttleLimit = 2` also allows two sounds in the same catego
 
 ### Scene
 
-The scene uses three Conductors:
+The scene uses two Conductors:
 
 | Conductor | Settings | CueSheet(s) | Registration | Playback |
 |-----------|----------|-------------|--------------|----------|
 | BGM | Settings_BGM | BGM_Field + BGM_Battle | RegisterCueSheet (both at startup) | PlayFieldBGM / PlayBattleBGM with crossfade, Stop with fade |
-| SE | Settings_SEVoice | SE | RegisterCueSheet | PlayOneShot (random track) |
-| Voice | Settings_SEVoice | Resources/CueSheets/Voice | RegisterCueSheetAsync (ResourcesCueSheetProvider) | Play / Stop |
+| SEVoice | Settings_SEVoice | SE + Resources/CueSheets/Voice | RegisterCueSheet (SE) + RegisterCueSheetAsync (Voice) | PlayOneShot (SE), Play / Stop (Voice) |
 
 BGM Conductor registers both Field and Battle sheets at startup.
 Calling `PlayFieldBGM()` or `PlayBattleBGM()` fades out the current BGM and fades in the new one,
 demonstrating typical scene-transition audio management.
 
-SE and Voice Conductors share `Settings_SEVoice`, demonstrating how multiple Conductors
-can reference the same Settings when they have compatible requirements.
+SEVoice Conductor handles both SE and Voice in a single Conductor,
+demonstrating MasterVolume (affects all sounds) and CategoryVolume (affects only SE or Voice).
 
 ## Operation UI (Canvas + UGUI)
 
 The scene includes a Canvas-based control panel (auto-scaled via CanvasScaler).
 Enter Play Mode to interact with it in the Game view:
 
-| Section | Controls |
-|---------|----------|
-| **BGM Conductor** | Play Field BGM / Play Battle BGM / Pause-Resume / Stop (Fade) |
-| **SE Conductor** | Play SE (Random / OneShot) |
-| **Voice Conductor** | Play Voice / Pause-Resume / Stop |
-| **Master Volume** | Slider (0.0 – 1.0) applied to all Conductors |
+| Section | Controls | Volume API |
+|---------|----------|-----------|
+| **BGM Conductor** | Play Field BGM / Play Battle BGM / Pause-Resume / Stop (Fade) | Master Volume → `SetMasterVolume()`, Category Volume → `SetCategoryVolume(0, volume)` |
+| **SE & Voice Conductor** | (contains SE and Voice sub-panels) | Master Volume → `SetMasterVolume()` |
+| SE | Play SE (Random / OneShot) | Category Volume → `SetCategoryVolume(0, volume)` |
+| Voice | Play Voice / Pause-Resume / Stop | Category Volume → `SetCategoryVolume(1, volume)` |
 
 - BGM and Voice sections show real-time playback status (Playing / Paused / ---).
-- Master Volume slider calls `SetMasterVolume()` on all three Conductors simultaneously.
+- Each Conductor has both MasterVolume and CategoryVolume sliders, demonstrating the difference.
+- SE and Voice share a single Conductor; individual volume is controlled via `SetCategoryVolume()`.
 - UI scales automatically to any screen resolution via `CanvasScaler (Scale With Screen Size)`.
