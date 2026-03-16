@@ -165,6 +165,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                         return playType.HasValue
                             ? EditorGUI.EnumPopup(cellRect, playType.Value)
                             : null;
+                    case ColumnType.CueId:
+                        var cueId = item.CueId;
+                        if (cueId.HasValue)
+                            EditorGUI.LabelField(cellRect, cueId.Value.ToString());
+                        return null;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, null);
                 }
@@ -537,6 +542,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 return item.ThrottleLimit?.ToString().IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
             if (tag.Equals(nameof(ColumnType.PlayType), StringComparison.OrdinalIgnoreCase))
                 return item.CuePlayType?.ToString().IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
+            if (tag.Equals(nameof(ColumnType.CueId), StringComparison.OrdinalIgnoreCase))
+                return item.CueId?.ToString().IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
 
             return false;
         }

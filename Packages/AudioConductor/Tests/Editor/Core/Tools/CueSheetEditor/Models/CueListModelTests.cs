@@ -814,7 +814,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             if (columnType is CueListTreeView.ColumnType.Name
                 or CueListTreeView.ColumnType.Color
                 or CueListTreeView.ColumnType.Volume
-                or CueListTreeView.ColumnType.VolumeRange)
+                or CueListTreeView.ColumnType.VolumeRange
+                or CueListTreeView.ColumnType.CueId)
                 Assert.Pass();
 
             var history = new AutoIncrementHistory();

@@ -603,6 +603,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 case CueListTreeView.ColumnType.PlayType:
                     PlayType = (CuePlayType)value;
                     break;
+                case CueListTreeView.ColumnType.CueId:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);
             }

@@ -22,7 +22,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             ThrottleLimit,
             Volume,
             VolumeRange,
-            PlayType
+            PlayType,
+            CueId
         }
 
         public static readonly ReadOnlyCollection<int> VolumeColumnGroup = Array.AsReadOnly(new[]
@@ -71,6 +72,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     Localization.Localization.Tr("cue_list.column_volume_range")),
                 CueListTreeView.ColumnType.PlayType => new GUIContent("Play Type",
                     Localization.Localization.Tr("cue_list.column_play_type")),
+                CueListTreeView.ColumnType.CueId => new GUIContent("Cue ID",
+                    Localization.Localization.Tr("cue_list.column_cue_id")),
                 _ => throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null)
             };
         }
@@ -123,6 +126,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                     column.headerContent = columnType.CreateHeaderContent();
                     column.width = column.minWidth;
                     column.maxWidth = column.minWidth;
+                    break;
+                case CueListTreeView.ColumnType.CueId:
+                    column.headerContent = columnType.CreateHeaderContent();
+                    column.minWidth = 60;
+                    column.width = 60;
+                    column.maxWidth = 60;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);

@@ -36,6 +36,7 @@ namespace AudioConductor.Editor.Localization
             { "cue_list.column_volume", "Volume scale for the Cue or Track. (0.0 to 1.0)" },
             { "cue_list.column_volume_range", "Random volume variation width for the Cue or Track. (0.0 to 1.0)" },
             { "cue_list.column_play_type", "Cue playback rule for selecting Track order." },
+            { "cue_list.column_cue_id", "Unique identifier for the Cue." },
             { "cue_inspector.name", "Cue name." },
             { "cue_inspector.cue_id", "Cue ID." },
             { "cue_inspector.color", "Cue color label." },

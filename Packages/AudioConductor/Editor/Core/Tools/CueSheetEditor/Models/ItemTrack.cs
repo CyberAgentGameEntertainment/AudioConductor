@@ -33,5 +33,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public override float? Volume => RawData.volume;
         public override float? VolumeRange => RawData.volumeRange;
         public override CuePlayType? CuePlayType => null;
+        public override int? CueId => null;
     }
 }

@@ -36,6 +36,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public abstract CuePlayType? CuePlayType { get; }
 
+        public abstract int? CueId { get; }
+
         public void InsertOrAddChild(int index, CueListItem child)
         {
             children ??= new List<TreeViewItem>();

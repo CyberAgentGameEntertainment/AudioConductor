@@ -341,6 +341,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 case CueListTreeView.ColumnType.PlayType:
                     ChangeCuePlayType(item, (CuePlayType)newValue);
                     break;
+                case CueListTreeView.ColumnType.CueId:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);
             }
@@ -548,6 +550,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     break;
                 case CueListTreeView.ColumnType.VolumeRange:
                     ChangeTrackVolumeRange(item, (float)newValue);
+                    break;
+                case CueListTreeView.ColumnType.CueId:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);

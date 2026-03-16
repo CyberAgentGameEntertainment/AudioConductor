@@ -36,6 +36,7 @@ namespace AudioConductor.Editor.Localization
             { "cue_list.column_volume", "Cue または Track の音量スケール (0.0 〜 1.0)" },
             { "cue_list.column_volume_range", "Cue または Track の音量ランダム変動幅 (0.0 〜 1.0)" },
             { "cue_list.column_play_type", "Track の選択順を決める Cue の再生ルール" },
+            { "cue_list.column_cue_id", "Cue の一意な識別子" },
             { "cue_inspector.name", "Cue 名" },
             { "cue_inspector.cue_id", "Cue ID" },
             { "cue_inspector.color", "Cue に付与する色ラベル" },
