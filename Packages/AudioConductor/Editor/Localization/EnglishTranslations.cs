@@ -16,6 +16,7 @@ namespace AudioConductor.Editor.Localization
             { "settings.throttle_limit", "Limit of concurrent play." },
             { "settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction." },
             { "settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction." },
+            { "settings.deactivate_pooled_objects", "When enabled, pooled AudioClipPlayer GameObjects are deactivated while idle. Reduces active GameObject overhead at the cost of SetActive calls on rent/return." },
             { "category.name", "Category name." },
             { "category.throttle_type", "Concurrent play control type." },
             { "category.throttle_limit", "Limit of concurrent play." },

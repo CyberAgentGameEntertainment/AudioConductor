@@ -21,6 +21,7 @@ namespace AudioConductor.Editor.Core.CustomEditors
         private HashSet<int> _existIds = null!;
         private IntegerField? _managedPoolCapacityField;
         private IntegerField? _oneShotPoolCapacityField;
+        private Toggle? _deactivatePooledObjectsField;
         private AudioConductorSettings _settings = null!;
         private IntegerField? _throttleLimitField;
 
@@ -55,6 +56,9 @@ namespace AudioConductor.Editor.Core.CustomEditors
             _oneShotPoolCapacityField = container.Q<IntegerField>("OneShotPoolCapacity");
             _oneShotPoolCapacityField.bindingPath = nameof(AudioConductorSettings.oneShotPoolCapacity);
 
+            _deactivatePooledObjectsField = container.Q<Toggle>("DeactivatePooledObjects");
+            _deactivatePooledObjectsField.bindingPath = nameof(AudioConductorSettings.deactivatePooledObjects);
+
             ApplyTooltips();
 
             var categoryListView = container.Q<ListView>();
@@ -83,6 +87,8 @@ namespace AudioConductor.Editor.Core.CustomEditors
                 _managedPoolCapacityField.tooltip = Localization.Localization.Tr("settings.managed_pool_size");
             if (_oneShotPoolCapacityField != null)
                 _oneShotPoolCapacityField.tooltip = Localization.Localization.Tr("settings.oneshot_pool_size");
+            if (_deactivatePooledObjectsField != null)
+                _deactivatePooledObjectsField.tooltip = Localization.Localization.Tr("settings.deactivate_pooled_objects");
         }
 
         private void OnLanguageChanged()
