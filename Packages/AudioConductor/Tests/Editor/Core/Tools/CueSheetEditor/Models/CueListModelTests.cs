@@ -98,11 +98,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             var cueSheet = CreateTestCueSheet();
             var model = new CueListModel(cueSheet, history, new AssetSaveService(), null!);
 
-            Assert.IsNotNull(model.Root);
-            Assert.IsNull(model.CueListTreeViewState);
-            Assert.IsNotNull(model.MoveAsObservable);
-            Assert.IsNotNull(model.AddAsObservable);
-            Assert.IsNotNull(model.RemoveAsObservable);
+            Assert.That(model.Root, Is.Not.Null);
+            Assert.That(model.CueListTreeViewState, Is.Null);
+            Assert.That(model.MoveAsObservable, Is.Not.Null);
+            Assert.That(model.AddAsObservable, Is.Not.Null);
+            Assert.That(model.RemoveAsObservable, Is.Not.Null);
         }
 
         [Test]
