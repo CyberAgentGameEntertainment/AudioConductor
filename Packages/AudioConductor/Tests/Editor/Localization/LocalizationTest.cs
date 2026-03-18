@@ -35,7 +35,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr("test.key");
 
-            Assert.AreEqual("Hello", result);
+            Assert.That(result, Is.EqualTo("Hello"));
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr("test.key");
 
-            Assert.AreEqual("test.key", result);
+            Assert.That(result, Is.EqualTo("test.key"));
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr("test.key");
 
-            Assert.AreEqual("こんにちは", result);
+            Assert.That(result, Is.EqualTo("こんにちは"));
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr("test.key");
 
-            Assert.AreEqual("test.key", result);
+            Assert.That(result, Is.EqualTo("test.key"));
         }
 
         [Test]
@@ -76,10 +76,10 @@ namespace AudioConductor.Editor.Localization.Tests
             L.JapaneseTable["test.key"] = "こんにちは";
 
             L.Language = EditorLanguage.English;
-            Assert.AreEqual("Hello", L.Tr("test.key"));
+            Assert.That(L.Tr("test.key"), Is.EqualTo("Hello"));
 
             L.Language = EditorLanguage.Japanese;
-            Assert.AreEqual("こんにちは", L.Tr("test.key"));
+            Assert.That(L.Tr("test.key"), Is.EqualTo("こんにちは"));
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace AudioConductor.Editor.Localization.Tests
             try
             {
                 L.Language = EditorLanguage.English;
-                Assert.IsTrue(raised);
+                Assert.That(raised, Is.True);
             }
             finally
             {
@@ -114,7 +114,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr(key);
 
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [TestCase("settings.throttle_type", "同時発音の制御方式")]
@@ -127,7 +127,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr(key);
 
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [TestCase("category.name", "Category name.")]
@@ -223,7 +223,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr(key);
 
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [TestCase("category.name", "カテゴリ名")]
@@ -318,7 +318,7 @@ namespace AudioConductor.Editor.Localization.Tests
 
             var result = L.Tr(key);
 
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
     }
 }
