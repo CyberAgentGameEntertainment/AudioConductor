@@ -43,21 +43,12 @@ namespace AudioConductor.Editor.SampleGeneration
 
         static AudioConductorSample()
         {
-            if (!EditorPrefs.GetBool(PrefKeyPending, false))
-                return;
-
-            // Clear the flag first to prevent infinite loops on repeated domain reloads.
-            var samplePath = EditorPrefs.GetString(PrefKeySamplePath, string.Empty);
-            var postDeploy = EditorPrefs.GetBool(PrefKeyPostDeploy, false);
-            EditorPrefs.DeleteKey(PrefKeyPending);
-            EditorPrefs.DeleteKey(PrefKeySamplePath);
-            EditorPrefs.DeleteKey(PrefKeyPostDeploy);
-
-            if (string.IsNullOrEmpty(samplePath))
+            var pending = ConsumePendingPhase2State();
+            if (!pending.HasPending)
                 return;
 
             // Defer execution to avoid running inside a constructor context.
-            EditorApplication.delayCall += () => RunPhase2(samplePath, postDeploy);
+            EditorApplication.delayCall += () => RunPhase2(pending.SamplePath, pending.PostDeploy);
         }
 
         /// <inheritdoc />
@@ -110,9 +101,7 @@ namespace AudioConductor.Editor.SampleGeneration
                 CreateReadme(samplePath, result);
 
                 // Store phase 2 state so it can resume after domain reload triggered by AssetDatabase.Refresh().
-                EditorPrefs.SetBool(PrefKeyPending, true);
-                EditorPrefs.SetString(PrefKeySamplePath, samplePath);
-                EditorPrefs.SetBool(PrefKeyPostDeploy, postDeploy);
+                SavePendingPhase2State(samplePath, postDeploy);
 
                 AssetDatabase.Refresh();
 
@@ -121,14 +110,38 @@ namespace AudioConductor.Editor.SampleGeneration
             }
             catch (Exception ex)
             {
-                EditorPrefs.DeleteKey(PrefKeyPending);
-                EditorPrefs.DeleteKey(PrefKeySamplePath);
-                EditorPrefs.DeleteKey(PrefKeyPostDeploy);
+                ClearPendingPhase2State();
                 result.IsSuccess = false;
                 result.Errors.Add($"Failed to generate sample: {ex.Message}");
             }
 
             return result;
+        }
+
+        internal static void SavePendingPhase2State(string samplePath, bool postDeploy)
+        {
+            EditorPrefs.SetBool(PrefKeyPending, true);
+            EditorPrefs.SetString(PrefKeySamplePath, samplePath);
+            EditorPrefs.SetBool(PrefKeyPostDeploy, postDeploy);
+        }
+
+        internal static PendingPhase2State ConsumePendingPhase2State()
+        {
+            if (!EditorPrefs.GetBool(PrefKeyPending, false))
+                return default;
+
+            var samplePath = EditorPrefs.GetString(PrefKeySamplePath, string.Empty);
+            var postDeploy = EditorPrefs.GetBool(PrefKeyPostDeploy, false);
+            ClearPendingPhase2State();
+
+            return string.IsNullOrEmpty(samplePath) ? default : new PendingPhase2State(samplePath, postDeploy);
+        }
+
+        internal static void ClearPendingPhase2State()
+        {
+            EditorPrefs.DeleteKey(PrefKeyPending);
+            EditorPrefs.DeleteKey(PrefKeySamplePath);
+            EditorPrefs.DeleteKey(PrefKeyPostDeploy);
         }
 
         private static void RunPhase2(string samplePath, bool postDeploy)
@@ -1205,6 +1218,19 @@ Enter Play Mode to interact with it in the Game view:
 
             File.WriteAllText(readmePath, content);
             result.CreatedFiles.Add(readmePath);
+        }
+
+        internal readonly struct PendingPhase2State
+        {
+            internal PendingPhase2State(string samplePath, bool postDeploy)
+            {
+                SamplePath = samplePath;
+                PostDeploy = postDeploy;
+            }
+
+            internal string SamplePath { get; }
+            internal bool PostDeploy { get; }
+            internal bool HasPending => !string.IsNullOrEmpty(SamplePath);
         }
     }
 }
