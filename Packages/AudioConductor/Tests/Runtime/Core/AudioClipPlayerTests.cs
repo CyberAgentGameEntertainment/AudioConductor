@@ -114,5 +114,59 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(_player.GetVolume(), Is.EqualTo(0.7f));
         }
+
+        // --- Pitch ---
+
+        [Test]
+        public void GetPitch_InitialValue_ReturnsOne()
+        {
+            SetupPlayer();
+
+            Assert.That(_player.GetPitch(), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void SetPitch_ChangesGetPitch()
+        {
+            SetupPlayer();
+
+            _player.SetPitch(1.5f);
+
+            Assert.That(_player.GetPitch(), Is.EqualTo(1.5f));
+        }
+
+        [Test]
+        public void GetActualPitch_WithInternalAndExternalPitch()
+        {
+            SetupPlayer(pitch: 0.5f);
+
+            _player.SetPitch(2f);
+
+            Assert.That(_player.GetActualPitch(), Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        // --- Initial State ---
+
+        [Test]
+        public void Setup_InitialState_IsNotPlaying()
+        {
+            SetupPlayer();
+
+            Assert.That(_player.IsPlaying, Is.False);
+        }
+
+        [Test]
+        public void ResetState_ClearsVolumeAndPitchToDefaults()
+        {
+            SetupPlayer();
+            _player.SetMasterVolume(0.5f);
+            _player.SetCategoryVolume(0.3f);
+            _player.SetVolumeFade(0.7f);
+
+            _player.ResetState();
+
+            // ResetState resets master, category, and fade volumes to 1.
+            Assert.That(_player.GetActualVolume(), Is.EqualTo(1f).Within(0.0001f));
+        }
     }
 }
