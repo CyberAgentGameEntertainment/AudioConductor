@@ -12,11 +12,11 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 {
     /// <summary>
     ///     Orchestrates the enum code generation pipeline:
-    ///     Build → Validate → Generate → Write → Refresh.
+    ///     Build → Validate → Generate → Write → optional Refresh.
     /// </summary>
     internal static class CueEnumPipeline
     {
-        internal static PipelineResult Execute(CueEnumDefinition definition)
+        internal static PipelineResult Execute(CueEnumDefinition definition, bool refreshAssets = true)
         {
             // 1. Build plans
             var plans = GenerationPlanBuilder.Build(definition);
@@ -52,7 +52,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             }
 
             // 5. Refresh once
-            if (writtenCount > 0)
+            if (refreshAssets && writtenCount > 0)
                 AssetDatabase.Refresh();
 
             return new PipelineResult(errors.Count == 0, generatedCount, writtenCount, upToDateCount, errors);
