@@ -7,7 +7,6 @@
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
-using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
@@ -30,9 +29,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle2.IsValid, Is.True);
             Assert.That(handle3.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -52,9 +48,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(_oneShotProvider.Created.Count, Is.EqualTo(oneShotCountBefore),
                 "No OneShot player should be created when throttle rejects");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -74,9 +67,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle2.IsValid, Is.True);
             Assert.That(oneShotPlayer.IsPlaying, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -98,9 +88,6 @@ namespace AudioConductor.Core.Tests
             Assert.That(handle3.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
             Assert.That(oneShotPlayer.IsPlaying, Is.True);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -121,9 +108,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -143,9 +127,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -170,9 +151,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -197,9 +175,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(_oneShotProvider.Created.Count, Is.EqualTo(oneShotCountBefore),
                 "No OneShot player should be created when all existing players have higher priority");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -229,9 +204,6 @@ namespace AudioConductor.Core.Tests
             Assert.That(handle.IsValid, Is.True);
             Assert.That(secondOneShotPlayer.IsPlaying, Is.False,
                 "Second OneShot should be evicted by managed Play, proving third PlayOneShot evicted first OneShot");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
     }
 }

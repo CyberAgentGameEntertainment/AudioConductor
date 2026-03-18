@@ -6,7 +6,6 @@
 
 using AudioConductor.Core.Enums;
 using NUnit.Framework;
-using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
@@ -30,9 +29,6 @@ namespace AudioConductor.Core.Tests
                 var handle = conductor.Play(sheetHandle, "cue");
                 Assert.That(handle.IsValid, Is.True, $"Play #{i} should succeed");
             }
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -53,9 +49,6 @@ namespace AudioConductor.Core.Tests
                 var handle = conductor.Play(sheetHandle, "cue");
                 Assert.That(handle.IsValid, Is.True, $"Play #{i} should succeed");
             }
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -76,9 +69,6 @@ namespace AudioConductor.Core.Tests
                 var handle = conductor.Play(sheetHandle, "cue");
                 Assert.That(handle.IsValid, Is.True, $"Play #{i} should succeed");
             }
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -99,9 +89,6 @@ namespace AudioConductor.Core.Tests
             var handle3 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle3.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -124,9 +111,6 @@ namespace AudioConductor.Core.Tests
             var handle3 = conductor.Play(sheetHandle, "cueA");
 
             Assert.That(handle3.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -150,9 +134,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle3.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -173,9 +154,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.True);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -197,9 +175,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.True);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
     }
 }

@@ -6,7 +6,6 @@
 
 using AudioConductor.Core.Enums;
 using NUnit.Framework;
-using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
@@ -27,9 +26,6 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -53,9 +49,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle2.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -87,9 +80,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle4.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -108,9 +98,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle2.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -131,9 +118,6 @@ namespace AudioConductor.Core.Tests
             Assert.That(handle3.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
             Assert.That(conductor.IsPlaying(handle2), Is.True);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -157,9 +141,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle1.IsValid, Is.True);
             Assert.That(handle2.IsValid, Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -183,9 +164,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle2.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -204,9 +182,6 @@ namespace AudioConductor.Core.Tests
                 var handle = conductor.Play(sheetHandle, "cue");
                 Assert.That(handle.IsValid, Is.True, $"Play #{i} should succeed via eviction");
             }
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -233,9 +208,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle3.IsValid, Is.False,
                 "CueA's low priority should not affect CueB's FCFS decision");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -262,9 +234,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle3.IsValid, Is.False,
                 "CueB's min priority (5) > 3, so new play should be rejected even though CueA has priority 1");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
     }
 }

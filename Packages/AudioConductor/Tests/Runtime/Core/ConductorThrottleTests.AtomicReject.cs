@@ -7,7 +7,6 @@
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
-using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
@@ -54,9 +53,6 @@ namespace AudioConductor.Core.Tests
                 "handle1 must NOT be evicted — the play was rejected, so no side effects should occur");
             Assert.That(conductor.IsPlaying(handle2), Is.True,
                 "handle2 should still be playing");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -94,9 +90,6 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(oneShotPlayerA.IsPlaying, Is.True,
                 "OneShot cueA must NOT be evicted — the play was rejected");
-
-            Object.DestroyImmediate(clip);
-            Object.DestroyImmediate(asset);
         }
     }
 }

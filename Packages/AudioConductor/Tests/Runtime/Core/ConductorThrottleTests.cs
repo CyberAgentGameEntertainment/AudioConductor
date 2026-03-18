@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
@@ -15,6 +16,7 @@ namespace AudioConductor.Core.Tests
 {
     public partial class ConductorThrottleTests
     {
+        private readonly List<Object> _created = new();
         private FakePlayerProvider _managedProvider = null!;
         private FakePlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
@@ -30,6 +32,10 @@ namespace AudioConductor.Core.Tests
         [TearDown]
         public void TearDown()
         {
+            foreach (var obj in _created)
+                if (obj != null)
+                    Object.DestroyImmediate(obj);
+            _created.Clear();
             Object.DestroyImmediate(_settings);
         }
 
@@ -38,16 +44,19 @@ namespace AudioConductor.Core.Tests
             return new Conductor(_settings, _managedProvider, _oneShotProvider);
         }
 
-        private static AudioClip CreateClip()
+        private AudioClip CreateClip()
         {
-            return AudioClip.Create("test", 44100, 1, 44100, false);
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            _created.Add(clip);
+            return clip;
         }
 
-        private static CueSheetAsset CreateSheetAsset(params Cue[] cues)
+        private CueSheetAsset CreateSheetAsset(params Cue[] cues)
         {
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
             foreach (var cue in cues)
                 asset.cueSheet.cueList.Add(cue);
+            _created.Add(asset);
             return asset;
         }
 
