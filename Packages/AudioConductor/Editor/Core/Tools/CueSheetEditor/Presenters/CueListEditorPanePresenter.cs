@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Foundation.TinyRx;
@@ -12,7 +11,7 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class CueListEditorPanePresenter : IDisposable
+    internal sealed class CueListEditorPanePresenter : ICueSheetEditorPanePresenter
     {
         private readonly CompositeDisposable _bindDisposable = new();
 
@@ -54,6 +53,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
             _inspectorPresenter.Setup();
             _cueListPresenter.Setup();
+        }
+
+        public void Open()
+        {
+            _view.Open();
+        }
+
+        public void Close()
+        {
+            _view.Close();
         }
 
         private void Bind()
@@ -103,16 +112,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void CleanupEventHandlers()
         {
             _cueListPresenter.OnSelectionItemChanged -= _inspectorPresenter.SetModel;
-        }
-
-        public void Open()
-        {
-            _view.Open();
-        }
-
-        public void Close()
-        {
-            _view.Close();
         }
     }
 }

@@ -23,31 +23,41 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         }
 
         private readonly CompositeDisposable _bindDisposable = new();
-        private readonly CueListEditorPanePresenter _cueListEditorPanePresenter;
+        private readonly ICueSheetEditorPanePresenter _cueListEditorPanePresenter;
 
-        private readonly CueSheetParameterPanePresenter _cueSheetParameterPanePresenter;
+        private readonly ICueSheetEditorPanePresenter _cueSheetParameterPanePresenter;
 
         private readonly ICueSheetEditorModel _model;
-        private readonly OtherOperationPanePresenter _otherOperationPanePresenter;
+        private readonly ICueSheetEditorPanePresenter _otherOperationPanePresenter;
 
-        private readonly CueSheetEditorView _view;
+        private readonly ICueSheetEditorView _view;
         private readonly CompositeDisposable _viewEventDisposable = new();
 
         public CueSheetEditorPresenter(ICueSheetEditorModel model, CueSheetEditorView view)
+            : this(
+                model,
+                view,
+                new CueSheetParameterPanePresenter(model.CueSheetParameterPaneModel,
+                    view.Q<CueSheetParameterPaneView>()),
+                new CueListEditorPanePresenter(model.CueListEditorPaneModel,
+                    view.Q<CueListEditorPaneView>()),
+                new OtherOperationPanePresenter(model.OtherOperationPaneModel,
+                    view.Q<OtherOperationPaneView>()))
+        {
+        }
+
+        internal CueSheetEditorPresenter(
+            ICueSheetEditorModel model,
+            ICueSheetEditorView view,
+            ICueSheetEditorPanePresenter cueSheetParameterPanePresenter,
+            ICueSheetEditorPanePresenter cueListEditorPanePresenter,
+            ICueSheetEditorPanePresenter otherOperationPanePresenter)
         {
             _model = model;
             _view = view;
-
-            _cueSheetParameterPanePresenter =
-                new CueSheetParameterPanePresenter(model.CueSheetParameterPaneModel,
-                    _view.Q<CueSheetParameterPaneView>());
-            _cueListEditorPanePresenter =
-                new CueListEditorPanePresenter(model.CueListEditorPaneModel,
-                    _view.Q<CueListEditorPaneView>());
-
-            _otherOperationPanePresenter =
-                new OtherOperationPanePresenter(model.OtherOperationPaneModel,
-                    _view.Q<OtherOperationPaneView>());
+            _cueSheetParameterPanePresenter = cueSheetParameterPanePresenter;
+            _cueListEditorPanePresenter = cueListEditorPanePresenter;
+            _otherOperationPanePresenter = otherOperationPanePresenter;
         }
 
         public void Dispose()

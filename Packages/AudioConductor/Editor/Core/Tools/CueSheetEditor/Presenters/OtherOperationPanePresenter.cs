@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class OtherOperationPanePresenter : IDisposable
+    internal sealed class OtherOperationPanePresenter : ICueSheetEditorPanePresenter
     {
         private readonly IOtherOperationPaneModel _model;
 
@@ -39,6 +39,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             SetupViewEventHandlers();
         }
 
+        public void Open()
+        {
+            _view.Open();
+        }
+
+        public void Close()
+        {
+            _view.Close();
+        }
+
         private void SetupViewEventHandlers()
         {
             _view.ExportClickedAsObservable
@@ -53,16 +63,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void CleanupViewEventHandlers()
         {
             _viewEventDisposable.Clear();
-        }
-
-        public void Open()
-        {
-            _view.Open();
-        }
-
-        public void Close()
-        {
-            _view.Close();
         }
 
         private void Export()

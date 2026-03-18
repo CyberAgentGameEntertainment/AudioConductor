@@ -13,7 +13,7 @@ using TabView = AudioConductor.Editor.Core.Tools.Shared.TabView;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
-    internal sealed class CueSheetEditorView : IDisposable
+    internal sealed class CueSheetEditorView : ICueSheetEditorView
     {
         private readonly Button _cueListButton;
         private readonly Button _otherOperationButton;
@@ -48,11 +48,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _tabView.Dispose();
         }
 
-        public T Q<T>(string? name = null, params string[] classes) where T : VisualElement
-        {
-            return _root.Q<T>(name, classes);
-        }
-
         public void SelectTab(int tabIndex)
         {
             _tabView.SelectTab(tabIndex);
@@ -62,6 +57,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         {
             _tabView.Setup();
             SetupEventHandlers();
+        }
+
+        public T Q<T>(string? name = null, params string[] classes) where T : VisualElement
+        {
+            return _root.Q<T>(name, classes);
         }
 
         private void ApplyTooltips()

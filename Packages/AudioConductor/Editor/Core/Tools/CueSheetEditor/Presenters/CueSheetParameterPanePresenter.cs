@@ -11,7 +11,7 @@ using AudioConductor.Editor.Foundation.TinyRx;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class CueSheetParameterPanePresenter : IDisposable
+    internal sealed class CueSheetParameterPanePresenter : ICueSheetEditorPanePresenter
     {
         private readonly CompositeDisposable _bindDisposable = new();
         private readonly ICueSheetParameterPaneModel _model;
@@ -37,6 +37,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.Setup();
             SetupViewEventHandlers();
             Bind();
+        }
+
+        public void Open()
+        {
+            _view.Open();
+        }
+
+        public void Close()
+        {
+            _view.Close();
         }
 
         private void Bind()
@@ -91,16 +101,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void CleanupViewEventHandlers()
         {
             _viewEventDisposable.Clear();
-        }
-
-        public void Open()
-        {
-            _view.Open();
-        }
-
-        public void Close()
-        {
-            _view.Close();
         }
     }
 }
