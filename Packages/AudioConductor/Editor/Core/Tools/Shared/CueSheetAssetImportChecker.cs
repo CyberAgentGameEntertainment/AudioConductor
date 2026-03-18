@@ -5,6 +5,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Core.Models;
 using UnityEditor;
 
@@ -91,7 +92,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 if (asset == null)
                     continue; // not CueSheetAsset
 
-                if (!CueSheetIds.Contains(asset.cueSheet.Id))
+                if (!ShouldDuplicateCueSheet(asset.cueSheet.Id, CueSheetIds))
                 {
                     // create new
                     MigrateCueIds(asset);
@@ -109,15 +110,28 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
         }
 
-        private static void MigrateCueIds(CueSheetAsset asset)
+        internal static bool ShouldDuplicateCueSheet(string cueSheetId, IReadOnlyCollection<string> existingCueSheetIds)
         {
-            if (!CueIdAssigner.HasDuplicateCueIds(asset.cueSheet.cueList))
-                return;
+            return !string.IsNullOrEmpty(cueSheetId) && existingCueSheetIds.Contains(cueSheetId);
+        }
+
+        internal static bool NormalizeCueIdsIfNeeded(CueSheet cueSheet)
+        {
+            if (cueSheet == null || !CueIdAssigner.HasDuplicateCueIds(cueSheet.cueList))
+                return false;
 
             // Reset all IDs and re-assign to ensure uniqueness even if non-zero duplicates exist.
-            foreach (var cue in asset.cueSheet.cueList)
+            foreach (var cue in cueSheet.cueList)
                 cue.cueId = 0;
-            CueIdAssigner.AssignMissingCueIds(asset.cueSheet.cueList);
+            CueIdAssigner.AssignMissingCueIds(cueSheet.cueList);
+            return true;
+        }
+
+        private static void MigrateCueIds(CueSheetAsset asset)
+        {
+            if (!NormalizeCueIdsIfNeeded(asset.cueSheet))
+                return;
+
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
         }
