@@ -168,5 +168,105 @@ namespace AudioConductor.Core.Tests
             // ResetState resets master, category, and fade volumes to 1.
             Assert.That(_player.GetActualVolume(), Is.EqualTo(1f).Within(0.0001f));
         }
+
+        [Test]
+        public void ResetState_ResetsPitchToDefault()
+        {
+            SetupPlayer();
+            _player.SetPitch(2f);
+
+            _player.ResetState();
+
+            Assert.That(_player.GetPitch(), Is.EqualTo(1f));
+        }
+
+        // --- Stop Actions ---
+
+        [Test]
+        public void Stop_InvokesStopAction()
+        {
+            SetupPlayer();
+            var called = false;
+            _player.AddStopAction(() => called = true);
+
+            _player.Stop();
+
+            Assert.That(called, Is.True);
+        }
+
+        [Test]
+        public void Stop_InvokesStopActionOnlyOnce()
+        {
+            SetupPlayer();
+            var callCount = 0;
+            _player.AddStopAction(() => callCount++);
+
+            _player.Stop();
+            _player.Stop();
+
+            Assert.That(callCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Stop_WithoutStopAction_DoesNotThrow()
+        {
+            SetupPlayer();
+
+            Assert.DoesNotThrow(() => _player.Stop());
+        }
+
+        [Test]
+        public void Stop_ResetsIsPausedToFalse()
+        {
+            SetupPlayer();
+            _player.Pause();
+
+            _player.Stop();
+
+            Assert.That(_player.IsPaused, Is.False);
+        }
+
+        // --- Pause / Resume ---
+
+        [Test]
+        public void Pause_NonLoop_SetsIsPausedTrue()
+        {
+            SetupPlayer();
+
+            _player.Pause();
+
+            Assert.That(_player.IsPaused, Is.True);
+        }
+
+        [Test]
+        public void Resume_AfterPause_SetsIsPausedFalse()
+        {
+            SetupPlayer();
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.IsPaused, Is.False);
+        }
+
+        [Test]
+        public void Pause_WhenAlreadyPaused_DoesNothing()
+        {
+            SetupPlayer();
+            _player.Pause();
+
+            _player.Pause();
+
+            Assert.That(_player.IsPaused, Is.True);
+        }
+
+        [Test]
+        public void Resume_WhenNotPaused_DoesNothing()
+        {
+            SetupPlayer();
+
+            Assert.DoesNotThrow(() => _player.Resume());
+            Assert.That(_player.IsPaused, Is.False);
+        }
     }
 }

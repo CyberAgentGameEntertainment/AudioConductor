@@ -28,6 +28,8 @@ namespace AudioConductor.Core
 
         protected override void OnBeforeReturn(AudioClipPlayer instance)
         {
+            instance.ResetState();
+
             if (_deactivateOnReturn)
                 instance.gameObject.SetActive(false);
         }

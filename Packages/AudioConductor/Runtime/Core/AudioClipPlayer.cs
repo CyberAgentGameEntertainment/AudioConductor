@@ -29,13 +29,14 @@ namespace AudioConductor.Core
         private int _frequency;
 
         private bool _isLoop;
+
+        private bool _isPlaybackActive;
         private bool _isVolumeDirty;
         private int _lastAppliedVolumeScaled = -1;
         private int _loopStartSample;
         private double _nextEventTime;
 
         private int _nextPlayAudioSourceIndex;
-
         private Action? _onEnd;
         private Action? _onStop;
         private double _pauseEndTime;
@@ -142,6 +143,7 @@ namespace AudioConductor.Core
             _source[0].Stop();
             _source[1].Stop();
 
+            _isPlaybackActive = true;
             _source[1].enabled = _isLoop;
 
             // for smooth switching of AudioSource
@@ -229,6 +231,7 @@ namespace AudioConductor.Core
             if (_isLoop && _source[1] != null)
                 _source[1].Stop();
 
+            _isPlaybackActive = false;
             InvokeStopAction();
             IsPaused = false;
         }
@@ -336,7 +339,7 @@ namespace AudioConductor.Core
 
         public void ManualUpdate(float _)
         {
-            if (!IsPlaying && !IsPaused)
+            if (!_isPlaybackActive && !IsPaused)
                 return;
 
             UpdateVolume();
@@ -373,6 +376,8 @@ namespace AudioConductor.Core
             _lastAppliedVolumeScaled = -1;
             ActiveFadeId = 0;
             IsFading = false;
+            _isPlaybackActive = false;
+            _pitchExternal = 1f;
 
             _onStop = _onEnd = null;
         }
