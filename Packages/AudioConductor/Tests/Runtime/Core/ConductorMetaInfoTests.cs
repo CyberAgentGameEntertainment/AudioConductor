@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
@@ -74,6 +75,25 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void GetCueSheetInfos_ListOverload_ClearsExistingItemsBeforeFilling()
+        {
+            using var conductor = new Conductor(_settings);
+            var asset = CreateCueSheetAsset("BGM");
+            conductor.RegisterCueSheet(asset);
+            var infos = new List<CueSheetInfo>
+            {
+                new(default, "stale")
+            };
+
+            conductor.GetCueSheetInfos(infos);
+
+            Assert.That(infos.Count, Is.EqualTo(1));
+            Assert.That(infos[0].Name, Is.EqualTo("BGM"));
+
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
         public void GetCueInfos_WithInvalidHandle_ReturnsEmpty()
         {
             using var conductor = new Conductor(_settings);
@@ -131,6 +151,20 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void GetCueInfos_ListOverload_WithInvalidHandle_ClearsExistingItems()
+        {
+            using var conductor = new Conductor(_settings);
+            var infos = new List<CueInfo>
+            {
+                new("stale", 99, 123)
+            };
+
+            conductor.GetCueInfos(default, infos);
+
+            Assert.That(infos, Is.Empty);
+        }
+
+        [Test]
         public void GetTrackInfos_WithInvalidHandle_ReturnsEmpty()
         {
             using var conductor = new Conductor(_settings);
@@ -179,6 +213,24 @@ namespace AudioConductor.Core.Tests
             Assert.That(infos[1].Priority, Is.EqualTo(3));
 
             Object.DestroyImmediate(clip);
+            Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void GetTrackInfos_ListOverload_WithUnknownCue_ClearsExistingItems()
+        {
+            using var conductor = new Conductor(_settings);
+            var asset = CreateCueSheetAsset("Sheet");
+            var handle = conductor.RegisterCueSheet(asset);
+            var infos = new List<TrackInfo>
+            {
+                new("stale", null, false, 0)
+            };
+
+            conductor.GetTrackInfos(handle, "missing", infos);
+
+            Assert.That(infos, Is.Empty);
+
             Object.DestroyImmediate(asset);
         }
 
