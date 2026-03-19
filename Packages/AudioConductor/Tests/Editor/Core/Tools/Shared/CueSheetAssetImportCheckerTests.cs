@@ -90,5 +90,59 @@ namespace AudioConductor.Editor.Core.Tools.Shared.Tests
             Assert.That(cueSheet.cueList[1].cueId, Is.EqualTo(2));
             Assert.That(cueSheet.cueList[2].cueId, Is.EqualTo(3));
         }
+
+        [Test]
+        public void ShouldDuplicateCueSheet_WhenIdIsNull_ReturnsFalse()
+        {
+            var existingIds = new HashSet<string> { "sheet-1" };
+
+            var result = CueSheetAssetImportChecker.ShouldDuplicateCueSheet(null!, existingIds);
+
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void ShouldDuplicateCueSheet_WhenIdIsEmpty_ReturnsFalse()
+        {
+            var existingIds = new HashSet<string> { "sheet-1" };
+
+            var result = CueSheetAssetImportChecker.ShouldDuplicateCueSheet(string.Empty, existingIds);
+
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void ShouldDuplicateCueSheet_WhenExistingIdsIsEmpty_ReturnsFalse()
+        {
+            var existingIds = new HashSet<string>();
+
+            var result = CueSheetAssetImportChecker.ShouldDuplicateCueSheet("sheet-1", existingIds);
+
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void NormalizeCueIdsIfNeeded_WhenCueSheetIsNull_ReturnsFalse()
+        {
+            var changed = CueSheetAssetImportChecker.NormalizeCueIdsIfNeeded(null!);
+
+            Assert.That(changed, Is.False);
+        }
+
+        [Test]
+        public void NormalizeCueIdsIfNeeded_WhenSingleCue_ReturnsFalse()
+        {
+            var cueSheet = new CueSheet
+            {
+                cueList = new List<Cue>
+                {
+                    new() { cueId = 1 }
+                }
+            };
+
+            var changed = CueSheetAssetImportChecker.NormalizeCueIdsIfNeeded(cueSheet);
+
+            Assert.That(changed, Is.False);
+        }
     }
 }
