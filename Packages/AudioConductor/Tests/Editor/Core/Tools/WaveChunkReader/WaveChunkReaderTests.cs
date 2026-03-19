@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using System.IO;
 using NUnit.Framework;
 
@@ -267,6 +268,313 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader.Tests
 
             var reader = new WaveChunkReader();
             Assert.Throws<WaveParseException>(() => reader.Execute(ms));
+        }
+
+        // Builds WAV with a SMPL chunk inserted before DATA
+        private static MemoryStream BuildWavWithSmplChunk(uint sampleLoops, bool sizeMismatch = false)
+        {
+            const uint fmtSize = 16u;
+            var smplHeaderSize = 4u * 9; // 36 bytes: 9 fixed fields
+            var loopsSize = sampleLoops * 4u * 6; // 24 bytes per loop
+            var actualSmplSize = smplHeaderSize + loopsSize;
+            // sizeMismatch: claim header-only size but write loop data too
+            var claimedSmplSize = sizeMismatch ? smplHeaderSize : actualSmplSize;
+            var dataPayload = new byte[8];
+            var dataSize = (uint)dataPayload.Length;
+            var formChunkSize = 4u + 8 + fmtSize + 8 + actualSmplSize + 8 + dataSize;
+
+            var ms = new MemoryStream();
+            var w = new BinaryWriter(ms);
+
+            w.Write(new[] { 'R', 'I', 'F', 'F' });
+            w.Write(formChunkSize);
+            w.Write(new[] { 'W', 'A', 'V', 'E' });
+
+            // FMT chunk
+            w.Write(new[] { 'f', 'm', 't', ' ' });
+            w.Write(fmtSize);
+            w.Write((ushort)1);
+            w.Write((ushort)2);
+            w.Write((uint)44100);
+            w.Write((uint)(44100 * 2 * 2));
+            w.Write((ushort)4);
+            w.Write((ushort)16);
+
+            // SMPL chunk
+            w.Write(new[] { 's', 'm', 'p', 'l' });
+            w.Write(claimedSmplSize);
+            w.Write(0u); // manufacturer
+            w.Write(0u); // product
+            w.Write(0u); // samplePeriod
+            w.Write(60u); // midiUnityNote
+            w.Write(0u); // midiPitchFraction
+            w.Write(0u); // smpteFormat
+            w.Write(0u); // smpteOffset
+            w.Write(sampleLoops);
+            w.Write(0u); // samplerData
+            for (var i = 0u; i < sampleLoops; i++)
+            {
+                w.Write(i); // identifier
+                w.Write(0u); // type
+                w.Write(100u * (i + 1)); // start
+                w.Write(200u * (i + 1)); // end
+                w.Write(0u); // fraction
+                w.Write(0u); // playCount
+            }
+
+            // DATA chunk
+            w.Write(new[] { 'd', 'a', 't', 'a' });
+            w.Write(dataSize);
+            w.Write(dataPayload);
+
+            ms.Position = 0;
+            return ms;
+        }
+
+        // Builds WAV with a CUE chunk inserted before DATA
+        private static MemoryStream BuildWavWithCueChunk(uint numCuePoints)
+        {
+            const uint fmtSize = 16u;
+            var cueSize = 4u + numCuePoints * 24u; // 4 for numCuePoints + 24 per cue point
+            var dataPayload = new byte[8];
+            var dataSize = (uint)dataPayload.Length;
+            var formChunkSize = 4u + 8 + fmtSize + 8 + cueSize + 8 + dataSize;
+
+            var ms = new MemoryStream();
+            var w = new BinaryWriter(ms);
+
+            w.Write(new[] { 'R', 'I', 'F', 'F' });
+            w.Write(formChunkSize);
+            w.Write(new[] { 'W', 'A', 'V', 'E' });
+
+            // FMT chunk
+            w.Write(new[] { 'f', 'm', 't', ' ' });
+            w.Write(fmtSize);
+            w.Write((ushort)1);
+            w.Write((ushort)2);
+            w.Write((uint)44100);
+            w.Write((uint)(44100 * 2 * 2));
+            w.Write((ushort)4);
+            w.Write((ushort)16);
+
+            // CUE chunk
+            w.Write(new[] { 'c', 'u', 'e', ' ' });
+            w.Write(cueSize);
+            w.Write(numCuePoints);
+            for (var i = 0u; i < numCuePoints; i++)
+            {
+                w.Write(i); // cueNumber
+                w.Write(i * 1000u); // position
+                w.Write(new[] { 'd', 'a', 't', 'a' }); // chunk
+                w.Write(0u); // chunkStart
+                w.Write(0u); // blockStart
+                w.Write(i * 500u); // sampleOffset
+            }
+
+            // DATA chunk
+            w.Write(new[] { 'd', 'a', 't', 'a' });
+            w.Write(dataSize);
+            w.Write(dataPayload);
+
+            ms.Position = 0;
+            return ms;
+        }
+
+        // Builds WAV with an arbitrary extra chunk inserted before DATA
+        private static MemoryStream BuildWavWithExtraChunk(string chunkId, byte[] payload)
+        {
+            const uint fmtSize = 16u;
+            var extraSize = (uint)payload.Length;
+            var dataPayload = new byte[8];
+            var dataSize = (uint)dataPayload.Length;
+            var formChunkSize = 4u + 8 + fmtSize + 8 + extraSize + 8 + dataSize;
+
+            var ms = new MemoryStream();
+            var w = new BinaryWriter(ms);
+
+            w.Write(new[] { 'R', 'I', 'F', 'F' });
+            w.Write(formChunkSize);
+            w.Write(new[] { 'W', 'A', 'V', 'E' });
+
+            // FMT chunk
+            w.Write(new[] { 'f', 'm', 't', ' ' });
+            w.Write(fmtSize);
+            w.Write((ushort)1);
+            w.Write((ushort)2);
+            w.Write((uint)44100);
+            w.Write((uint)(44100 * 2 * 2));
+            w.Write((ushort)4);
+            w.Write((ushort)16);
+
+            // extra chunk
+            foreach (var c in chunkId.ToCharArray())
+                w.Write(c);
+            w.Write(extraSize);
+            w.Write(payload);
+
+            // DATA chunk
+            w.Write(new[] { 'd', 'a', 't', 'a' });
+            w.Write(dataSize);
+            w.Write(dataPayload);
+
+            ms.Position = 0;
+            return ms;
+        }
+
+        [Test]
+        public void Execute_WavWithSmplChunk_SingleLoop_ReadsLoopInfo()
+        {
+            using var ms = BuildWavWithSmplChunk(1);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.LoopInfoList, Has.Count.EqualTo(1));
+            Assert.That(reader.LoopInfoList[0].start, Is.EqualTo(100u));
+            Assert.That(reader.LoopInfoList[0].end, Is.EqualTo(200u));
+        }
+
+        [Test]
+        public void Execute_WavWithSmplChunk_MultipleLoops_ReadsAllLoopInfos()
+        {
+            using var ms = BuildWavWithSmplChunk(2);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.LoopInfoList, Has.Count.EqualTo(2));
+        }
+
+        [Test]
+        public void Execute_WavWithSmplChunk_SizeMismatch_ThrowsApplicationException()
+        {
+            using var ms = BuildWavWithSmplChunk(1, true);
+
+            var reader = new WaveChunkReader();
+            Assert.Throws<ApplicationException>(() => reader.Execute(ms));
+        }
+
+        [Test]
+        public void Execute_WavWithCueChunk_SingleCuePoint_ReadsCueChunkList()
+        {
+            using var ms = BuildWavWithCueChunk(1);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.CueChunkList, Has.Count.EqualTo(1));
+            Assert.That(reader.LoopInfoList, Is.Empty);
+        }
+
+        [Test]
+        public void Execute_WavWithCueChunk_TwoCuePoints_CreatesLoopInfo()
+        {
+            using var ms = BuildWavWithCueChunk(2);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.CueChunkList, Has.Count.EqualTo(2));
+            Assert.That(reader.LoopInfoList, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void Execute_WavWithCueChunk_ThreeCuePoints_NoLoopInfo()
+        {
+            using var ms = BuildWavWithCueChunk(3);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.CueChunkList, Has.Count.EqualTo(3));
+            Assert.That(reader.LoopInfoList, Is.Empty);
+        }
+
+        [Test]
+        public void Execute_WavWithInstChunk_SkipsCorrectly()
+        {
+            using var ms = BuildWavWithExtraChunk("INST", new byte[7]);
+
+            var reader = new WaveChunkReader();
+            Assert.DoesNotThrow(() => reader.Execute(ms));
+            Assert.That(reader.Channels, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Execute_WavWithResUChunk_SkipsCorrectly()
+        {
+            using var ms = BuildWavWithExtraChunk("RESU", new byte[8]);
+
+            var reader = new WaveChunkReader();
+            Assert.DoesNotThrow(() => reader.Execute(ms));
+            Assert.That(reader.Channels, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Execute_WavWithUnknownChunk_SkipsCorrectly()
+        {
+            using var ms = BuildWavWithExtraChunk("ABCD", new byte[4]);
+
+            var reader = new WaveChunkReader();
+            Assert.DoesNotThrow(() => reader.Execute(ms));
+            Assert.That(reader.Channels, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Execute_FmtChunkWithExtraParams_ReadsCorrectly()
+        {
+            // fmtSize=18 → 2 extra bytes after the standard 16
+            const uint fmtSize = 18u;
+            var dataPayload = new byte[8];
+            var dataSize = (uint)dataPayload.Length;
+            var formChunkSize = 4u + 8 + fmtSize + 8 + dataSize;
+
+            var ms = new MemoryStream();
+            var w = new BinaryWriter(ms);
+
+            w.Write(new[] { 'R', 'I', 'F', 'F' });
+            w.Write(formChunkSize);
+            w.Write(new[] { 'W', 'A', 'V', 'E' });
+            w.Write(new[] { 'f', 'm', 't', ' ' });
+            w.Write(fmtSize);
+            w.Write((ushort)1);
+            w.Write((ushort)2);
+            w.Write((uint)44100);
+            w.Write((uint)(44100 * 2 * 2));
+            w.Write((ushort)4);
+            w.Write((ushort)16);
+            w.Write((ushort)0); // 2 extra bytes
+            w.Write(new[] { 'd', 'a', 't', 'a' });
+            w.Write(dataSize);
+            w.Write(dataPayload);
+            ms.Position = 0;
+
+            var reader = new WaveChunkReader();
+            Assert.DoesNotThrow(() => reader.Execute(ms));
+            Assert.That(reader.Channels, Is.EqualTo(2));
+            Assert.That(reader.SamplingRate, Is.EqualTo(44100));
+        }
+
+        [Test]
+        public void HasLoop_WithLoopInfo_ReturnsTrue()
+        {
+            using var ms = BuildWavWithSmplChunk(1);
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.HasLoop(), Is.True);
+        }
+
+        [Test]
+        public void HasLoop_WithoutLoopInfo_ReturnsFalse()
+        {
+            using var ms = BuildWav();
+
+            var reader = new WaveChunkReader();
+            reader.Execute(ms);
+
+            Assert.That(reader.HasLoop(), Is.False);
         }
     }
 }
