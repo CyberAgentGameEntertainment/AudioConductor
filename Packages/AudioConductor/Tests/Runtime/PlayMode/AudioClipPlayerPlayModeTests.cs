@@ -137,5 +137,71 @@ namespace AudioConductor.Tests.PlayMode
 
             _player.Stop();
         }
+
+        [UnityTest]
+        public IEnumerator Pause_WhenLoopPlaying_PausesCorrectly()
+        {
+            SetupPlayer(true);
+            _player.Play();
+            yield return new WaitForSeconds(0.2f);
+
+            _player.Pause();
+
+            Assert.That(_player.IsPaused, Is.True);
+
+            _player.Stop();
+        }
+
+        [UnityTest]
+        public IEnumerator Resume_WhenLoopPaused_ResumesCorrectly()
+        {
+            SetupPlayer(true);
+            _player.Play();
+            yield return new WaitForSeconds(0.2f);
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.IsPaused, Is.False);
+
+            _player.Stop();
+        }
+
+        [UnityTest]
+        public IEnumerator Stop_WhenLoopPlaying_SetsIsPlayingFalse()
+        {
+            SetupPlayer(true);
+            _player.Play();
+            yield return new WaitForSeconds(0.2f);
+
+            _player.Stop();
+
+            Assert.That(_player.IsPlaying, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator GetCurrentSample_WhenPlaying_ReturnsNonNegative()
+        {
+            SetupPlayer();
+            _player.Play();
+            yield return new WaitForSeconds(0.2f);
+
+            var sample = _player.GetCurrentSample();
+
+            Assert.That(sample, Is.GreaterThanOrEqualTo(0));
+
+            _player.Stop();
+        }
+
+        [UnityTest]
+        public IEnumerator SetCurrentSample_WhenNotPlaying_UpdatesPosition()
+        {
+            SetupPlayer();
+
+            _player.SetCurrentSample(100);
+
+            Assert.That(_player.GetCurrentSample(), Is.EqualTo(100));
+            yield return null;
+        }
     }
 }

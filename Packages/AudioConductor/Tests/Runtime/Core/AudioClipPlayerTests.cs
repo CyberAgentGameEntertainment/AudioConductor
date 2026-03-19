@@ -36,6 +36,12 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void Setup_WithNullClip_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() => _player.Setup(null, null!, 0, 1f, 1f, false, 0, 0, 0));
+        }
+
+        [Test]
         public void SetCategoryVolume_AffectsGetActualVolume()
         {
             SetupPlayer();
