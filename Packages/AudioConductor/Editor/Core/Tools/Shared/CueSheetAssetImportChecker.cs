@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Core.Models;
@@ -48,20 +49,44 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         private static void DeleteAssets(IReadOnlyCollection<string> deletedAssets)
         {
+            ProcessDeletedAssets(deletedAssets, CueSheetAssets, CueSheetIds);
+        }
+
+        private static void MoveAssets(IReadOnlyList<string> movedAssets, IReadOnlyList<string> movedFromAssetPaths)
+        {
+            ProcessMovedAssets(movedAssets, movedFromAssetPaths, CueSheetAssets);
+        }
+
+        private static void ImportAssets(IReadOnlyCollection<string> importedAssets)
+        {
+            var modified = ProcessImportedAssets(importedAssets, CueSheetAssets, CueSheetIds,
+                path => AssetDatabase.LoadAssetAtPath<CueSheetAsset>(path));
+            foreach (var asset in modified)
+                EditorUtility.SetDirty(asset);
+            if (modified.Count > 0)
+                AssetDatabase.SaveAssets();
+        }
+
+        internal static void ProcessDeletedAssets(IReadOnlyCollection<string>? deletedAssets,
+            Dictionary<string, CueSheetAsset> cueSheetAssets,
+            HashSet<string> cueSheetIds)
+        {
             if (deletedAssets == null || deletedAssets.Count == 0)
                 return;
 
             foreach (var deletedAsset in deletedAssets)
             {
-                if (!CueSheetAssets.TryGetValue(deletedAsset, out var asset))
+                if (!cueSheetAssets.TryGetValue(deletedAsset, out var asset))
                     continue;
 
-                CueSheetAssets.Remove(deletedAsset);
-                CueSheetIds.Remove(asset.cueSheet.Id);
+                cueSheetAssets.Remove(deletedAsset);
+                cueSheetIds.Remove(asset.cueSheet.Id);
             }
         }
 
-        private static void MoveAssets(IReadOnlyList<string> movedAssets, IReadOnlyList<string> movedFromAssetPaths)
+        internal static void ProcessMovedAssets(IReadOnlyList<string>? movedAssets,
+            IReadOnlyList<string>? movedFromAssetPaths,
+            Dictionary<string, CueSheetAsset> cueSheetAssets)
         {
             if (movedAssets == null || movedAssets.Count == 0 || movedFromAssetPaths == null
                 || movedFromAssetPaths.Count == 0)
@@ -70,44 +95,49 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             for (var i = 0; i < movedFromAssetPaths.Count; i++)
             {
                 var originalAssetPath = movedFromAssetPaths[i];
-                if (!CueSheetAssets.TryGetValue(originalAssetPath, out var asset))
+                if (!cueSheetAssets.TryGetValue(originalAssetPath, out var asset))
                     continue;
 
-                CueSheetAssets.Remove(originalAssetPath);
-                CueSheetAssets.Add(movedAssets[i], asset);
+                cueSheetAssets.Remove(originalAssetPath);
+                cueSheetAssets.Add(movedAssets[i], asset);
             }
         }
 
-        private static void ImportAssets(IReadOnlyCollection<string> importedAssets)
+        internal static IReadOnlyList<CueSheetAsset> ProcessImportedAssets(
+            IReadOnlyCollection<string>? importedAssets,
+            Dictionary<string, CueSheetAsset> cueSheetAssets,
+            HashSet<string> cueSheetIds,
+            Func<string, CueSheetAsset?> loadAsset)
         {
+            var modifiedAssets = new List<CueSheetAsset>();
+
             if (importedAssets == null || importedAssets.Count == 0)
-                return;
+                return modifiedAssets;
 
             foreach (var importedAsset in importedAssets)
             {
-                if (CueSheetAssets.TryGetValue(importedAsset, out var asset))
+                if (cueSheetAssets.ContainsKey(importedAsset))
                     continue; // reimport
 
-                asset = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(importedAsset);
+                var asset = loadAsset(importedAsset);
                 if (asset == null)
                     continue; // not CueSheetAsset
 
-                if (!ShouldDuplicateCueSheet(asset.cueSheet.Id, CueSheetIds))
+                if (ShouldDuplicateCueSheet(asset.cueSheet.Id, cueSheetIds))
                 {
-                    // create new
-                    MigrateCueIds(asset);
-                    CueSheetAssets.Add(importedAsset, asset);
-                    CueSheetIds.Add(asset.cueSheet.Id);
-                    continue;
+                    asset.cueSheet = asset.cueSheet.Duplicate()!;
+                    modifiedAssets.Add(asset);
+                }
+                else if (NormalizeCueIdsIfNeeded(asset.cueSheet))
+                {
+                    modifiedAssets.Add(asset);
                 }
 
-                // duplicate
-                asset.cueSheet = asset.cueSheet.Duplicate()!;
-                EditorUtility.SetDirty(asset);
-                AssetDatabase.SaveAssets();
-                CueSheetAssets.Add(importedAsset, asset);
-                CueSheetIds.Add(asset.cueSheet.Id);
+                cueSheetAssets.Add(importedAsset, asset);
+                cueSheetIds.Add(asset.cueSheet.Id);
             }
+
+            return modifiedAssets;
         }
 
         internal static bool ShouldDuplicateCueSheet(string cueSheetId, IReadOnlyCollection<string> existingCueSheetIds)
