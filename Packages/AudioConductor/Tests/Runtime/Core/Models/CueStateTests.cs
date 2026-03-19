@@ -98,5 +98,51 @@ namespace AudioConductor.Core.Models.Tests
             Assert.That(track1, Is.EqualTo(expectedTrack));
             Assert.That(track2, Is.EqualTo(expectedTrack));
         }
+
+        [Test]
+        public void GetTrack_WithValidIndex_ReturnsTrack()
+        {
+            var expectedTrack = new Track { name = "TrackA" };
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { new() { name = "TrackB" }, expectedTrack }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track = cueState.GetTrack(1);
+
+            Assert.That(track, Is.EqualTo(expectedTrack));
+        }
+
+        [Test]
+        public void GetTrack_WithNegativeIndex_ReturnsNull()
+        {
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { new() { name = "TrackA" } }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track = cueState.GetTrack(-1);
+
+            Assert.That(track, Is.Null);
+        }
+
+        [Test]
+        public void GetTrack_WithOutOfRangeIndex_ReturnsNull()
+        {
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { new() { name = "TrackA" } }
+            };
+            var cueState = new CueState(1, cue);
+
+            var track = cueState.GetTrack(1);
+
+            Assert.That(track, Is.Null);
+        }
     }
 }

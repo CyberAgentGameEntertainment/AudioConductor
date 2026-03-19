@@ -54,5 +54,57 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             controller.Dispose();
             Assert.DoesNotThrow(() => controller.Dispose());
         }
+
+        [Test]
+        public void Play_DoesNotThrow()
+        {
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            Assert.DoesNotThrow(() => controller.Play());
+        }
+
+        [Test]
+        public void Stop_DoesNotThrow()
+        {
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            Assert.DoesNotThrow(() => controller.Stop());
+        }
+
+        [Test]
+        public void Pause_DoesNotThrow()
+        {
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            Assert.DoesNotThrow(() => controller.Pause());
+        }
+
+        [Test]
+        public void UnPause_DoesNotThrow()
+        {
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            Assert.DoesNotThrow(() => controller.UnPause());
+        }
+
+        [Test]
+        public void SetCurrentSample_ThenGetCurrentSample_ReturnsSetValue()
+        {
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            controller.SetCurrentSample(100);
+            Assert.That(controller.GetCurrentSample(), Is.EqualTo(100));
+        }
+
+        [Test]
+        public void Play_AfterDispose_DoesNotThrow()
+        {
+            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            controller.Dispose();
+            Assert.DoesNotThrow(() => controller.Play());
+        }
+
+        [Test]
+        public void Stop_AfterDispose_DoesNotThrow()
+        {
+            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            controller.Dispose();
+            Assert.DoesNotThrow(() => controller.Stop());
+        }
     }
 }

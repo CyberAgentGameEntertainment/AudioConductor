@@ -34,6 +34,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             model.Setup();
 
             Assert.IsNotNull(model.CueSheetEditorModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.CueSheetParameterPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.CueListEditorPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.OtherOperationPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.ObservablePaneState);
         }
     }
 }
