@@ -8,31 +8,33 @@ using System.Collections.Generic;
 using System.IO;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Models;
-using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumPipelineTests
     {
-        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(CueEnumPipelineTests);
+        // Use the system temp directory instead of Assets/ to avoid triggering a domain reload
+        // via Unity's file system watcher during interactive test execution.
+        private static readonly string RootFolder =
+            Path.Combine(Path.GetTempPath(), "AudioConductorTests", nameof(CueEnumPipelineTests));
+
         private readonly List<Object> _created = new();
 
         [SetUp]
         public void SetUp()
         {
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
-            Utility.CreateFolderRecursively(RootFolder);
+            if (Directory.Exists(RootFolder))
+                Directory.Delete(RootFolder, true);
+            Directory.CreateDirectory(RootFolder);
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
+            if (Directory.Exists(RootFolder))
+                Directory.Delete(RootFolder, true);
 
             foreach (var obj in _created)
                 if (obj != null)
@@ -48,7 +50,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             var asset = CreateAsset("BGM", new Cue { name = "title", cueId = 1 });
             def.rootEntries.Add(asset);
 
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.GeneratedCount, Is.EqualTo(1));
@@ -63,8 +65,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             def.defaultOutputPath = RootFolder;
             def.rootEntries.Add(CreateAsset("BGM", new Cue { name = "title", cueId = 1 }));
 
-            CueEnumPipeline.Execute(def, refreshAssets: false);
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            CueEnumPipeline.Execute(def, false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.WrittenCount, Is.EqualTo(0));
@@ -86,7 +88,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
                 }
             });
 
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.WrittenCount, Is.EqualTo(1));
@@ -100,7 +102,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         {
             var def = CreateDefinition();
 
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.GeneratedCount, Is.EqualTo(0));
@@ -119,7 +121,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             def.rootEntries.Add(asset1);
             def.rootEntries.Add(asset2);
 
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.Errors, Has.Count.GreaterThan(0));
@@ -135,7 +137,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
                 new Cue { name = "dup", cueId = 2 });
             def.rootEntries.Add(asset);
 
-            var result = CueEnumPipeline.Execute(def, refreshAssets: false);
+            var result = CueEnumPipeline.Execute(def, false);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.Errors, Has.Some.Contain("Duplicate cue name"));

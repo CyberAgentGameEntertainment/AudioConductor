@@ -5,29 +5,30 @@
 #nullable enable
 
 using System.IO;
-using AudioConductor.Editor.Core.Tests;
 using NUnit.Framework;
-using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
 {
     internal sealed class CueEnumCodeWriterPureTests
     {
-        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(CueEnumCodeWriterPureTests);
+        // Use the system temp directory instead of Assets/ to avoid triggering a domain reload
+        // via Unity's file system watcher during interactive test execution.
+        private static readonly string RootFolder =
+            Path.Combine(Path.GetTempPath(), "AudioConductorTests", nameof(CueEnumCodeWriterPureTests));
 
         [SetUp]
         public void SetUp()
         {
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
-            Utility.CreateFolderRecursively(RootFolder);
+            if (Directory.Exists(RootFolder))
+                Directory.Delete(RootFolder, true);
+            Directory.CreateDirectory(RootFolder);
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
+            if (Directory.Exists(RootFolder))
+                Directory.Delete(RootFolder, true);
         }
 
         [Test]
