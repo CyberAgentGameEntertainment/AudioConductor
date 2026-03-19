@@ -8,6 +8,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -184,6 +185,17 @@ namespace AudioConductor.Core.Providers.Tests
 
             // Second release with same loadId should be ignored
             Assert.That(() => _provider.Release(task.Result.Value.LoadId), Throws.Nothing);
+        }
+
+        [UnityTest]
+        public IEnumerator LoadAsync_WithInvalidKey_ReturnsNull()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("InvalidKeyException"));
+
+            var task = _provider.LoadAsync("invalid_key_that_does_not_exist");
+            yield return WaitForTask(task);
+
+            Assert.That(task.Result, Is.Null);
         }
     }
 }
