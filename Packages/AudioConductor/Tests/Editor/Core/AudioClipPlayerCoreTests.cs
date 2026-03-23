@@ -37,9 +37,9 @@ namespace AudioConductor.Editor.Tests.Core
         private AudioClipPlayerCore _core = null!;
         private AudioClip _clip = null!;
 
-        private void SetupCore(float volume = 1f, float pitch = 1f, bool isLoop = false)
+        private void SetupCore(float volume = 1f, float pitch = 1f, bool isLoop = false, int endSample = 0)
         {
-            _core.Setup(null, _clip, 0, volume, pitch, isLoop, 0, 0, 0);
+            _core.Setup(null, _clip, 0, volume, pitch, isLoop, 0, 0, endSample);
         }
 
         // --- Volume (5-factor multiplication) ---
@@ -315,6 +315,68 @@ namespace AudioConductor.Editor.Tests.Core
             _core.SetPitch(1.5f);
 
             Assert.That(_core.GetPitch(), Is.EqualTo(1.5f));
+        }
+
+        // --- Loop playback ---
+
+        [Test]
+        public void Play_Loop_WithValidEndSample_SchedulesSource0()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+
+            _core.Play();
+
+            Assert.That(_source0.IsPlaying, Is.True);
+        }
+
+        [Test]
+        public void Play_Loop_WithDuration0_DoesNotScheduleAudioSource()
+        {
+            // endSample == startSample == 0 → samples=0 → duration=0
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: 0);
+
+            _core.Play();
+
+            Assert.That(_source0.IsPlaying, Is.False);
+        }
+
+        [Test]
+        public void ManualUpdate_Loop_WithDuration0_DoesNotRepeatSchedule()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: 0);
+            _core.Play();
+
+            for (var i = 0; i < 5; i++)
+            {
+                _clock.DspTime += 0.1;
+                _core.ManualUpdate(0.1f);
+            }
+
+            Assert.That(_source0.IsPlaying, Is.False);
+            Assert.That(_source1.IsPlaying, Is.False);
+        }
+
+        [Test]
+        public void ManualUpdate_Loop_WithValidEndSample_TriggersLoopOnTime()
+        {
+            // clip: 44100 samples @ 44100 Hz → duration=1.0s
+            // After Play: _nextEventTime = dspTime + 0.1 (playStartTime) + 1.0 - 1.0 = dspTime + 0.1
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+
+            // Before _nextEventTime (0.1s): source1 not yet scheduled
+            _clock.DspTime = 0.05;
+            _core.ManualUpdate(0.05f);
+            Assert.That(_source1.IsPlaying, Is.False);
+
+            // After _nextEventTime (0.1s): source1 scheduled for next loop
+            _clock.DspTime = 0.15;
+            _core.ManualUpdate(0.1f);
+            Assert.That(_source1.IsPlaying, Is.True);
         }
     }
 }

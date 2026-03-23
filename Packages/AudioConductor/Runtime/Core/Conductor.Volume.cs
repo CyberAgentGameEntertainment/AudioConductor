@@ -55,7 +55,7 @@ namespace AudioConductor.Core
             if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return false;
 
-            return state.Player.IsPlaying;
+            return state.Player.IsPlaying || state.Player.IsFading;
         }
 
         /// <summary>

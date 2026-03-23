@@ -341,6 +341,14 @@ namespace AudioConductor.Core
                 return;
 
             var samples = _endSample > startSample ? _endSample - startSample : startSample - _endSample;
+            // In loop mode, zero-length region would cause _nextEventTime to never advance,
+            // resulting in PlayLoop being called every ManualUpdate frame indefinitely.
+            if (_isLoop && samples == 0)
+            {
+                _nextEventTime = double.MaxValue;
+                return;
+            }
+
             var duration = (float)samples / _frequency;
             _scheduledEndTime = playStartTime + duration / pitch;
 
