@@ -30,7 +30,7 @@ namespace AudioConductor.Core.Shared
         /// <summary>
         ///     Limit of instance count.
         /// </summary>
-        protected int MaxPoolCount => int.MaxValue;
+        protected virtual int MaxPoolCount => int.MaxValue;
 
         /// <summary>
         ///     Current pooled object count.
@@ -122,7 +122,7 @@ namespace AudioConductor.Core.Shared
 
             _pool ??= new Stack<T>(InitialCapacity);
 
-            if (_pool.Count + 1 == MaxPoolCount)
+            if (_pool.Count >= MaxPoolCount)
                 throw new InvalidOperationException("Reached Max PoolSize");
 
             OnBeforeReturn(instance);

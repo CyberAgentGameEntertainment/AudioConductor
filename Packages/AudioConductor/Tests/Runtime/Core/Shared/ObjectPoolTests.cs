@@ -219,6 +219,28 @@ namespace AudioConductor.Core.Shared.Tests
             Assert.DoesNotThrow(() => pool.Dispose());
         }
 
+        [Test]
+        public void Return_WhenPoolBelowMaxPoolCount_DoesNotThrow()
+        {
+            using var pool = new BoundedPool();
+            pool.Prewarm(3);
+            var instance = pool.Rent();
+
+            Assert.DoesNotThrow(() => pool.Return(instance));
+            Assert.That(pool.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Return_WhenPoolAtMaxPoolCount_Throws()
+        {
+            // prewarm(4) bypasses MaxPoolCount=3; rent makes Count=3 (== MaxPoolCount)
+            using var pool = new BoundedPool();
+            pool.Prewarm(4);
+            var instance = pool.Rent();
+
+            Assert.Throws<InvalidOperationException>(() => pool.Return(instance));
+        }
+
         private sealed class IntPool : ObjectPool<int[]>
         {
             protected override int[] CreateInstance()
@@ -259,6 +281,16 @@ namespace AudioConductor.Core.Shared.Tests
             protected override void OnClear(int[] instance)
             {
                 OnClearCount++;
+            }
+        }
+
+        private sealed class BoundedPool : ObjectPool<int[]>
+        {
+            protected override int MaxPoolCount => 3;
+
+            protected override int[] CreateInstance()
+            {
+                return new int[1];
             }
         }
     }
