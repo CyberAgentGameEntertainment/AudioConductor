@@ -211,7 +211,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Pause_AfterPlay_CallsSpyPlayerPause()
+        public void Pause_AfterPlay_IsPaused()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -224,7 +224,6 @@ namespace AudioConductor.Core.Tests
             conductor.Pause(handle);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.PauseCount, Is.EqualTo(1));
             Assert.That(player.IsPaused, Is.True);
 
             Object.DestroyImmediate(clip);

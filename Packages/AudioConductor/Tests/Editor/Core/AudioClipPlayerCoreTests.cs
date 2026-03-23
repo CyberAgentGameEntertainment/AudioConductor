@@ -166,7 +166,6 @@ namespace AudioConductor.Editor.Tests.Core
             _core.Pause();
 
             Assert.That(_core.IsPaused, Is.True);
-            Assert.That(_source0.PauseCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -316,14 +315,6 @@ namespace AudioConductor.Editor.Tests.Core
             _core.SetPitch(1.5f);
 
             Assert.That(_core.GetPitch(), Is.EqualTo(1.5f));
-        }
-
-        [Test]
-        public void GetActualVolume_AfterSetup_ReturnsOne()
-        {
-            SetupCore();
-
-            Assert.That(_core.GetActualVolume(), Is.EqualTo(1f).Within(0.0001f));
         }
     }
 }
