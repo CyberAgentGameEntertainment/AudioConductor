@@ -19,7 +19,7 @@ namespace AudioConductor.Core
     public abstract class CueSheetProviderBase<TState> : ICueSheetProvider, IDisposable
     {
         private readonly Dictionary<uint, TState> _states = new();
-        private uint _nextLoadId;
+        internal uint _nextLoadId;
 
         /// <summary>
         ///     Synchronously loads a CueSheet by key.

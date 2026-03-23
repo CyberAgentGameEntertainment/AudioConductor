@@ -34,7 +34,7 @@ namespace AudioConductor.Core
         private ConductorBehaviour? _behaviour;
         private uint _cueSheetHandleCounter;
         private float _masterVolume = 1f;
-        private uint _playStateCounter;
+        internal uint _playStateCounter;
         private GameObject? _rootObject;
 
         /// <summary>

@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -168,9 +167,7 @@ namespace AudioConductor.Core.Tests
         public void Load_WhenLoadIdOverflows_SkipsZero()
         {
             using var provider = new TestProvider(_asset);
-            var field = typeof(CueSheetProviderBase<string>).GetField(
-                "_nextLoadId", BindingFlags.NonPublic | BindingFlags.Instance);
-            field!.SetValue(provider, uint.MaxValue - 1u);
+            provider._nextLoadId = uint.MaxValue - 1u;
 
             var result1 = provider.Load("key1");
             var result2 = provider.Load("key2");
