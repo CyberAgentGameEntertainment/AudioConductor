@@ -94,11 +94,13 @@ namespace AudioConductor.Core.Tests.Fakes
             IsPlaying = false;
             IsPaused = false;
             StopCount++;
+            LastStopAction?.Invoke();
+            LastStopAction = null;
         }
 
         public float GetActualVolume()
         {
-            return 1f;
+            return Volume * VolumeFade * MasterVolume * CategoryVolume;
         }
 
         public float GetVolume()
@@ -113,7 +115,7 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public float GetActualPitch()
         {
-            return 1f;
+            return Pitch;
         }
 
         public float GetPitch()
@@ -128,12 +130,12 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void AddStopAction(Action onStop)
         {
-            LastStopAction = onStop;
+            LastStopAction += onStop;
         }
 
         public void AddEndAction(Action onEnd)
         {
-            LastEndAction = onEnd;
+            LastEndAction += onEnd;
         }
 
         public int GetCurrentSample()
