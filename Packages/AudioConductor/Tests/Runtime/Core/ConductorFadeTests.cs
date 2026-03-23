@@ -71,7 +71,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Stop_WithFadeTime_HandleRemainsPlaying()
+        public void Stop_WithFadeTime_AfterFadeCompleted_IsNoLongerPlaying()
         {
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var track = new Track { name = "track1", audioClip = clip };
@@ -82,14 +82,13 @@ namespace AudioConductor.Core.Tests
             using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
-
-            // Fade-out starts: playback is still active until fade completes.
             conductor.Stop(handle, 1.0f);
 
-            // IsPlaying remains true because the fade is ongoing.
-            Assert.That(conductor.IsPlaying(handle), Is.True);
+            // Advance time past the fade duration to complete the fade-out.
+            conductor.Update(1.1f);
 
             Object.DestroyImmediate(clip);
+            Assert.That(conductor.IsPlaying(handle), Is.False);
         }
 
         [Test]
