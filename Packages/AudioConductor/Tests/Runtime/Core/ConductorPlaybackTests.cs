@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Reflection;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -175,8 +176,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void PlayOptions_TrackIndex_SelectsSpecificTrack()
         {
-            // A cue with two tracks but null clips — both return invalid,
-            // but we verify the overload does not throw.
+            // Clips are null so Play returns invalid, but TrackIndex selection itself must not throw.
             var track0 = new Track { name = "track0", audioClip = null };
             var track1 = new Track { name = "track1", audioClip = null };
             var cue = new Cue { name = "cue1" };
@@ -187,12 +187,15 @@ namespace AudioConductor.Core.Tests
             using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
-            Assert.DoesNotThrow(() => conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackIndex = 1 }));
+            var handle = conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackIndex = 1 });
+
+            Assert.That(handle.IsValid, Is.False);
         }
 
         [Test]
         public void PlayOptions_TrackName_SelectsSpecificTrack()
         {
+            // Clip is null so Play returns invalid, but TrackName selection itself must not throw.
             var track = new Track { name = "named_track", audioClip = null };
             var cue = new Cue { name = "cue1" };
             cue.trackList.Add(track);
@@ -201,8 +204,9 @@ namespace AudioConductor.Core.Tests
             using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
-            Assert.DoesNotThrow(() =>
-                conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackName = "named_track" }));
+            var handle = conductor.Play(sheetHandle, "cue1", new PlayOptions { TrackName = "named_track" });
+
+            Assert.That(handle.IsValid, Is.False);
         }
 
         [Test]
@@ -381,6 +385,35 @@ namespace AudioConductor.Core.Tests
             // Both plays should succeed because each sequential play advances the track index.
             Assert.That(handle1.IsValid, Is.True);
             Assert.That(handle2.IsValid, Is.True);
+        }
+
+        [Test]
+        public void Play_WhenPlayStateCounterOverflows_SkipsZeroId()
+        {
+            var clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            var track = new Track { name = "track1", audioClip = clip };
+            var cue = new Cue { name = "cue1" };
+            cue.trackList.Add(track);
+            _cueSheetAsset.cueSheet.cueList.Add(cue);
+
+            using var conductor = new Conductor(_settings);
+            var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
+
+            // Force counter to uint.MaxValue so the next increment overflows to 0.
+            var field = typeof(Conductor).GetField(
+                "_playStateCounter", BindingFlags.NonPublic | BindingFlags.Instance);
+            field!.SetValue(conductor, uint.MaxValue);
+
+            var handle1 = conductor.Play(sheetHandle, "cue1");
+            var handle2 = conductor.Play(sheetHandle, "cue1");
+
+            Object.DestroyImmediate(clip);
+
+            // First play wraps to 0 and must skip to 1; second play uses 2.
+            // Both handles must be valid (Id != 0).
+            Assert.That(handle1.IsValid, Is.True);
+            Assert.That(handle2.IsValid, Is.True);
+            Assert.That(handle1, Is.Not.EqualTo(handle2));
         }
     }
 }

@@ -98,7 +98,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void StopAll_WithFadeTime_DoesNotThrow()
+        public void StopAll_WithFadeTime_Startsfade()
         {
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var track = new Track { name = "track1", audioClip = clip };
@@ -108,11 +108,13 @@ namespace AudioConductor.Core.Tests
 
             using var conductor = new Conductor(_settings);
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
-            conductor.Play(sheetHandle, "cue1");
+            var handle = conductor.Play(sheetHandle, "cue1");
 
-            Assert.DoesNotThrow(() => conductor.StopAll(1.0f));
+            conductor.StopAll(1.0f);
 
+            // Fade-out is in progress, so the playback remains tracked as playing.
             Object.DestroyImmediate(clip);
+            Assert.That(conductor.IsPlaying(handle), Is.True);
         }
 
         [Test]

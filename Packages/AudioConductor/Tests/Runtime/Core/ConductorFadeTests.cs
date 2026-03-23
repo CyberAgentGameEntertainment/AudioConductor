@@ -31,7 +31,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Stop_WithFadeTime_DoesNotThrow()
+        public void Stop_WithFadeTime_StartsFade()
         {
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var track = new Track { name = "track1", audioClip = clip };
@@ -43,13 +43,15 @@ namespace AudioConductor.Core.Tests
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
 
-            Assert.DoesNotThrow(() => conductor.Stop(handle, 1.0f));
+            conductor.Stop(handle, 1.0f);
 
+            // Fade-out is in progress, so the playback remains tracked as playing.
             Object.DestroyImmediate(clip);
+            Assert.That(conductor.IsPlaying(handle), Is.True);
         }
 
         [Test]
-        public void Stop_WithFadeTimeAndCustomFader_DoesNotThrow()
+        public void Stop_WithFadeTimeAndCustomFader_StartsFade()
         {
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var track = new Track { name = "track1", audioClip = clip };
@@ -61,9 +63,11 @@ namespace AudioConductor.Core.Tests
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
             var handle = conductor.Play(sheetHandle, "cue1");
 
-            Assert.DoesNotThrow(() => conductor.Stop(handle, 1.0f, Faders.Linear));
+            conductor.Stop(handle, 1.0f, Faders.Linear);
 
+            // Fade-out with custom fader is in progress, so the playback remains tracked as playing.
             Object.DestroyImmediate(clip);
+            Assert.That(conductor.IsPlaying(handle), Is.True);
         }
 
         [Test]

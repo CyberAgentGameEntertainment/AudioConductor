@@ -168,6 +168,9 @@ namespace AudioConductor.Core.Shared.Tests
         [TestCase(1, false, 1, 0, false, 0.5f, 0f, false, 0.5f, 0.5f)]
         [TestCase(1, false, 1, 0.2f, false, 0.5f, 0, false, 0.4f, 0.6f)]
         [TestCase(1, false, 1, 0, false, 0.5f, 0.2f, false, 0.3f, 0.7f)]
+        // 3-layer product exceeds Pitch.Max (3*3*3=27 > 3): result must clamp to ±3.
+        [TestCase(3, false, 3, 0, false, 3, 0, false, 3, 3)]
+        [TestCase(3, true, 3, 0, false, 3, 0, false, -3, -3)]
         public void CalcPitch(float cueSheetPitch, bool cueSheetPitchInvert,
             float cuePitch, float cuePitchRange, bool cuePitchInvert,
             float trackPitch, float trackPitchRange, bool trackPitchInvert,
