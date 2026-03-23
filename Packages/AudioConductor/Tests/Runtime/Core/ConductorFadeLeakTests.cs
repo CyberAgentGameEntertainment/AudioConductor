@@ -15,16 +15,16 @@ namespace AudioConductor.Core.Tests
 {
     public class ConductorFadeLeakTests
     {
-        private FakePlayerProvider _managedProvider = null!;
-        private FakePlayerProvider _oneShotProvider = null!;
+        private SpyPlayerProvider _managedProvider = null!;
+        private SpyPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new FakePlayerProvider();
-            _oneShotProvider = new FakePlayerProvider();
+            _managedProvider = new SpyPlayerProvider();
+            _oneShotProvider = new SpyPlayerProvider();
         }
 
         [TearDown]

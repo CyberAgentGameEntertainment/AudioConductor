@@ -8,10 +8,10 @@ using System.Collections.Generic;
 
 namespace AudioConductor.Core.Tests.Fakes
 {
-    internal sealed class FakePlayerProvider : IPlayerProvider
+    internal sealed class SpyPlayerProvider : IPlayerProvider
     {
-        private readonly Queue<FakePlayer> _pool = new();
-        public List<FakePlayer> Created { get; } = new();
+        private readonly Queue<SpyPlayer> _pool = new();
+        public List<SpyPlayer> Created { get; } = new();
 
         public void Prewarm(int count)
         {
@@ -22,16 +22,16 @@ namespace AudioConductor.Core.Tests.Fakes
             if (_pool.Count > 0)
                 return _pool.Dequeue();
 
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             Created.Add(player);
             return player;
         }
 
         public void Return(IInternalPlayer player)
         {
-            var fake = (FakePlayer)player;
-            fake.ResetState();
-            _pool.Enqueue(fake);
+            var spy = (SpyPlayer)player;
+            spy.ResetState();
+            _pool.Enqueue(spy);
         }
     }
 }

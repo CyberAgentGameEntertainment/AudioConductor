@@ -32,7 +32,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void StartFade_SetsActiveFadeIdAndIsFading()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
 
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
@@ -43,8 +43,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void StartFade_MultipleCalls_AssignsDifferentFadeIds()
         {
-            var player1 = new FakePlayer();
-            var player2 = new FakePlayer();
+            var player1 = new SpyPlayer();
+            var player2 = new SpyPlayer();
 
             _fadeManager.StartFade(player1, Faders.Linear, 0f, 1f, 1f);
             _fadeManager.StartFade(player2, Faders.Linear, 0f, 1f, 1f);
@@ -55,7 +55,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Update_ProgressesFade_SetsVolumeFade()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             _fadeManager.Update(0.5f);
@@ -67,7 +67,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Update_CompletedFade_ClearsIsFadingAndActiveFadeId()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             _fadeManager.Update(1f);
@@ -80,7 +80,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Update_StaleFade_IsReclaimed()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             // Cancel the fade (makes it stale).
@@ -96,7 +96,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void MarkFadeOut_RegistersTarget()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
 
             _fadeManager.MarkFadeOut(player);
 
@@ -106,7 +106,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void IsFadingOut_UnregisteredTarget_ReturnsFalse()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
 
             Assert.That(_fadeManager.IsFadingOut(player), Is.False);
         }
@@ -114,7 +114,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void RemoveFadeOutTarget_RemovesFromTracking()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
 
             _fadeManager.MarkFadeOut(player);
             _fadeManager.RemoveFadeOutTarget(player);
@@ -125,7 +125,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void CancelFade_ResetsActiveFadeIdAndIsFading()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             _fadeManager.CancelFade(player);
@@ -137,7 +137,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void CancelFade_RemovesFadeOutTarget()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.MarkFadeOut(player);
 
             _fadeManager.CancelFade(player);
@@ -148,7 +148,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Dispose_ClearsAllState()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
             _fadeManager.MarkFadeOut(player);
 
@@ -161,8 +161,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void StartFade_MultiplePlayers_AllProgressIndependently()
         {
-            var player1 = new FakePlayer();
-            var player2 = new FakePlayer();
+            var player1 = new SpyPlayer();
+            var player2 = new SpyPlayer();
 
             _fadeManager.StartFade(player1, Faders.Linear, 0f, 1f, 1f);
             _fadeManager.StartFade(player2, Faders.Linear, 0f, 1f, 2f);
@@ -181,7 +181,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void StartFade_SamePlayerTwice_SecondOverridesFirst()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
 
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
             var firstFadeId = player.ActiveFadeId;
@@ -195,7 +195,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void StartFade_SamePlayerTwice_UpdateCompletesSecondFade()
         {
-            var player = new FakePlayer();
+            var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
             _fadeManager.StartFade(player, Faders.Linear, 1f, 0f, 1f);
 

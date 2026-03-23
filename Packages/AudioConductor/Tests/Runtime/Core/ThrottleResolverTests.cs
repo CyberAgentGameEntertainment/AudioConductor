@@ -54,7 +54,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void ResolveThrottle_AtLimit_PriorityOrder_WithCandidate_ReturnsTrue()
         {
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var cue = CreateCue();
             var managed = new PlaybackState(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
@@ -78,7 +78,7 @@ namespace AudioConductor.Core.Tests
         public void ResolveThrottle_AtLimit_MinPriorityLowerThanTrack_ForcesEviction()
         {
             // Existing sounds have lower priority → force PriorityOrder eviction regardless of throttleType.
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var cue = CreateCue();
             var managed = new PlaybackState(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
@@ -92,7 +92,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_Playback_CountsAndTracksOldest()
         {
             var cue = CreateCue(10);
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var state = new PlaybackState(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -116,7 +116,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_Playback_SkipsStoppedPlayer()
         {
             var cue = CreateCue();
-            var player = new FakePlayer { IsPlaying = false, IsPaused = false };
+            var player = new SpyPlayer { IsPlaying = false, IsPaused = false };
             var state = new PlaybackState(1, 100, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -136,7 +136,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_Playback_DifferentSheet_OnlyCounts_GlobalAndCategory()
         {
             var cue = CreateCue(10);
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var state = new PlaybackState(1, 200, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -160,7 +160,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_OneShot_CountsAndTracksOldest()
         {
             var cue = CreateCue(10);
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var state = new OneShotState(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -184,7 +184,7 @@ namespace AudioConductor.Core.Tests
         public void SelectEvictionCandidate_ManagedOlderThanOneShot_SelectsManaged()
         {
             var cue = CreateCue();
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var managed = new PlaybackState(1, 100, cue, player, 0);
             var oneShot = new OneShotState(2, 100, cue, player, 0);
 
@@ -197,7 +197,7 @@ namespace AudioConductor.Core.Tests
         public void SelectEvictionCandidate_OneShotOlderThanManaged_SelectsOneShot()
         {
             var cue = CreateCue();
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var managed = new PlaybackState(5, 100, cue, player, 0);
             var oneShot = new OneShotState(2, 100, cue, player, 0);
 
@@ -210,7 +210,7 @@ namespace AudioConductor.Core.Tests
         public void SelectEvictionCandidate_EqualIds_PrefersManaged()
         {
             var cue = CreateCue();
-            var player = new FakePlayer { IsPlaying = true };
+            var player = new SpyPlayer { IsPlaying = true };
             var managed = new PlaybackState(3, 100, cue, player, 0);
             var oneShot = new OneShotState(3, 100, cue, player, 0);
 

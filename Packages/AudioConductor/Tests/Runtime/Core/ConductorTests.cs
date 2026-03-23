@@ -89,7 +89,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void GetCategoryVolume_WhenNotSet_ReturnsOne()
         {
-            using var conductor = new Conductor(_settings, new FakePlayerProvider(), new FakePlayerProvider());
+            using var conductor = new Conductor(_settings, new SpyPlayerProvider(), new SpyPlayerProvider());
 
             Assert.That(conductor.GetCategoryVolume(1), Is.EqualTo(1f).Within(0.0001f));
         }
@@ -97,7 +97,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_ThenGetCategoryVolume_ReturnsSameValue()
         {
-            using var conductor = new Conductor(_settings, new FakePlayerProvider(), new FakePlayerProvider());
+            using var conductor = new Conductor(_settings, new SpyPlayerProvider(), new SpyPlayerProvider());
 
             conductor.SetCategoryVolume(1, 0.5f);
 
@@ -107,8 +107,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_AppliedToManagedPlayerWithMatchingCategory()
         {
-            var managedProvider = new FakePlayerProvider();
-            var oneShotProvider = new FakePlayerProvider();
+            var managedProvider = new SpyPlayerProvider();
+            var oneShotProvider = new SpyPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 1 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -131,8 +131,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_AppliedToOneShotPlayerWithMatchingCategory()
         {
-            var managedProvider = new FakePlayerProvider();
-            var oneShotProvider = new FakePlayerProvider();
+            var managedProvider = new SpyPlayerProvider();
+            var oneShotProvider = new SpyPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 2 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -155,8 +155,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_NotAppliedToPlayerWithDifferentCategory()
         {
-            var managedProvider = new FakePlayerProvider();
-            var oneShotProvider = new FakePlayerProvider();
+            var managedProvider = new SpyPlayerProvider();
+            var oneShotProvider = new SpyPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 10 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -179,8 +179,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Play_AppliesCategoryVolumeAtStart()
         {
-            var managedProvider = new FakePlayerProvider();
-            var oneShotProvider = new FakePlayerProvider();
+            var managedProvider = new SpyPlayerProvider();
+            var oneShotProvider = new SpyPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 5 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -202,8 +202,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void PlayOneShot_AppliesCategoryVolumeAtStart()
         {
-            var managedProvider = new FakePlayerProvider();
-            var oneShotProvider = new FakePlayerProvider();
+            var managedProvider = new SpyPlayerProvider();
+            var oneShotProvider = new SpyPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 5 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });

@@ -10,12 +10,11 @@ using UnityEngine.Audio;
 
 namespace AudioConductor.Core.Tests.Fakes
 {
-    internal sealed class FakePlayer : IInternalPlayer
+    internal sealed class SpyPlayer : IInternalPlayer
     {
         public int StopCount { get; private set; }
         public bool StopCalled => StopCount > 0;
         public float CategoryVolume { get; private set; } = 1f;
-
         public int PlayCount { get; private set; }
         public int PauseCount { get; private set; }
         public int ResumeCount { get; private set; }
@@ -32,8 +31,6 @@ namespace AudioConductor.Core.Tests.Fakes
         public int SetupStartSample { get; private set; }
         public int SetupLoopStartSample { get; private set; }
         public int SetupEndSample { get; private set; }
-        public Action? LastStopAction { get; private set; }
-        public Action? LastEndAction { get; private set; }
         public bool IsPlaying { get; set; }
         public bool IsPaused { get; set; }
         public uint ActiveFadeId { get; set; }
@@ -71,22 +68,20 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void Pause()
         {
-            if (IsPlaying)
-            {
-                IsPlaying = false;
-                IsPaused = true;
-                PauseCount++;
-            }
+            if (IsPaused)
+                return;
+            IsPlaying = false;
+            IsPaused = true;
+            PauseCount++;
         }
 
         public void Resume()
         {
-            if (IsPaused)
-            {
-                IsPlaying = true;
-                IsPaused = false;
-                ResumeCount++;
-            }
+            if (!IsPaused)
+                return;
+            IsPlaying = true;
+            IsPaused = false;
+            ResumeCount++;
         }
 
         public void Stop()
@@ -94,8 +89,6 @@ namespace AudioConductor.Core.Tests.Fakes
             IsPlaying = false;
             IsPaused = false;
             StopCount++;
-            LastStopAction?.Invoke();
-            LastStopAction = null;
         }
 
         public float GetActualVolume()
@@ -130,12 +123,10 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void AddStopAction(Action onStop)
         {
-            LastStopAction += onStop;
         }
 
         public void AddEndAction(Action onEnd)
         {
-            LastEndAction += onEnd;
         }
 
         public int GetCurrentSample()
@@ -194,8 +185,6 @@ namespace AudioConductor.Core.Tests.Fakes
             SetupStartSample = 0;
             SetupLoopStartSample = 0;
             SetupEndSample = 0;
-            LastStopAction = null;
-            LastEndAction = null;
         }
     }
 }

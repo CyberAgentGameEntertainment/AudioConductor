@@ -19,8 +19,8 @@ namespace AudioConductor.Core.Tests
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new FakePlayerProvider();
-            _oneShotProvider = new FakePlayerProvider();
+            _managedProvider = new SpyPlayerProvider();
+            _oneShotProvider = new SpyPlayerProvider();
         }
 
         [TearDown]
@@ -29,8 +29,8 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(_settings);
         }
 
-        private FakePlayerProvider _managedProvider = null!;
-        private FakePlayerProvider _oneShotProvider = null!;
+        private SpyPlayerProvider _managedProvider = null!;
+        private SpyPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         private Conductor CreateConductor()
@@ -211,7 +211,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Pause_AfterPlay_CallsFakePlayerPause()
+        public void Pause_AfterPlay_CallsSpyPlayerPause()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -232,7 +232,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Resume_AfterPause_CallsFakePlayerResume()
+        public void Resume_AfterPause_CallsSpyPlayerResume()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -311,7 +311,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void SetVolume_AfterPlay_CallsFakePlayerSetVolume()
+        public void SetVolume_AfterPlay_CallsSpyPlayerSetVolume()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -331,7 +331,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void SetPitch_AfterPlay_CallsFakePlayerSetPitch()
+        public void SetPitch_AfterPlay_CallsSpyPlayerSetPitch()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
