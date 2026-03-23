@@ -32,6 +32,8 @@ namespace AudioConductor.Core
 
             var (asset, state) = result.Value;
             var loadId = ++_nextLoadId;
+            if (loadId == 0)
+                loadId = ++_nextLoadId;
             _states[loadId] = state;
             return new CueSheetLoadInfo(asset, loadId);
         }
@@ -47,6 +49,8 @@ namespace AudioConductor.Core
 
             var (asset, state) = result.Value;
             var loadId = ++_nextLoadId;
+            if (loadId == 0)
+                loadId = ++_nextLoadId;
             _states[loadId] = state;
             return new CueSheetLoadInfo(asset, loadId);
         }

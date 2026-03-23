@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
@@ -161,6 +162,21 @@ namespace AudioConductor.Core.Tests
             Assert.That(provider.ReleasedStates, Has.Count.EqualTo(2));
             Assert.That(provider.ReleasedStates, Does.Contain("key1"));
             Assert.That(provider.ReleasedStates, Does.Contain("key2"));
+        }
+
+        [Test]
+        public void Load_WhenLoadIdOverflows_SkipsZero()
+        {
+            using var provider = new TestProvider(_asset);
+            var field = typeof(CueSheetProviderBase<string>).GetField(
+                "_nextLoadId", BindingFlags.NonPublic | BindingFlags.Instance);
+            field!.SetValue(provider, uint.MaxValue - 1u);
+
+            var result1 = provider.Load("key1");
+            var result2 = provider.Load("key2");
+
+            Assert.That(result1!.Value.LoadId, Is.EqualTo(uint.MaxValue));
+            Assert.That(result2!.Value.LoadId, Is.EqualTo(1u));
         }
 
         [Test]
