@@ -207,6 +207,20 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
+        public void SelectEvictionCandidate_EqualIds_PrefersManaged()
+        {
+            var cue = CreateCue();
+            var player = new FakePlayer { IsPlaying = true };
+            var managed = new PlaybackState(3, 100, cue, player, 0);
+            var oneShot = new OneShotState(3, 100, cue, player, 0);
+
+            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+
+            Assert.That(result.Id, Is.EqualTo(3u));
+            Assert.That(result.IsManaged, Is.True);
+        }
+
+        [Test]
         public void SelectEvictionCandidate_BothNull_ReturnsDefault()
         {
             var result = ThrottleResolver.SelectEvictionCandidate(null, null);

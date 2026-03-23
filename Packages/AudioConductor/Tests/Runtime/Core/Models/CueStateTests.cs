@@ -7,6 +7,8 @@
 using System.Collections.Generic;
 using AudioConductor.Core.Enums;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace AudioConductor.Core.Models.Tests
 {
@@ -143,6 +145,24 @@ namespace AudioConductor.Core.Models.Tests
             var track = cueState.GetTrack(1);
 
             Assert.That(track, Is.Null);
+        }
+
+        [Test]
+        public void GetTrackByName_WithDuplicateTrackNames_ReturnsFirstMatch()
+        {
+            var firstTrack = new Track { name = "TrackA" };
+            var secondTrack = new Track { name = "TrackA" };
+            var cue = new Cue
+            {
+                playType = CuePlayType.Sequential,
+                trackList = new List<Track> { firstTrack, secondTrack }
+            };
+            var cueState = new CueState(1, cue);
+
+            LogAssert.Expect(LogType.Assert, "Duplicate track name detected: TrackA");
+            var track = cueState.GetTrack("TrackA");
+
+            Assert.That(track, Is.EqualTo(firstTrack));
         }
     }
 }

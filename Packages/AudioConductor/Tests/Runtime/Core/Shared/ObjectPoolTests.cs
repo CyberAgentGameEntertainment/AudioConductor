@@ -123,6 +123,17 @@ namespace AudioConductor.Core.Shared.Tests
         }
 
         [Test]
+        public void Shrink_WithOddCountAndHalfRatio_TruncatesResult()
+        {
+            using var pool = new IntPool();
+            pool.Prewarm(3);
+
+            pool.Shrink(0.5f, 0);
+
+            Assert.That(pool.Count, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Shrink_NullPool_DoesNotThrow()
         {
             using var pool = new IntPool();
@@ -147,7 +158,7 @@ namespace AudioConductor.Core.Shared.Tests
             using var pool = new TrackingPool();
             pool.Prewarm(4);
 
-            pool.Shrink(0f, 0, callOnBeforeRent: true);
+            pool.Shrink(0f, 0, true);
 
             Assert.That(pool.OnBeforeRentCount, Is.EqualTo(4));
         }
@@ -169,7 +180,7 @@ namespace AudioConductor.Core.Shared.Tests
             using var pool = new TrackingPool();
             pool.Prewarm(3);
 
-            pool.Clear(callOnBeforeRent: true);
+            pool.Clear(true);
 
             Assert.That(pool.OnBeforeRentCount, Is.EqualTo(3));
         }

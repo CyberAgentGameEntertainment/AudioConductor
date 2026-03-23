@@ -73,6 +73,34 @@ namespace AudioConductor.Core.Models.Tests
         }
 
         [Test]
+        public void Elapsed_WhenFadeTimeIsNegative_SetsTargetVolumeImmediately()
+        {
+            var fadeable = new FakeIFadeable();
+            var fadeState = new FadeState();
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, -1f);
+
+            var result = fadeState.Elapsed(0f);
+
+            Assert.That(result, Is.True);
+            Assert.That(fadeState.IsFinished, Is.True);
+            Assert.That(fadeable.Volume, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Elapsed_WhenDeltaTimeExceedsFadeTime_CompletesAndClampsToTargetVolume()
+        {
+            var fadeable = new FakeIFadeable();
+            var fadeState = new FadeState();
+            fadeState.Setup(1, fadeable, Faders.Linear, 0f, 1f, 0.5f);
+
+            var result = fadeState.Elapsed(1f);
+
+            Assert.That(result, Is.True);
+            Assert.That(fadeState.IsFinished, Is.True);
+            Assert.That(fadeable.Volume, Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
         public void Setup_CanBeCalledTwice_ResetsState()
         {
             var fadeable1 = new FakeIFadeable();

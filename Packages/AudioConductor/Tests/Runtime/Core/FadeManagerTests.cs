@@ -191,5 +191,19 @@ namespace AudioConductor.Core.Tests
             Assert.That(player.ActiveFadeId, Is.Not.EqualTo(firstFadeId));
             Assert.That(player.ActiveFadeId, Is.Not.EqualTo(0u));
         }
+
+        [Test]
+        public void StartFade_SamePlayerTwice_UpdateCompletesSecondFade()
+        {
+            var player = new FakePlayer();
+            _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
+            _fadeManager.StartFade(player, Faders.Linear, 1f, 0f, 1f);
+
+            _fadeManager.Update(1f);
+
+            Assert.That(player.VolumeFade, Is.EqualTo(0f).Within(0.01f));
+            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
+        }
     }
 }

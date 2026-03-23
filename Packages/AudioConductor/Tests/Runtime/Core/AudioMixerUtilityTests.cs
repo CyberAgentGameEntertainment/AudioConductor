@@ -70,6 +70,7 @@ namespace AudioConductor.Core.Tests
         [TestCase(0.5f)]
         [TestCase(1.0f)]
         [TestCase(0.75f)]
+        [TestCase(2.0f)]
         public void RoundTrip_ToLinearOfToDecibel_ReturnsOriginalValue(float linear)
         {
             var roundTrip = AudioMixerUtility.ToLinear(AudioMixerUtility.ToDecibel(linear));
