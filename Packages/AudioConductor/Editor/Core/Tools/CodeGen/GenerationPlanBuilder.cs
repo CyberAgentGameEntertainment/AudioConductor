@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using AudioConductor.Core.Models;
@@ -88,7 +89,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             var errors = new List<string>();
 
             // Check OutputFilePath uniqueness
-            var seenPaths = new HashSet<string>();
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var plan in plans)
                 if (!seenPaths.Add(plan.OutputFilePath))
                     errors.Add($"Duplicate output file path: \"{plan.OutputFilePath}\"");

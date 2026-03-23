@@ -287,6 +287,21 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
             Assert.That(errors, Is.Empty);
         }
 
+        [Test]
+        public void Validate_DuplicateOutputPath_DifferentCase_ReturnsError()
+        {
+            var plans = new[]
+            {
+                new GenerationPlan("Assets/Same.cs", "", new[] { new EnumEntry("A", "A", CreateAsset("A")) }),
+                new GenerationPlan("assets/same.cs", "", new[] { new EnumEntry("B", "B", CreateAsset("B")) })
+            };
+
+            var errors = GenerationPlanBuilder.Validate(plans);
+
+            Assert.That(errors, Has.Count.GreaterThan(0));
+            Assert.That(errors[0], Does.Contain("Duplicate output file path"));
+        }
+
         private CueEnumDefinition CreateDefinition()
         {
             var def = ScriptableObject.CreateInstance<CueEnumDefinition>();

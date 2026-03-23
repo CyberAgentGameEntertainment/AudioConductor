@@ -46,6 +46,16 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen.Tests
         [TestCase("namespace", "@namespace")]
         [TestCase("return", "@return")]
         [TestCase("void", "@void")]
+        [TestCase("record", "@record")]
+        [TestCase("init", "@init")]
+        [TestCase("required", "@required")]
+        [TestCase("async", "@async")]
+        [TestCase("await", "@await")]
+        [TestCase("var", "@var")]
+        [TestCase("dynamic", "@dynamic")]
+        [TestCase("yield", "@yield")]
+        [TestCase("when", "@when")]
+        [TestCase("with", "@with")]
         public void ToPascalCase_CSharpKeyword_PrefixedWithAt(string input, string expected)
         {
             Assert.That(IdentifierConverter.ToPascalCase(input), Is.EqualTo(expected));

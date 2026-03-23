@@ -21,7 +21,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed",
             "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw",
             "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using",
-            "virtual", "void", "volatile", "while"
+            "virtual", "void", "volatile", "while",
+            // Context keywords (C# 5+/9+)
+            "async", "await", "dynamic", "file", "init", "nameof", "record", "required",
+            "scoped", "var", "when", "with", "yield"
         };
 
         /// <summary>
