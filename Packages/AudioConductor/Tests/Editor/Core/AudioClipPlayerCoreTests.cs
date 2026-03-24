@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using AudioConductor.Core;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
@@ -377,6 +376,239 @@ namespace AudioConductor.Core.Tests
             _clock.DspTime = 0.15;
             _core.ManualUpdate(0.1f);
             Assert.That(_source1.IsPlaying, Is.True);
+        }
+
+        // --- Restart ---
+
+        [Test]
+        public void Restart_WhilePlaying_RestartFromBeginning()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+
+            _clock.DspTime = 0.5;
+            _core.Restart();
+
+            // Restart calls Play() which schedules via the next alternating AudioSource index
+            Assert.That(_core.IsPlaying, Is.True);
+        }
+
+        // --- Pause (loop 2-source branch) ---
+
+        [Test]
+        public void Pause_Loop_Source0Playing_PausesSource0StopsSource1()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            _source1.IsPlaying = false;
+
+            _core.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(1));
+            Assert.That(_source1.StopCount, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
+        public void Pause_Loop_Source1Playing_StopsSource0PausesSource1()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = false;
+            _source1.IsPlaying = true;
+
+            _core.Pause();
+
+            Assert.That(_source1.PauseCount, Is.EqualTo(1));
+            Assert.That(_source0.StopCount, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
+        public void Pause_NonLoop_PausesSource0()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+
+            _core.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(1));
+        }
+
+        // --- Resume (loop branch) ---
+
+        [Test]
+        public void Resume_Loop_PausedSource0_UnPausesSource0()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            _source1.IsPlaying = false;
+            _core.Pause();
+
+            _core.Resume();
+
+            Assert.That(_source0.UnPauseCount, Is.EqualTo(1));
+            Assert.That(_source1.UnPauseCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Resume_Loop_PausedSource1_UnPausesSource1()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = false;
+            _source1.IsPlaying = true;
+            _core.Pause();
+
+            _core.Resume();
+
+            Assert.That(_source1.UnPauseCount, Is.EqualTo(1));
+            Assert.That(_source0.UnPauseCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Resume_NonLoop_UnPausesSource0()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+            _core.Pause();
+
+            _core.Resume();
+
+            Assert.That(_source0.UnPauseCount, Is.EqualTo(1));
+        }
+
+        // --- AddEndAction / _onEnd fire ---
+
+        [Test]
+        public void AddEndAction_OnPlaybackEnd_InvokesCallback()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+
+            var called = false;
+            _core.AddEndAction(() => called = true);
+
+            // Advance past scheduledEndTime to trigger ManualUpdate → _onEnd
+            _clock.DspTime = 10.0;
+            _core.ManualUpdate(10.0f);
+
+            Assert.That(called, Is.True);
+        }
+
+        [Test]
+        public void AddEndAction_Multiple_InvokesAllCallbacks()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+
+            var count = 0;
+            _core.AddEndAction(() => count++);
+            _core.AddEndAction(() => count++);
+
+            _clock.DspTime = 10.0;
+            _core.ManualUpdate(10.0f);
+
+            Assert.That(count, Is.EqualTo(2));
+        }
+
+        // --- GetCurrentSample / SetCurrentSample ---
+
+        [Test]
+        public void GetCurrentSample_NonLoop_ReturnsSource0TimeSamples()
+        {
+            SetupCore(isLoop: false);
+            _source0.TimeSamples = 1234;
+
+            Assert.That(_core.GetCurrentSample(), Is.EqualTo(1234));
+        }
+
+        [Test]
+        public void GetCurrentSample_Loop_Source0Playing_ReturnsSource0TimeSamples()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            _source1.IsPlaying = false;
+            _source0.TimeSamples = 500;
+
+            Assert.That(_core.GetCurrentSample(), Is.EqualTo(500));
+        }
+
+        [Test]
+        public void GetCurrentSample_Loop_BothPlaying_ReturnsHigherTimeSamples()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            _source1.IsPlaying = true;
+            _source0.TimeSamples = 1000;
+            _source1.TimeSamples = 500;
+
+            // GetPlayingSource returns source with higher TimeSamples
+            Assert.That(_core.GetCurrentSample(), Is.EqualTo(1000));
+        }
+
+        [Test]
+        public void GetCurrentSample_Loop_NonePlaying_ReturnsZero()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _source0.IsPlaying = false;
+            _source1.IsPlaying = false;
+
+            Assert.That(_core.GetCurrentSample(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SetCurrentSample_NonLoop_SetsSource0TimeSamples()
+        {
+            SetupCore(isLoop: false, endSample: _clip.samples);
+
+            _core.SetCurrentSample(2000);
+
+            Assert.That(_source0.TimeSamples, Is.EqualTo(2000));
+        }
+
+        [Test]
+        public void SetCurrentSample_Loop_SetsPlayingSourceTimeSamples()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: true, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            _source1.IsPlaying = false;
+
+            _core.SetCurrentSample(3000);
+
+            Assert.That(_source0.TimeSamples, Is.EqualTo(3000));
+        }
+
+        [Test]
+        public void SetCurrentSample_ReschedulesEndTime()
+        {
+            _clock.DspTime = 0.0;
+            SetupCore(isLoop: false, endSample: _clip.samples);
+            _core.Play();
+            _source0.IsPlaying = true;
+            var endTimeBefore = _source0.LastScheduledEndTime;
+
+            _clock.DspTime = 0.5;
+            _source0.TimeSamples = 22050; // halfway
+            _core.SetCurrentSample(22050);
+
+            Assert.That(_source0.LastScheduledEndTime, Is.Not.EqualTo(endTimeBefore));
         }
     }
 }
