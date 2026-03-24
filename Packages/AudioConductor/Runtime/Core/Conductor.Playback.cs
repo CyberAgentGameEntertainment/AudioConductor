@@ -8,6 +8,7 @@ using System;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
+using UnityEngine;
 
 namespace AudioConductor.Core
 {
@@ -318,6 +319,19 @@ namespace AudioConductor.Core
                     ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
                     ref catCount, ref catMin, ref catOldestOneShot,
                     ref globalCount, ref globalMin, ref globalOldestOneShot);
+
+#if UNITY_EDITOR
+            // Invariant: counts must not exceed their respective limits.
+            // Violated only if throttle limits are mutated while players are active (unsupported).
+            Debug.Assert(cueThrottleLimit <= 0 || cueCount <= cueThrottleLimit,
+                "cue count exceeds throttle limit");
+            Debug.Assert(sheetThrottleLimit <= 0 || sheetCount <= sheetThrottleLimit,
+                "sheet count exceeds throttle limit");
+            Debug.Assert(catThrottleLimit <= 0 || catCount <= catThrottleLimit,
+                "category count exceeds throttle limit");
+            Debug.Assert(globalThrottleLimit <= 0 || globalCount <= globalThrottleLimit,
+                "global count exceeds throttle limit");
+#endif
 
             // Phase 1: Resolve eviction candidates per scope without executing.
             // AdjustCountsAfterEviction updates local counts so subsequent scopes
