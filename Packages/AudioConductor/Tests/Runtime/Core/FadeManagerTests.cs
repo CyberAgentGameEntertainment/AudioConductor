@@ -9,9 +9,6 @@ using NUnit.Framework;
 
 namespace AudioConductor.Core.Tests
 {
-    /// <summary>
-    ///     Tests for <see cref="FadeManager" /> fade lifecycle management.
-    /// </summary>
     [TestFixture]
     internal sealed class FadeManagerTests
     {
