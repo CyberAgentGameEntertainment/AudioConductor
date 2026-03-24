@@ -175,8 +175,8 @@ namespace AudioConductor.Core.Tests.Fakes
             SetupCount = 0;
             ManualUpdateCount = 0;
             Volume = 0f;
-            Pitch = 0f;
-            MasterVolume = 0f;
+            Pitch = 1f;
+            MasterVolume = 1f;
             CurrentSample = 0;
             LastDeltaTime = 0f;
             SetupVolume = 0f;
