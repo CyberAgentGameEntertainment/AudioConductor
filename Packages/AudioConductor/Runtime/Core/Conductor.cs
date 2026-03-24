@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -29,8 +30,9 @@ namespace AudioConductor.Core
         private readonly IPlayerProvider _playerProvider;
         private readonly ICueSheetProvider? _provider;
         private readonly List<uint> _removeKeyBuffer = new(BufferInitialCapacity);
-        private readonly AudioConductorSettings _settings;
         private readonly List<uint> _stopAllKeyBuffer = new(BufferInitialCapacity);
+        private readonly int _throttleLimit;
+        private readonly ThrottleType _throttleType;
         private ConductorBehaviour? _behaviour;
         private NonZeroSequence _cueSheetHandleCounter;
         private float _masterVolume = 1f;
@@ -45,7 +47,8 @@ namespace AudioConductor.Core
         /// <param name="provider">Optional provider for async CueSheet loading and releasing.</param>
         public Conductor(AudioConductorSettings settings, ICueSheetProvider? provider = null)
         {
-            _settings = settings;
+            _throttleType = settings.throttleType;
+            _throttleLimit = settings.throttleLimit;
             _provider = provider;
 
             _rootObject = new GameObject(nameof(Conductor));
@@ -76,7 +79,8 @@ namespace AudioConductor.Core
         internal Conductor(AudioConductorSettings settings, IPlayerProvider managedProvider,
             IPlayerProvider oneShotProvider)
         {
-            _settings = settings;
+            _throttleType = settings.throttleType;
+            _throttleLimit = settings.throttleLimit;
             _provider = null;
             _playerProvider = managedProvider;
             _oneShotProvider = oneShotProvider;

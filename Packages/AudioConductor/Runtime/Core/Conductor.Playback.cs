@@ -291,8 +291,8 @@ namespace AudioConductor.Core
                 catThrottleLimit = cat.throttleLimit;
             }
 
-            var globalThrottleType = _settings.throttleType;
-            var globalThrottleLimit = _settings.throttleLimit;
+            var globalThrottleType = _throttleType;
+            var globalThrottleLimit = _throttleLimit;
 
             if (cueThrottleLimit <= 0 && sheetThrottleLimit <= 0 && catThrottleLimit <= 0 &&
                 globalThrottleLimit <= 0)
