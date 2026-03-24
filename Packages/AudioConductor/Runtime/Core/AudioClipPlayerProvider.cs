@@ -33,7 +33,6 @@ namespace AudioConductor.Core
                 return;
 
             var clipPlayer = (AudioClipPlayer)player;
-            clipPlayer.ResetState();
             _pool.Return(clipPlayer);
         }
     }

@@ -9,6 +9,5 @@ namespace AudioConductor.Core
         void SetMasterVolume(float volume);
         void SetCategoryVolume(float volume);
         void ManualUpdate(float deltaTime);
-        void ResetState();
     }
 }
