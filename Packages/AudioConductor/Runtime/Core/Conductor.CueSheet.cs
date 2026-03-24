@@ -20,7 +20,7 @@ namespace AudioConductor.Core
         /// <returns>A handle that identifies this registration.</returns>
         public CueSheetHandle RegisterCueSheet(CueSheetAsset asset)
         {
-            var id = ++_cueSheetHandleCounter;
+            var id = _cueSheetHandleCounter.Next();
             _cueSheets[id] = new CueSheetRegistration(asset);
             return new CueSheetHandle(id);
         }
@@ -40,7 +40,7 @@ namespace AudioConductor.Core
             if (info == null)
                 throw new InvalidOperationException($"Failed to load CueSheet with key '{key}'.");
 
-            var id = ++_cueSheetHandleCounter;
+            var id = _cueSheetHandleCounter.Next();
             _cueSheets[id] = new CueSheetRegistration(info.Value.Asset, info.Value.LoadId);
             return new CueSheetHandle(id);
         }

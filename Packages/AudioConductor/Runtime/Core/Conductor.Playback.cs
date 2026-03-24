@@ -222,8 +222,7 @@ namespace AudioConductor.Core
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
 
-            var id = ++_playStateCounter;
-            if (id == 0) id = ++_playStateCounter;
+            var id = _playStateCounter.Next();
             var state = new PlaybackState(id, cueSheetId, cue, player, track.priority);
             _playbacks[id] = state;
 
@@ -258,8 +257,7 @@ namespace AudioConductor.Core
             player.Play();
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
-            var oneShotId = ++_playStateCounter;
-            if (oneShotId == 0) oneShotId = ++_playStateCounter;
+            var oneShotId = _playStateCounter.Next();
             _oneShotStates.Add(new OneShotState(oneShotId, cueSheetId, cue, player, track.priority));
         }
 

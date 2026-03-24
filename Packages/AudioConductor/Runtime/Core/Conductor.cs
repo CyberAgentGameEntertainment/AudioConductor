@@ -32,9 +32,9 @@ namespace AudioConductor.Core
         private readonly AudioConductorSettings _settings;
         private readonly List<uint> _stopAllKeyBuffer = new(BufferInitialCapacity);
         private ConductorBehaviour? _behaviour;
-        private uint _cueSheetHandleCounter;
+        private NonZeroSequence _cueSheetHandleCounter;
         private float _masterVolume = 1f;
-        internal uint _playStateCounter;
+        internal NonZeroSequence _playStateCounter;
         private GameObject? _rootObject;
 
         /// <summary>

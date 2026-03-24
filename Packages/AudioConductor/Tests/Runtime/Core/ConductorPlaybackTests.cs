@@ -399,7 +399,7 @@ namespace AudioConductor.Core.Tests
             var sheetHandle = conductor.RegisterCueSheet(_cueSheetAsset);
 
             // Force counter to uint.MaxValue so the next increment overflows to 0.
-            conductor._playStateCounter = uint.MaxValue;
+            conductor._playStateCounter = new NonZeroSequence(uint.MaxValue);
 
             var handle1 = conductor.Play(sheetHandle, "cue1");
             var handle2 = conductor.Play(sheetHandle, "cue1");
