@@ -167,7 +167,7 @@ namespace AudioConductor.Core.Tests
         public void Load_WhenLoadIdOverflows_SkipsZero()
         {
             using var provider = new TestProvider(_asset);
-            provider._nextLoadId = uint.MaxValue - 1u;
+            provider._nextLoadId = new NonZeroSequence(uint.MaxValue - 1u);
 
             var result1 = provider.Load("key1");
             var result2 = provider.Load("key2");
