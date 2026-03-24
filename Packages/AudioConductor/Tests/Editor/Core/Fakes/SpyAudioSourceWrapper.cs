@@ -8,7 +8,7 @@ using AudioConductor.Core;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Editor.Tests.Core.Fakes
+namespace AudioConductor.Core.Tests.Fakes
 {
     internal sealed class SpyAudioSourceWrapper : IAudioSourceWrapper
     {

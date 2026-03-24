@@ -12,7 +12,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Tests.PlayMode
+namespace AudioConductor.Core.Shared.Tests
 {
     public class ComponentPoolPlayModeTests
     {

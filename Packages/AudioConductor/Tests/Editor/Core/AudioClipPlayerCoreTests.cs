@@ -5,12 +5,12 @@
 #nullable enable
 
 using AudioConductor.Core;
-using AudioConductor.Editor.Tests.Core.Fakes;
+using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Editor.Tests.Core
+namespace AudioConductor.Core.Tests
 {
     [TestFixture]
     internal sealed class AudioClipPlayerCoreTests

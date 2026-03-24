@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Tests.PlayMode
+namespace AudioConductor.Core.Tests
 {
     public class AudioClipPlayerPlayModeTests
     {
