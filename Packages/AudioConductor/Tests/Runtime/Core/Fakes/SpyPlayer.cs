@@ -12,6 +12,9 @@ namespace AudioConductor.Core.Tests.Fakes
 {
     internal sealed class SpyPlayer : IInternalPlayer
     {
+        private Action? _onEnd;
+        private Action? _onStop;
+
         public int StopCount { get; private set; }
         public bool StopCalled => StopCount > 0;
         public float CategoryVolume { get; private set; } = 1f;
@@ -31,6 +34,8 @@ namespace AudioConductor.Core.Tests.Fakes
         public int SetupStartSample { get; private set; }
         public int SetupLoopStartSample { get; private set; }
         public int SetupEndSample { get; private set; }
+        public float ActualVolume { get; set; } = 1f;
+        public float ActualPitch { get; set; } = 1f;
         public bool IsPlaying { get; set; }
         public bool IsPaused { get; set; }
         public uint ActiveFadeId { get; set; }
@@ -42,9 +47,11 @@ namespace AudioConductor.Core.Tests.Fakes
         public void Setup(AudioMixerGroup? audioMixerGroup, AudioClip clip, int categoryId, float volume, float pitch,
             bool isLoop, int startSample, int loopStartSample, int endSample)
         {
+            if (clip == null)
+                return;
+            ResetState();
             CategoryId = categoryId;
-            if (clip != null)
-                ClipSamples = clip.samples;
+            ClipSamples = clip.samples;
             SetupCount++;
             SetupVolume = volume;
             SetupPitch = pitch;
@@ -89,11 +96,14 @@ namespace AudioConductor.Core.Tests.Fakes
             IsPlaying = false;
             IsPaused = false;
             StopCount++;
+            var onStop = _onStop;
+            _onStop = null;
+            onStop?.Invoke();
         }
 
         public float GetActualVolume()
         {
-            return Volume * VolumeFade * MasterVolume * CategoryVolume;
+            return ActualVolume;
         }
 
         public float GetVolume()
@@ -108,7 +118,7 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public float GetActualPitch()
         {
-            return Pitch;
+            return ActualPitch;
         }
 
         public float GetPitch()
@@ -123,10 +133,12 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void AddStopAction(Action onStop)
         {
+            _onStop += onStop;
         }
 
         public void AddEndAction(Action onEnd)
         {
+            _onEnd += onEnd;
         }
 
         public int GetCurrentSample()
@@ -156,6 +168,8 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void ManualUpdate(float deltaTime)
         {
+            if (!IsPlaying && !IsPaused)
+                return;
             ManualUpdateCount++;
             LastDeltaTime = deltaTime;
         }
@@ -185,6 +199,10 @@ namespace AudioConductor.Core.Tests.Fakes
             SetupStartSample = 0;
             SetupLoopStartSample = 0;
             SetupEndSample = 0;
+            ActualVolume = 1f;
+            ActualPitch = 1f;
+            _onStop = null;
+            _onEnd = null;
         }
     }
 }
