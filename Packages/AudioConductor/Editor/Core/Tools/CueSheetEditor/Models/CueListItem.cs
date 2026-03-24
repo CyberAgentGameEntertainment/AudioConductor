@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using AudioConductor.Core.Enums;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using UnityEditor.IMGUI.Controls;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models

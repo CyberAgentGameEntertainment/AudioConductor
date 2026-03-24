@@ -8,7 +8,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using AudioConductor.Editor.SamplesDeployment;
 using NUnit.Framework;
 
 namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
@@ -57,7 +56,8 @@ namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
         {
             var packageJsonPath = Path.Combine(_tempDir, "nonexistent.json");
 
-            var result = PackageManifestUpdater.UpdateSamples(packageJsonPath, new List<PackageManifestUpdater.SampleInfo>());
+            var result =
+                PackageManifestUpdater.UpdateSamples(packageJsonPath, new List<PackageManifestUpdater.SampleInfo>());
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Errors, Has.Count.GreaterThan(0));
@@ -69,7 +69,8 @@ namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
             var packageJsonPath = Path.Combine(_tempDir, "package.json");
             File.WriteAllText(packageJsonPath, "not valid json");
 
-            var result = PackageManifestUpdater.UpdateSamples(packageJsonPath, new List<PackageManifestUpdater.SampleInfo>());
+            var result =
+                PackageManifestUpdater.UpdateSamples(packageJsonPath, new List<PackageManifestUpdater.SampleInfo>());
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Errors, Has.Count.GreaterThan(0));

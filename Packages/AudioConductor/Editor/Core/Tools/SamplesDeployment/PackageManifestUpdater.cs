@@ -12,7 +12,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace AudioConductor.Editor.SamplesDeployment
+namespace AudioConductor.Editor.Core.Tools.SamplesDeployment
 {
     /// <summary>
     ///     Updates the samples array in package.json.

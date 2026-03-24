@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AudioConductor.Editor.SampleGeneration
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration
 {
     /// <summary>
     ///     Provides search and enumeration of registered samples.

@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace AudioConductor.Editor.SampleGeneration
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration
 {
     /// <summary>
     ///     Defines a sample. Manages its own generation and deletion.

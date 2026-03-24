@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace AudioConductor.Editor.SamplesDeployment
+namespace AudioConductor.Editor.Core.Tools.SamplesDeployment
 {
     /// <summary>
     ///     Scans the Assets/Samples folder to detect samples.

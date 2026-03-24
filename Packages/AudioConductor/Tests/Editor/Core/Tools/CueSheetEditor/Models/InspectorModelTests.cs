@@ -6,7 +6,7 @@
 
 using System;
 using AudioConductor.Core.Models;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using NUnit.Framework;

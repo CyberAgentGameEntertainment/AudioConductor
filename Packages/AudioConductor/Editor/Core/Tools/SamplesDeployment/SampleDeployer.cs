@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace AudioConductor.Editor.SamplesDeployment
+namespace AudioConductor.Editor.Core.Tools.SamplesDeployment
 {
     /// <summary>
     ///     Deploys a sample folder to the package's Samples~ folder.

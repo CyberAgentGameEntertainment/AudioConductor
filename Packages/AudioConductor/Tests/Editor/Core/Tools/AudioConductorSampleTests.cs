@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using AudioConductor.Editor.SampleGeneration;
 using NUnit.Framework;
 
-namespace AudioConductor.Editor.Core.Tools.Tests
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration.Tests
 {
     internal sealed class AudioConductorSampleTests
     {

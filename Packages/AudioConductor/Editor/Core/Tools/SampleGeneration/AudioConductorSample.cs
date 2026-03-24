@@ -17,7 +17,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace AudioConductor.Editor.SampleGeneration
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration
 {
     /// <summary>
     ///     Generates an AudioConductor v2 sample demonstrating multiple Conductors,

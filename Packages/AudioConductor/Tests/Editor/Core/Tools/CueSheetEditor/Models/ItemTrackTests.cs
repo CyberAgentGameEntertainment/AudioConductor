@@ -5,7 +5,7 @@
 #nullable enable
 
 using AudioConductor.Core.Models;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using NUnit.Framework;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests

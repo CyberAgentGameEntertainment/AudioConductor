@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 
-namespace AudioConductor.Editor.SampleGeneration
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration
 {
     /// <summary>
     ///     Holds the result of a sample generation operation.

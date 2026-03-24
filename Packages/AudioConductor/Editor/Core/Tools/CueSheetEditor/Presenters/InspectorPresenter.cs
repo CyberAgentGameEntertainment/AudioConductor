@@ -5,7 +5,7 @@
 #nullable enable
 
 using System;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using UnityEngine.UIElements;

@@ -4,7 +4,7 @@
 
 #nullable enable
 
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 {

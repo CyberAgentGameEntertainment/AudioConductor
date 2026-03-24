@@ -9,12 +9,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using AudioConductor.Editor.SamplesDeployment;
+using AudioConductor.Editor.Core.Tools.SamplesDeployment;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Editor.SampleGeneration
+namespace AudioConductor.Editor.Core.Tools.SampleGeneration
 {
     /// <summary>
     ///     Editor menu for generating, cleaning, and deploying samples.

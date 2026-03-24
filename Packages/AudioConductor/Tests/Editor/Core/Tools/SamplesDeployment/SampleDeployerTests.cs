@@ -5,7 +5,6 @@
 #nullable enable
 
 using System.IO;
-using AudioConductor.Editor.SamplesDeployment;
 using NUnit.Framework;
 
 namespace AudioConductor.Editor.Core.Tools.SamplesDeployment.Tests
