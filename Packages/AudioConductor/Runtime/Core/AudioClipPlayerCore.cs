@@ -435,7 +435,10 @@ namespace AudioConductor.Core
             var playing0 = _sources[0].IsPlaying;
             var playing1 = _sources[1].IsPlaying;
 
-            // AudioSource.isPlaying may both be true near the loop.
+            // Both AudioSources may be playing simultaneously near a loop boundary.
+            // Prefer the source with higher TimeSamples (the outgoing source) to maintain
+            // continuity: the incoming source starts from loopStartSample and should not
+            // become current until the outgoing source finishes.
             if (playing0 && playing1)
                 return _sources[0].TimeSamples > _sources[1].TimeSamples ? _sources[0] : _sources[1];
 
