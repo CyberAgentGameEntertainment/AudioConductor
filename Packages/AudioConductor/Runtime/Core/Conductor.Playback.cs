@@ -186,24 +186,28 @@ namespace AudioConductor.Core
         private PlaybackHandle PlayCue(uint cueSheetId, CueSheetRegistration registration, Cue cue,
             PlayOptions? options)
         {
-            if (options?.TrackIndex.HasValue == true && !string.IsNullOrEmpty(options?.TrackName))
+            var hasTrackIndex = options?.TrackIndex.HasValue == true;
+            var trackName = options?.TrackName;
+            var selector = options?.Selector;
+
+            if (hasTrackIndex && !string.IsNullOrEmpty(trackName))
                 throw new ArgumentException("TrackIndex and TrackName are mutually exclusive.");
 
-            if (options?.TrackIndex.HasValue == true && options?.Selector != null)
+            if (hasTrackIndex && selector != null)
                 throw new ArgumentException("TrackIndex and Selector are mutually exclusive.");
 
-            if (!string.IsNullOrEmpty(options?.TrackName) && options?.Selector != null)
+            if (!string.IsNullOrEmpty(trackName) && selector != null)
                 throw new ArgumentException("TrackName and Selector are mutually exclusive.");
 
             var cueState = registration.GetOrCreateCueState(cueSheetId, cue);
 
             Track? track;
-            if (options?.TrackIndex.HasValue == true && options.Value.TrackIndex.HasValue)
-                track = cueState.GetTrack(options.Value.TrackIndex.Value);
-            else if (!string.IsNullOrEmpty(options?.TrackName))
-                track = cueState.GetTrack(options!.Value.TrackName!);
+            if (hasTrackIndex)
+                track = cueState.GetTrack(options!.Value.TrackIndex!.Value);
+            else if (!string.IsNullOrEmpty(trackName))
+                track = cueState.GetTrack(trackName!);
             else
-                track = cueState.NextTrack(options?.Selector);
+                track = cueState.NextTrack(selector);
 
             if (track == null || track.audioClip == null)
                 return default;
