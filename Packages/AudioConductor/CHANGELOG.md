@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.0.0 - YYYY/MM/DD
+## v2.0.0 - 2026/03/25
 
 - New Features
   - Instance-based `Conductor` class replacing static `AudioConductorInterface`
