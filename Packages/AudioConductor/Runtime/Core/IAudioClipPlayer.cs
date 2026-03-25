@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core.Enums;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -26,14 +27,9 @@ namespace AudioConductor.Core
         int CategoryId { get; }
 
         /// <summary>
-        ///     True if playing.
+        ///     Get the state of the player.
         /// </summary>
-        bool IsPlaying { get; }
-
-        /// <summary>
-        ///     True if paused.
-        /// </summary>
-        bool IsPaused { get; }
+        PlayerState State { get; }
 
         /// <summary>
         ///     Setup to play AudioClip.

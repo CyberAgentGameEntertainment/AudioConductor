@@ -5,71 +5,55 @@
 #nullable enable
 
 using System.Collections.Generic;
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 
 namespace AudioConductor.Core
 {
     /// <summary>
-    ///     Manages fade state lifecycle: start, update, cancel, and fade-out target tracking.
+    ///     Manages fade operation lifecycle: start, update, and cancel.
     /// </summary>
     internal sealed class FadeManager
     {
         private const int PoolInitialCapacity = 8;
-        private readonly HashSet<IFadeable> _fadeOutTargets = new(PoolInitialCapacity);
-        private readonly Stack<FadeState> _fadePool = new(PoolInitialCapacity);
-        private readonly List<FadeState> _fadeStates = new();
-        private uint _fadeIdCounter;
+        private readonly Stack<FadeOperation> _operationPool = new(PoolInitialCapacity);
+        private readonly List<FadeOperation> _operations = new();
+        private NonZeroSequence _fadeIdCounter;
 
         internal FadeManager()
         {
             for (var i = 0; i < PoolInitialCapacity; i++)
-                _fadePool.Push(new FadeState());
+                _operationPool.Push(new FadeOperation());
         }
 
         internal void StartFade(IFadeable target, IFader fader, float from, float to, float duration)
         {
-            var fadeId = NextFadeId();
-            var fadeState = RentFadeState();
-            fadeState.Setup(fadeId, target, fader, from, to, duration);
-            target.ActiveFadeId = fadeId;
-            target.IsFading = true;
-            _fadeStates.Add(fadeState);
-        }
-
-        internal bool IsFadingOut(IFadeable target)
-        {
-            return _fadeOutTargets.Contains(target);
-        }
-
-        internal void MarkFadeOut(IFadeable target)
-        {
-            _fadeOutTargets.Add(target);
-        }
-
-        internal void RemoveFadeOutTarget(IFadeable target)
-        {
-            _fadeOutTargets.Remove(target);
+            var id = _fadeIdCounter.Next();
+            var fadeState = RentOperation();
+            fadeState.Setup(id, target, fader, from, to, duration);
+            target.ActiveFadeId = id;
+            target.FadeState = to > from ? FadeState.FadingIn : FadeState.FadingOut;
+            _operations.Add(fadeState);
         }
 
         internal void CancelFade(IFadeable target)
         {
             target.ActiveFadeId = 0;
-            target.IsFading = false;
-            _fadeOutTargets.Remove(target);
+            target.FadeState = FadeState.None;
         }
 
         internal void Update(float deltaTime)
         {
-            for (var i = 0; i < _fadeStates.Count; i++)
+            for (var i = 0; i < _operations.Count; i++)
             {
-                var fade = _fadeStates[i];
+                var fade = _operations[i];
 
                 // Stale check: the fade was invalidated by CancelFade.
                 if (fade.Fadeable.ActiveFadeId != fade.Id)
                 {
-                    _fadeStates[i] = _fadeStates[^1];
-                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
-                    _fadePool.Push(fade);
+                    _operations[i] = _operations[^1];
+                    _operations.RemoveAt(_operations.Count - 1);
+                    _operationPool.Push(fade);
                     i--;
                     continue;
                 }
@@ -77,11 +61,15 @@ namespace AudioConductor.Core
                 var finished = fade.Elapsed(deltaTime);
                 if (finished)
                 {
-                    fade.Fadeable.IsFading = false;
+                    // FadingOut → FadingOutComplete so Conductor.Update can stop the player.
+                    // FadingIn → None; the player continues playing normally with no further action.
+                    fade.Fadeable.FadeState = fade.Fadeable.FadeState == FadeState.FadingOut
+                        ? FadeState.FadingOutComplete
+                        : FadeState.None;
                     fade.Fadeable.ActiveFadeId = 0;
-                    _fadeStates[i] = _fadeStates[^1];
-                    _fadeStates.RemoveAt(_fadeStates.Count - 1);
-                    _fadePool.Push(fade);
+                    _operations[i] = _operations[^1];
+                    _operations.RemoveAt(_operations.Count - 1);
+                    _operationPool.Push(fade);
                     i--;
                 }
             }
@@ -89,22 +77,12 @@ namespace AudioConductor.Core
 
         internal void Dispose()
         {
-            _fadeStates.Clear();
-            _fadeOutTargets.Clear();
+            _operations.Clear();
         }
 
-        private FadeState RentFadeState()
+        private FadeOperation RentOperation()
         {
-            return _fadePool.Count > 0 ? _fadePool.Pop() : new FadeState();
-        }
-
-        private uint NextFadeId()
-        {
-            var id = ++_fadeIdCounter;
-            // 0 is the sentinel value meaning "no active fade".
-            if (id == 0)
-                id = ++_fadeIdCounter;
-            return id;
+            return _operationPool.Count > 0 ? _operationPool.Pop() : new FadeOperation();
         }
     }
 }

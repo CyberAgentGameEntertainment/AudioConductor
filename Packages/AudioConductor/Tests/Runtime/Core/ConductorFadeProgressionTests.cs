@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
@@ -115,7 +116,7 @@ namespace AudioConductor.Core.Tests
 
             var player = _managedProvider.Created[0];
             Assert.That(player.VolumeFade, Is.EqualTo(1f).Within(0.001f));
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);

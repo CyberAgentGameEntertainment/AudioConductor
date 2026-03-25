@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core.Enums;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -22,16 +23,15 @@ namespace AudioConductor.Core
             set => _core.ActiveFadeId = value;
         }
 
-        public bool IsFading
+        public FadeState FadeState
         {
-            get => _core.IsFading;
-            set => _core.IsFading = value;
+            get => _core.FadeState;
+            set => _core.FadeState = value;
         }
 
         public int ClipSamples => _core.ClipSamples;
         public int CategoryId => _core.CategoryId;
-        public bool IsPlaying => _core.IsPlaying;
-        public bool IsPaused => _core.IsPaused;
+        public PlayerState State => _core.State;
         public float VolumeFade => _core.VolumeFade;
 
         public void Setup(AudioMixerGroup? audioMixerGroup,

@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -35,7 +36,7 @@ namespace AudioConductor.Core.Tests
         {
             _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 0);
 
-            Assert.That(_player.IsPlaying, Is.False);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]

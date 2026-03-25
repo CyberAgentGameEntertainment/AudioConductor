@@ -100,13 +100,13 @@ namespace AudioConductor.Core
 
             if (fadeTime > 0f)
             {
-                // Do not add a duplicate fade-out entry for the same player.
-                if (_fadeManager.IsFadingOut(state.Player))
+                // Do not start a duplicate fade-out if one is already in progress or completed.
+                if (state.Player.FadeState == FadeState.FadingOut ||
+                    state.Player.FadeState == FadeState.FadingOutComplete)
                     return;
 
                 _fadeManager.StartFade(state.Player, fader ?? Faders.Linear, state.Player.VolumeFade, 0f,
                     fadeTime.Value);
-                _fadeManager.MarkFadeOut(state.Player);
                 return;
             }
 

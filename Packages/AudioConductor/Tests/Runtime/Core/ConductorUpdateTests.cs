@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
@@ -123,11 +124,11 @@ namespace AudioConductor.Core.Tests
 
             var player = _managedProvider.Created[0];
             player.IsPlaying = false;
-            player.IsFading = true;
+            player.FadeState = FadeState.FadingOut;
 
             conductor.Update(0.016f);
 
-            // Playback is NOT removed because IsFading == true.
+            // Playback is NOT removed because FadeState != None.
             // Player was not returned to pool; next Play creates a new instance.
             conductor.Play(sheet, "cue1");
             Assert.That(_managedProvider.Created.Count, Is.EqualTo(2));

@@ -74,13 +74,13 @@ namespace AudioConductor.Core.Tests
             var handle = conductor.Play(sheet, "cue1", new PlayOptions { FadeTime = 1f });
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.IsFading, Is.True);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingIn));
 
             conductor.Stop(handle);
             conductor.Update(0.016f);
 
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -100,14 +100,14 @@ namespace AudioConductor.Core.Tests
 
             var player = _managedProvider.Created[0];
             conductor.Stop(handle, 1f);
-            Assert.That(player.IsFading, Is.True);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingOut));
 
             // Immediate stop via a new Stop call (no fade).
             conductor.Stop(handle);
             conductor.Update(0.016f);
 
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -153,8 +153,8 @@ namespace AudioConductor.Core.Tests
             conductor.Play(sheet, "cue1", new PlayOptions { FadeTime = 1f });
             conductor.Play(sheet, "cue1", new PlayOptions { FadeTime = 1f });
 
-            Assert.That(_managedProvider.Created[0].IsFading, Is.True);
-            Assert.That(_managedProvider.Created[1].IsFading, Is.True);
+            Assert.That(_managedProvider.Created[0].FadeState, Is.EqualTo(FadeState.FadingIn));
+            Assert.That(_managedProvider.Created[1].FadeState, Is.EqualTo(FadeState.FadingIn));
 
             conductor.StopAll();
             conductor.Update(0.016f);
@@ -162,7 +162,7 @@ namespace AudioConductor.Core.Tests
             foreach (var player in _managedProvider.Created)
             {
                 Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
-                Assert.That(player.IsFading, Is.False);
+                Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
             }
 
             Object.DestroyImmediate(clip);
@@ -209,8 +209,8 @@ namespace AudioConductor.Core.Tests
 
             conductor.Stop(h1, 1f);
             conductor.Stop(h2, 1f);
-            Assert.That(_managedProvider.Created[0].IsFading, Is.True);
-            Assert.That(_managedProvider.Created[1].IsFading, Is.True);
+            Assert.That(_managedProvider.Created[0].FadeState, Is.EqualTo(FadeState.FadingOut));
+            Assert.That(_managedProvider.Created[1].FadeState, Is.EqualTo(FadeState.FadingOut));
 
             conductor.StopAll();
             conductor.Update(0.016f);
@@ -218,7 +218,7 @@ namespace AudioConductor.Core.Tests
             foreach (var player in _managedProvider.Created)
             {
                 Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
-                Assert.That(player.IsFading, Is.False);
+                Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
             }
 
             Object.DestroyImmediate(clip);
@@ -241,14 +241,14 @@ namespace AudioConductor.Core.Tests
 
             conductor.Play(sheet, "cue1", new PlayOptions { FadeTime = 1f });
             var evictedPlayer = _managedProvider.Created[0];
-            Assert.That(evictedPlayer.IsFading, Is.True);
+            Assert.That(evictedPlayer.FadeState, Is.EqualTo(FadeState.FadingIn));
 
             // Second play triggers eviction of the first.
             conductor.Play(sheet, "cue1");
             conductor.Update(0.016f);
 
             Assert.That(evictedPlayer.ActiveFadeId, Is.EqualTo(0u));
-            Assert.That(evictedPlayer.IsFading, Is.False);
+            Assert.That(evictedPlayer.FadeState, Is.EqualTo(FadeState.None));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -271,14 +271,14 @@ namespace AudioConductor.Core.Tests
             var handle = conductor.Play(sheet, "cue1");
             var evictedPlayer = _managedProvider.Created[0];
             conductor.Stop(handle, 1f);
-            Assert.That(evictedPlayer.IsFading, Is.True);
+            Assert.That(evictedPlayer.FadeState, Is.EqualTo(FadeState.FadingOut));
 
             // Second play triggers eviction of the fading-out first.
             conductor.Play(sheet, "cue1");
             conductor.Update(0.016f);
 
             Assert.That(evictedPlayer.ActiveFadeId, Is.EqualTo(0u));
-            Assert.That(evictedPlayer.IsFading, Is.False);
+            Assert.That(evictedPlayer.FadeState, Is.EqualTo(FadeState.None));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);

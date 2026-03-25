@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Core
@@ -55,7 +56,7 @@ namespace AudioConductor.Core
             if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return false;
 
-            return state.Player.IsPlaying || state.Player.IsFading;
+            return state.Player.State == PlayerState.Playing || state.Player.FadeState != FadeState.None;
         }
 
         /// <summary>

@@ -4,6 +4,8 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
+
 namespace AudioConductor.Core
 {
     public sealed partial class Conductor
@@ -19,10 +21,9 @@ namespace AudioConductor.Core
                 if (playback.Player == null)
                     continue;
 
-                if (!playback.Player.IsFading && _fadeManager.IsFadingOut(playback.Player))
+                if (playback.Player.FadeState == FadeState.FadingOutComplete)
                 {
                     playback.Player.Stop();
-                    _fadeManager.RemoveFadeOutTarget(playback.Player);
                     _playerProvider.Return(playback.Player);
                     _removeKeyBuffer.Add(playback.Id);
                     continue;
@@ -30,7 +31,7 @@ namespace AudioConductor.Core
 
                 playback.Player.ManualUpdate(deltaTime);
 
-                if (!playback.Player.IsPlaying && !playback.Player.IsPaused && !playback.Player.IsFading)
+                if (playback.Player is { State: PlayerState.Stopped, FadeState: FadeState.None })
                 {
                     _playerProvider.Return(playback.Player);
                     _removeKeyBuffer.Add(playback.Id);
@@ -49,10 +50,10 @@ namespace AudioConductor.Core
 
                 state.Player.ManualUpdate(deltaTime);
 
-                if (!state.Player.IsPlaying && !state.Player.IsPaused)
+                if (state.Player.State == PlayerState.Stopped)
                 {
                     _oneShotProvider.Return(state.Player);
-                    _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
+                    _oneShotStates[i] = _oneShotStates[^1];
                     _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
                     i--;
                 }

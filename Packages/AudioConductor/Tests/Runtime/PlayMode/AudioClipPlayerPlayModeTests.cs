@@ -5,7 +5,7 @@
 #nullable enable
 
 using System.Collections;
-using AudioConductor.Core;
+using AudioConductor.Core.Enums;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -59,7 +59,7 @@ namespace AudioConductor.Core.Tests
             // PlayScheduled uses dspTime + 0.1s delay; wait long enough for playback to start
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(_player.IsPlaying, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
         }
 
         [UnityTest]
@@ -71,7 +71,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Stop();
 
-            Assert.That(_player.IsPlaying, Is.False);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [UnityTest]
@@ -83,7 +83,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Pause();
 
-            Assert.That(_player.IsPaused, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
         }
 
         [UnityTest]
@@ -96,7 +96,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Resume();
 
-            Assert.That(_player.IsPaused, Is.False);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
         }
 
         [UnityTest]
@@ -128,12 +128,12 @@ namespace AudioConductor.Core.Tests
             _player.Play();
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(_player.IsPlaying, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
 
             // Verify still playing after additional frames
             yield return new WaitForSeconds(0.5f);
 
-            Assert.That(_player.IsPlaying, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
 
             _player.Stop();
         }
@@ -147,7 +147,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Pause();
 
-            Assert.That(_player.IsPaused, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
 
             _player.Stop();
         }
@@ -162,7 +162,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Resume();
 
-            Assert.That(_player.IsPaused, Is.False);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
 
             _player.Stop();
         }
@@ -176,7 +176,7 @@ namespace AudioConductor.Core.Tests
 
             _player.Stop();
 
-            Assert.That(_player.IsPlaying, Is.False);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [UnityTest]

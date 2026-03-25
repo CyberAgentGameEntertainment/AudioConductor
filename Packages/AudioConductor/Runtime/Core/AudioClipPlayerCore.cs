@@ -6,6 +6,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Shared;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -50,18 +51,20 @@ namespace AudioConductor.Core
         internal float VolumeAsset { get; private set; }
         internal float PitchInternal { get; private set; }
 
+        private bool IsPaused { get; set; }
+
         public uint ActiveFadeId { get; set; }
-        public bool IsFading { get; set; }
+        public FadeState FadeState { get; set; }
         public int ClipSamples { get; private set; }
         public int CategoryId { get; private set; }
 
-        public bool IsPlaying
+        public PlayerState State
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _sources[0].IsPlaying || _sources[1].IsPlaying;
+            get => IsPaused ? PlayerState.Paused
+                : _sources[0].IsPlaying || _sources[1].IsPlaying ? PlayerState.Playing
+                : PlayerState.Stopped;
         }
-
-        public bool IsPaused { get; private set; }
 
         public void Setup(AudioMixerGroup? audioMixerGroup,
             AudioClip clip,
@@ -322,7 +325,7 @@ namespace AudioConductor.Core
             VolumeFade = 1f;
             _lastAppliedVolumeScaled = -1;
             ActiveFadeId = 0;
-            IsFading = false;
+            FadeState = FadeState.None;
             _isPlaybackActive = false;
             _pitchExternal = 1f;
 

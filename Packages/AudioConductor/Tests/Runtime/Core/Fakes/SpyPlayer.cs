@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core.Enums;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -39,10 +40,14 @@ namespace AudioConductor.Core.Tests.Fakes
         public bool IsPlaying { get; set; }
         public bool IsPaused { get; set; }
         public uint ActiveFadeId { get; set; }
-        public bool IsFading { get; set; }
+        public FadeState FadeState { get; set; }
         public int ClipSamples { get; private set; }
         public int CategoryId { get; private set; }
         public float VolumeFade { get; private set; } = 1f;
+
+        public PlayerState State => IsPaused ? PlayerState.Paused
+            : IsPlaying ? PlayerState.Playing
+            : PlayerState.Stopped;
 
         public void Setup(AudioMixerGroup? audioMixerGroup, AudioClip clip, int categoryId, float volume, float pitch,
             bool isLoop, int startSample, int loopStartSample, int endSample)
@@ -179,7 +184,7 @@ namespace AudioConductor.Core.Tests.Fakes
             IsPlaying = false;
             IsPaused = false;
             ActiveFadeId = 0;
-            IsFading = false;
+            FadeState = FadeState.None;
             StopCount = 0;
             CategoryVolume = 1f;
             VolumeFade = 1f;

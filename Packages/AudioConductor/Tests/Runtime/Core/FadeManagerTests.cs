@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 
@@ -27,14 +28,14 @@ namespace AudioConductor.Core.Tests
         private FadeManager _fadeManager = null!;
 
         [Test]
-        public void StartFade_SetsActiveFadeIdAndIsFading()
+        public void StartFade_SetsActiveFadeIdAndFadeState()
         {
             var player = new SpyPlayer();
 
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             Assert.That(player.ActiveFadeId, Is.Not.EqualTo(0u));
-            Assert.That(player.IsFading, Is.True);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingIn));
         }
 
         [Test]
@@ -58,20 +59,33 @@ namespace AudioConductor.Core.Tests
             _fadeManager.Update(0.5f);
 
             Assert.That(player.VolumeFade, Is.EqualTo(0.5f).Within(0.01f));
-            Assert.That(player.IsFading, Is.True);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingIn));
         }
 
         [Test]
-        public void Update_CompletedFade_ClearsIsFadingAndActiveFadeId()
+        public void Update_CompletedFadeIn_SetsFadeStateNone()
         {
             var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
 
             _fadeManager.Update(1f);
 
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
             Assert.That(player.VolumeFade, Is.EqualTo(1f).Within(0.01f));
+        }
+
+        [Test]
+        public void Update_CompletedFadeOut_SetsFadingOutComplete()
+        {
+            var player = new SpyPlayer();
+            _fadeManager.StartFade(player, Faders.Linear, 1f, 0f, 1f);
+
+            _fadeManager.Update(1f);
+
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingOutComplete));
+            Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
+            Assert.That(player.VolumeFade, Is.EqualTo(0f).Within(0.01f));
         }
 
         [Test]
@@ -86,41 +100,12 @@ namespace AudioConductor.Core.Tests
             // Update should reclaim the stale fade without error.
             _fadeManager.Update(0.5f);
 
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
         }
 
         [Test]
-        public void MarkFadeOut_RegistersTarget()
-        {
-            var player = new SpyPlayer();
-
-            _fadeManager.MarkFadeOut(player);
-
-            Assert.That(_fadeManager.IsFadingOut(player), Is.True);
-        }
-
-        [Test]
-        public void IsFadingOut_UnregisteredTarget_ReturnsFalse()
-        {
-            var player = new SpyPlayer();
-
-            Assert.That(_fadeManager.IsFadingOut(player), Is.False);
-        }
-
-        [Test]
-        public void RemoveFadeOutTarget_RemovesFromTracking()
-        {
-            var player = new SpyPlayer();
-
-            _fadeManager.MarkFadeOut(player);
-            _fadeManager.RemoveFadeOutTarget(player);
-
-            Assert.That(_fadeManager.IsFadingOut(player), Is.False);
-        }
-
-        [Test]
-        public void CancelFade_ResetsActiveFadeIdAndIsFading()
+        public void CancelFade_ResetsActiveFadeIdAndFadeState()
         {
             var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
@@ -128,31 +113,20 @@ namespace AudioConductor.Core.Tests
             _fadeManager.CancelFade(player);
 
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
         }
 
         [Test]
-        public void CancelFade_RemovesFadeOutTarget()
-        {
-            var player = new SpyPlayer();
-            _fadeManager.MarkFadeOut(player);
-
-            _fadeManager.CancelFade(player);
-
-            Assert.That(_fadeManager.IsFadingOut(player), Is.False);
-        }
-
-        [Test]
-        public void Dispose_ClearsAllState()
+        public void Dispose_ClearsAllOperations()
         {
             var player = new SpyPlayer();
             _fadeManager.StartFade(player, Faders.Linear, 0f, 1f, 1f);
-            _fadeManager.MarkFadeOut(player);
 
             _fadeManager.Dispose();
 
-            // After dispose, fade-out tracking is cleared.
-            Assert.That(_fadeManager.IsFadingOut(player), Is.False);
+            // After dispose, operations are cleared; Update no longer progresses fades.
+            _fadeManager.Update(1f);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingIn));
         }
 
         [Test]
@@ -166,13 +140,13 @@ namespace AudioConductor.Core.Tests
 
             _fadeManager.Update(1f);
 
-            // player1 (duration 1f): elapsed 1f/1f = 1.0 → VolumeFade == 1f, IsFading == false
+            // player1 (duration 1f): elapsed 1f/1f = 1.0 → VolumeFade == 1f, FadeState == None
             Assert.That(player1.VolumeFade, Is.EqualTo(1f).Within(0.01f));
-            Assert.That(player1.IsFading, Is.False);
+            Assert.That(player1.FadeState, Is.EqualTo(FadeState.None));
 
-            // player2 (duration 2f): elapsed 1f/2f = 0.5 → VolumeFade == 0.5f, IsFading == true
+            // player2 (duration 2f): elapsed 1f/2f = 0.5 → VolumeFade == 0.5f, FadeState == FadingIn
             Assert.That(player2.VolumeFade, Is.EqualTo(0.5f).Within(0.01f));
-            Assert.That(player2.IsFading, Is.True);
+            Assert.That(player2.FadeState, Is.EqualTo(FadeState.FadingIn));
         }
 
         [Test]
@@ -199,7 +173,8 @@ namespace AudioConductor.Core.Tests
             _fadeManager.Update(1f);
 
             Assert.That(player.VolumeFade, Is.EqualTo(0f).Within(0.01f));
-            Assert.That(player.IsFading, Is.False);
+            // Second fade is FadeOut direction, so completion yields FadingOutComplete.
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.FadingOutComplete));
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
         }
     }

@@ -67,7 +67,7 @@ namespace AudioConductor.Core
             ref int catCount, ref int catMin, ref PlaybackState? catOldest,
             ref int globalCount, ref int globalMin, ref PlaybackState? globalOldest)
         {
-            if (p.Player == null || !p.Player.IsPlaying && !p.Player.IsPaused)
+            if (p.Player == null || p.Player.State == PlayerState.Stopped)
                 return;
 
             globalCount++;
@@ -118,7 +118,7 @@ namespace AudioConductor.Core
             ref int catCount, ref int catMin, ref OneShotState? catOldest,
             ref int globalCount, ref int globalMin, ref OneShotState? globalOldest)
         {
-            if (s.Player == null || !s.Player.IsPlaying && !s.Player.IsPaused)
+            if (s.Player == null || s.Player.State == PlayerState.Stopped)
                 return;
 
             globalCount++;

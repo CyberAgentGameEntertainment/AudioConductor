@@ -154,9 +154,9 @@ namespace AudioConductor.Core.Tests
 
             var handle1 = conductor.Play(sheetHandle, "cue");
             conductor.Stop(handle1, 0.1f);
-            // Simulate fade completion: clear IsFading so Update removes the playback
+            // Simulate fade completion: set FadingOutComplete so Update removes the playback
             var player1 = _managedProvider.Created[0];
-            player1.IsFading = false;
+            player1.FadeState = FadeState.FadingOutComplete;
             conductor.Update(0f);
             var handle2 = conductor.Play(sheetHandle, "cue");
 

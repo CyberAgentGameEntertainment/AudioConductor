@@ -5,12 +5,15 @@
 namespace AudioConductor.Core.Enums
 {
     /// <summary>
-    ///     State of the track.
+    ///     Fade direction state of the player.
     /// </summary>
-    public enum TrackState
+    public enum FadeState
     {
-        Playing,
-        Paused,
-        Stopped
+        None,
+        FadingIn,
+        FadingOut,
+
+        // Fade-out animation completed; Conductor.Update will stop and return the player.
+        FadingOutComplete
     }
 }

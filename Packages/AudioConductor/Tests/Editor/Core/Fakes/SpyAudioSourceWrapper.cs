@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using AudioConductor.Core;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -12,6 +11,7 @@ namespace AudioConductor.Core.Tests.Fakes
 {
     internal sealed class SpyAudioSourceWrapper : IAudioSourceWrapper
     {
+        private bool _wasPlayingBeforePause;
         public int StopCount { get; private set; }
         public int PauseCount { get; private set; }
         public int UnPauseCount { get; private set; }
@@ -35,13 +35,16 @@ namespace AudioConductor.Core.Tests.Fakes
 
         public void Pause()
         {
+            _wasPlayingBeforePause = IsPlaying;
             IsPlaying = false;
             PauseCount++;
         }
 
         public void UnPause()
         {
-            IsPlaying = true;
+            if (_wasPlayingBeforePause)
+                IsPlaying = true;
+            _wasPlayingBeforePause = false;
             UnPauseCount++;
         }
 

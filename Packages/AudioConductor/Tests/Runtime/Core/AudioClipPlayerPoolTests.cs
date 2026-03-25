@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -68,12 +69,12 @@ namespace AudioConductor.Core.Tests
         public void OnBeforeReturn_CallsResetState()
         {
             var player = _pool.Rent();
-            player.IsFading = true;
+            player.FadeState = FadeState.FadingOut;
             player.ActiveFadeId = 1u;
 
             _pool.Return(player);
 
-            Assert.That(player.IsFading, Is.False);
+            Assert.That(player.FadeState, Is.EqualTo(FadeState.None));
             Assert.That(player.ActiveFadeId, Is.EqualTo(0u));
         }
     }

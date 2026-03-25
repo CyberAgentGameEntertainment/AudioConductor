@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace AudioConductor.Core.Models
 {
-    internal sealed class FadeState
+    internal sealed class FadeOperation
     {
         private IFader _fader = null!;
 

@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
@@ -143,17 +144,17 @@ namespace AudioConductor.Core.Tests
         {
             SetupCore();
 
-            Assert.That(_core.IsPlaying, Is.False);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]
-        public void Pause_SetsIsPausedTrue()
+        public void Pause_SetsStatePaused()
         {
             SetupCore();
 
             _core.Pause();
 
-            Assert.That(_core.IsPaused, Is.True);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Paused));
         }
 
         [Test]
@@ -164,18 +165,18 @@ namespace AudioConductor.Core.Tests
 
             _core.Pause();
 
-            Assert.That(_core.IsPaused, Is.True);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Paused));
         }
 
         [Test]
-        public void Resume_AfterPause_SetsIsPausedFalse()
+        public void Resume_AfterPauseWithoutPlaying_RemainsStateStopped()
         {
             SetupCore();
             _core.Pause();
 
             _core.Resume();
 
-            Assert.That(_core.IsPaused, Is.False);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]
@@ -184,18 +185,18 @@ namespace AudioConductor.Core.Tests
             SetupCore();
 
             Assert.DoesNotThrow(() => _core.Resume());
-            Assert.That(_core.IsPaused, Is.False);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]
-        public void Stop_SetsIsPausedFalse()
+        public void Stop_SetsStateStopped()
         {
             SetupCore();
             _core.Pause();
 
             _core.Stop();
 
-            Assert.That(_core.IsPaused, Is.False);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         // --- Callbacks ---
@@ -391,7 +392,7 @@ namespace AudioConductor.Core.Tests
             _core.Restart();
 
             // Restart calls Play() which schedules via the next alternating AudioSource index
-            Assert.That(_core.IsPlaying, Is.True);
+            Assert.That(_core.State, Is.EqualTo(PlayerState.Playing));
         }
 
         // --- Pause (loop 2-source branch) ---
