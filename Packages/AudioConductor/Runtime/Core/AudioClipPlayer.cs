@@ -118,7 +118,7 @@ namespace AudioConductor.Core
             // for smooth switching of AudioSource
             // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
             const float delay = 0.1f;
-            SetupPlayLoopSchedule(_dspClock.DspTime + delay, _startSample);
+            SchedulePlayback(_dspClock.DspTime + delay, _startSample);
         }
 
         public void Restart()
@@ -297,7 +297,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                PlayLoop();
+                ScheduleNextLoop();
             }
             else
             {
@@ -352,19 +352,19 @@ namespace AudioConductor.Core
             _onStop = _onEnd = null;
         }
 
-        private void PlayLoop()
+        private void ScheduleNextLoop()
         {
-            SetupPlayLoopSchedule(_nextEventTime + LoopLookaheadDuration, _loopStartSample);
+            SchedulePlayback(_scheduledEndTime, _loopStartSample);
         }
 
-        private void SetupPlayLoopSchedule(double playStartTime, int startSample)
+        private void SchedulePlayback(double playStartTime, int startSample)
         {
             var pitch = Mathf.Abs(GetActualPitch());
             if (pitch == 0f)
                 return;
 
             // In loop mode, zero-length region would cause _nextEventTime to never advance,
-            // resulting in PlayLoop being called every ManualUpdate frame indefinitely.
+            // resulting in ScheduleNextLoop being called every ManualUpdate frame indefinitely.
             if (_isLoop && _endSample == startSample)
             {
                 _nextEventTime = double.MaxValue;
