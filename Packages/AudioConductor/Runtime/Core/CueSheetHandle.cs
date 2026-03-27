@@ -32,7 +32,7 @@ namespace AudioConductor.Core
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is CueSheetHandle other && Equals(other);
         }
