@@ -11,22 +11,6 @@ namespace AudioConductor.Core
 {
     public sealed partial class Conductor
     {
-        internal readonly struct EvictionResult
-        {
-            public readonly uint Id;
-            public readonly uint CueSheetId;
-            public readonly Cue Cue;
-            public readonly bool IsManaged;
-
-            public EvictionResult(uint id, uint cueSheetId, Cue cue, bool isManaged)
-            {
-                Id = id;
-                CueSheetId = cueSheetId;
-                Cue = cue;
-                IsManaged = isManaged;
-            }
-        }
-
         private sealed class CueSheetRegistration
         {
             private readonly Dictionary<int, Cue> _cueIdLookup;

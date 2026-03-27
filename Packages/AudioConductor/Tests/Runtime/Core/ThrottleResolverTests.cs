@@ -11,7 +11,6 @@ using NUnit.Framework;
 using Playback = AudioConductor.Core.Conductor.Playback;
 using ManagedPlayback = AudioConductor.Core.Conductor.ManagedPlayback;
 using OneShotPlayback = AudioConductor.Core.Conductor.OneShotPlayback;
-using EvictionResult = AudioConductor.Core.Conductor.EvictionResult;
 
 namespace AudioConductor.Core.Tests
 {
@@ -28,7 +27,7 @@ namespace AudioConductor.Core.Tests
         {
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 0,
-                10, 0, 0, null, null, out var eviction);
+                10, 0, 0, null, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(0));
         }
@@ -38,7 +37,7 @@ namespace AudioConductor.Core.Tests
         {
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 3,
-                2, 0, 0, null, null, out var eviction);
+                2, 0, 0, null, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(0));
         }
@@ -48,7 +47,7 @@ namespace AudioConductor.Core.Tests
         {
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 2,
-                2, 0, 0, null, null, out _);
+                2, 0, 0, null, out _);
             Assert.That(result, Is.False);
         }
 
@@ -60,7 +59,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.PriorityOrder, 1,
-                1, 0, 0, managed.Core, null, out var eviction);
+                1, 0, 0, managed.Core, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(1u));
         }
@@ -71,7 +70,7 @@ namespace AudioConductor.Core.Tests
             // All existing sounds have higher priority (value > trackPriority) → reject.
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.PriorityOrder, 1,
-                1, 5, 0, null, null, out _);
+                1, 5, 0, null, out _);
             Assert.That(result, Is.False);
         }
 
@@ -84,7 +83,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 1,
-                1, 0, 5, managed.Core, null, out var eviction);
+                1, 0, 5, managed.Core, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(1u));
         }
@@ -182,56 +181,9 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void SelectEvictionCandidate_ManagedOlderThanOneShot_SelectsManaged()
-        {
-            var cue = CreateCue();
-            var player = new SpyPlayer { IsPlaying = true };
-            var managed = new ManagedPlayback(1, 100, cue, player, 0);
-            var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
-
-            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
-            Assert.That(result.Id, Is.EqualTo(1u));
-            Assert.That(result.IsManaged, Is.True);
-        }
-
-        [Test]
-        public void SelectEvictionCandidate_OneShotOlderThanManaged_SelectsOneShot()
-        {
-            var cue = CreateCue();
-            var player = new SpyPlayer { IsPlaying = true };
-            var managed = new ManagedPlayback(5, 100, cue, player, 0);
-            var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
-
-            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
-            Assert.That(result.Id, Is.EqualTo(2u));
-            Assert.That(result.IsManaged, Is.False);
-        }
-
-        [Test]
-        public void SelectEvictionCandidate_EqualIds_PrefersManaged()
-        {
-            var cue = CreateCue();
-            var player = new SpyPlayer { IsPlaying = true };
-            var managed = new ManagedPlayback(3, 100, cue, player, 0);
-            var oneShot = new OneShotPlayback(3, 100, cue, player, 0);
-
-            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
-
-            Assert.That(result.Id, Is.EqualTo(3u));
-            Assert.That(result.IsManaged, Is.True);
-        }
-
-        [Test]
-        public void SelectEvictionCandidate_BothNull_ReturnsDefault()
-        {
-            var result = ThrottleResolver.SelectEvictionCandidate(null, null);
-            Assert.That(result.Id, Is.EqualTo(0u));
-        }
-
-        [Test]
         public void AdjustCountsAfterEviction_ZeroId_NoChange()
         {
-            var eviction = default(EvictionResult);
+            var eviction = default(Playback);
             var cue = CreateCue();
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
@@ -245,7 +197,7 @@ namespace AudioConductor.Core.Tests
         public void AdjustCountsAfterEviction_MatchingScopes_DecrementsAll()
         {
             var cue = CreateCue(10);
-            var eviction = new EvictionResult(1, 100, cue, true);
+            var eviction = new Playback(1, 100, cue, null!, 0);
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
             ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,
@@ -261,7 +213,7 @@ namespace AudioConductor.Core.Tests
         public void AdjustCountsAfterEviction_DifferentSheet_OnlyDecrementsGlobalAndCategory()
         {
             var cue = CreateCue(10);
-            var eviction = new EvictionResult(1, 200, cue, true);
+            var eviction = new Playback(1, 200, cue, null!, 0);
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
             ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,

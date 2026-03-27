@@ -16,8 +16,8 @@ namespace AudioConductor.Core
     {
         internal static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
             int playNum, int minPriority, int trackPriority,
-            Playback? oldestManaged, Playback? oldestOneShot,
-            out EvictionResult eviction)
+            Playback? oldest,
+            out Playback eviction)
         {
             eviction = default;
 
@@ -33,8 +33,10 @@ namespace AudioConductor.Core
             switch (throttleType)
             {
                 case ThrottleType.PriorityOrder:
-                    eviction = SelectEvictionCandidate(oldestManaged, oldestOneShot);
-                    return eviction.Id != 0;
+                    if (!oldest.HasValue)
+                        return false;
+                    eviction = oldest.Value;
+                    return true;
                 case ThrottleType.FirstComeFirstServed:
                     return false;
                 default:
@@ -43,7 +45,7 @@ namespace AudioConductor.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void AdjustCountsAfterEviction(in EvictionResult eviction,
+        internal static void AdjustCountsAfterEviction(in Playback eviction,
             uint targetCueSheetId, Cue targetCue, int targetCategoryId,
             ref int cueCount, ref int sheetCount, ref int catCount, ref int globalCount)
         {
@@ -108,26 +110,6 @@ namespace AudioConductor.Core
                     catOldest = p;
                 }
             }
-        }
-
-        internal static EvictionResult SelectEvictionCandidate(Playback? oldestManaged,
-            Playback? oldestOneShot)
-        {
-            // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
-            if (oldestManaged.HasValue &&
-                (!oldestOneShot.HasValue || oldestManaged.Value.Id <= oldestOneShot.Value.Id))
-            {
-                var m = oldestManaged.Value;
-                return new EvictionResult(m.Id, m.CueSheetId, m.Cue, true);
-            }
-
-            if (oldestOneShot.HasValue)
-            {
-                var s = oldestOneShot.Value;
-                return new EvictionResult(s.Id, s.CueSheetId, s.Cue, false);
-            }
-
-            return default;
         }
     }
 }

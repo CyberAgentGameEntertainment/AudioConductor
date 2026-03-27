@@ -301,28 +301,21 @@ namespace AudioConductor.Core
             // Single pass: count playing states and track oldest per scope at once.
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            Playback? cueOldestManaged = null,
-                sheetOldestManaged = null,
-                catOldestManaged = null,
-                globalOldestManaged = null;
-            Playback? cueOldestOneShot = null,
-                sheetOldestOneShot = null,
-                catOldestOneShot = null,
-                globalOldestOneShot = null;
+            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             foreach (var p in _managedPlaybacks.Values)
                 ThrottleResolver.AccumulateAllScopes(p.Core, cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref cueOldestManaged,
-                    ref sheetCount, ref sheetMin, ref sheetOldestManaged,
-                    ref catCount, ref catMin, ref catOldestManaged,
-                    ref globalCount, ref globalMin, ref globalOldestManaged);
+                    ref cueCount, ref cueMin, ref cueOldest,
+                    ref sheetCount, ref sheetMin, ref sheetOldest,
+                    ref catCount, ref catMin, ref catOldest,
+                    ref globalCount, ref globalMin, ref globalOldest);
 
             foreach (var s in _oneShotPlaybacks)
                 ThrottleResolver.AccumulateAllScopes(s.Core, cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref cueOldestOneShot,
-                    ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
-                    ref catCount, ref catMin, ref catOldestOneShot,
-                    ref globalCount, ref globalMin, ref globalOldestOneShot);
+                    ref cueCount, ref cueMin, ref cueOldest,
+                    ref sheetCount, ref sheetMin, ref sheetOldest,
+                    ref catCount, ref catMin, ref catOldest,
+                    ref globalCount, ref globalMin, ref globalOldest);
 
 #if UNITY_EDITOR
             // Invariant: counts must not exceed their respective limits.
@@ -342,28 +335,28 @@ namespace AudioConductor.Core
             // see the effect of prior evictions. Actual stop is deferred to Phase 2
             // to ensure no side effects when a later scope rejects the play.
             if (!ThrottleResolver.ResolveThrottle(cueThrottleType, cueThrottleLimit,
-                    cueCount, cueMin, track.priority, cueOldestManaged, cueOldestOneShot,
+                    cueCount, cueMin, track.priority, cueOldest,
                     out var cueEviction))
                 return false;
             ThrottleResolver.AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
             if (!ThrottleResolver.ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
-                    sheetCount, sheetMin, track.priority, sheetOldestManaged, sheetOldestOneShot,
+                    sheetCount, sheetMin, track.priority, sheetOldest,
                     out var sheetEviction))
                 return false;
             ThrottleResolver.AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
             if (!ThrottleResolver.ResolveThrottle(catThrottleType, catThrottleLimit,
-                    catCount, catMin, track.priority, catOldestManaged, catOldestOneShot,
+                    catCount, catMin, track.priority, catOldest,
                     out var catEviction))
                 return false;
             ThrottleResolver.AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
                 ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
             if (!ThrottleResolver.ResolveThrottle(globalThrottleType, globalThrottleLimit,
-                    globalCount, globalMin, track.priority, globalOldestManaged, globalOldestOneShot,
+                    globalCount, globalMin, track.priority, globalOldest,
                     out var globalEviction))
                 return false;
 
@@ -418,27 +411,21 @@ namespace AudioConductor.Core
             _playerProvider.Return(playback.Player);
         }
 
-        private void ExecuteEviction(in EvictionResult eviction)
+        private void ExecuteEviction(in Playback eviction)
         {
             if (eviction.Id == 0)
                 return;
 
-            if (eviction.IsManaged)
+            if (_managedPlaybacks.TryGetValue(eviction.Id, out var pb))
             {
-                if (_managedPlaybacks.TryGetValue(eviction.Id, out var pb))
-                {
-                    StopPlayback(pb);
-                    _managedPlaybacks.Remove(eviction.Id);
-                }
+                StopPlayback(pb);
+                _managedPlaybacks.Remove(eviction.Id);
             }
-            else
+            else if (RemoveOneShotById(eviction.Id, out var player))
             {
-                if (RemoveOneShotById(eviction.Id, out var player))
-                {
-                    _fadeManager.CancelFade(player);
-                    player.Stop();
-                    _oneShotProvider.Return(player);
-                }
+                _fadeManager.CancelFade(player);
+                player.Stop();
+                _oneShotProvider.Return(player);
             }
         }
 
