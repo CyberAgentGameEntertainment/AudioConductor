@@ -24,9 +24,9 @@ namespace AudioConductor.Core
         private readonly Dictionary<int, float> _categoryVolumes = new();
         private readonly Dictionary<uint, CueSheetRegistration> _cueSheets = new();
         private readonly FadeManager _fadeManager = new();
+        private readonly Dictionary<uint, ManagedPlayback> _managedPlaybacks = new();
+        private readonly List<OneShotPlayback> _oneShotPlaybacks = new();
         private readonly IPlayerProvider _oneShotProvider;
-        private readonly List<OneShotState> _oneShotStates = new();
-        private readonly Dictionary<uint, PlaybackState> _playbacks = new();
         private readonly IPlayerProvider _playerProvider;
         private readonly ICueSheetProvider? _provider;
         private readonly List<uint> _removeKeyBuffer = new(BufferInitialCapacity);
@@ -94,18 +94,18 @@ namespace AudioConductor.Core
         /// </summary>
         public void Dispose()
         {
-            foreach (var playback in _playbacks.Values)
+            foreach (var playback in _managedPlaybacks.Values)
                 StopPlayback(playback);
-            _playbacks.Clear();
+            _managedPlaybacks.Clear();
 
-            foreach (var state in _oneShotStates)
+            foreach (var state in _oneShotPlaybacks)
                 if (state.Player != null)
                 {
                     state.Player.Stop();
                     _oneShotProvider.Return(state.Player);
                 }
 
-            _oneShotStates.Clear();
+            _oneShotPlaybacks.Clear();
             _fadeManager.Dispose();
 
             foreach (var registration in _cueSheets.Values)

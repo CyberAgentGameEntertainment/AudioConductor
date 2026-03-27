@@ -95,7 +95,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state))
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state))
                 return;
 
             if (fadeTime > 0f)
@@ -111,7 +111,7 @@ namespace AudioConductor.Core
             }
 
             StopPlayback(state);
-            _playbacks.Remove(handle.Id);
+            _managedPlaybacks.Remove(handle.Id);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return;
 
             state.Player.Pause();
@@ -138,7 +138,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return;
 
             state.Player.Resume();
@@ -228,8 +228,8 @@ namespace AudioConductor.Core
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
 
             var id = _playStateCounter.Next();
-            var state = new PlaybackState(id, cueSheetId, cue, player, track.priority);
-            _playbacks[id] = state;
+            var state = new ManagedPlayback(id, cueSheetId, cue, player, track.priority);
+            _managedPlaybacks[id] = state;
 
             if (options?.FadeTime > 0f)
             {
@@ -263,12 +263,12 @@ namespace AudioConductor.Core
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
             var oneShotId = _playStateCounter.Next();
-            _oneShotStates.Add(new OneShotState(oneShotId, cueSheetId, cue, player, track.priority));
+            _oneShotPlaybacks.Add(new OneShotPlayback(oneShotId, cueSheetId, cue, player, track.priority));
         }
 
         private bool CanPlay(uint cueSheetId, Cue cue, Track track)
         {
-            if (_playbacks.Count == 0 && _oneShotStates.Count == 0)
+            if (_managedPlaybacks.Count == 0 && _oneShotPlaybacks.Count == 0)
                 return true;
 
             // Gather throttle settings per scope.
@@ -301,23 +301,23 @@ namespace AudioConductor.Core
             // Single pass: count playing states and track oldest per scope at once.
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            PlaybackState? cueOldestManaged = null,
+            ManagedPlayback? cueOldestManaged = null,
                 sheetOldestManaged = null,
                 catOldestManaged = null,
                 globalOldestManaged = null;
-            OneShotState? cueOldestOneShot = null,
+            OneShotPlayback? cueOldestOneShot = null,
                 sheetOldestOneShot = null,
                 catOldestOneShot = null,
                 globalOldestOneShot = null;
 
-            foreach (var p in _playbacks.Values)
+            foreach (var p in _managedPlaybacks.Values)
                 ThrottleResolver.AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestManaged,
                     ref sheetCount, ref sheetMin, ref sheetOldestManaged,
                     ref catCount, ref catMin, ref catOldestManaged,
                     ref globalCount, ref globalMin, ref globalOldestManaged);
 
-            foreach (var s in _oneShotStates)
+            foreach (var s in _oneShotPlaybacks)
                 ThrottleResolver.AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestOneShot,
                     ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
@@ -378,15 +378,15 @@ namespace AudioConductor.Core
 
         private void StopAllPlaybacksImmediate()
         {
-            foreach (var playback in _playbacks.Values)
+            foreach (var playback in _managedPlaybacks.Values)
                 StopPlayback(playback);
-            _playbacks.Clear();
+            _managedPlaybacks.Clear();
         }
 
         private void StopAllPlaybacksWithFade(float fadeTime, IFader? fader)
         {
             _stopAllKeyBuffer.Clear();
-            foreach (var id in _playbacks.Keys)
+            foreach (var id in _managedPlaybacks.Keys)
                 _stopAllKeyBuffer.Add(id);
             for (var i = 0; i < _stopAllKeyBuffer.Count; i++)
                 Stop(new PlaybackHandle(_stopAllKeyBuffer[i]), fadeTime, fader);
@@ -394,9 +394,9 @@ namespace AudioConductor.Core
 
         private void StopAllOneShots()
         {
-            for (var i = _oneShotStates.Count - 1; i >= 0; i--)
+            for (var i = _oneShotPlaybacks.Count - 1; i >= 0; i--)
             {
-                var state = _oneShotStates[i];
+                var state = _oneShotPlaybacks[i];
                 if (state.Player != null)
                 {
                     _fadeManager.CancelFade(state.Player);
@@ -405,10 +405,10 @@ namespace AudioConductor.Core
                 }
             }
 
-            _oneShotStates.Clear();
+            _oneShotPlaybacks.Clear();
         }
 
-        private void StopPlayback(PlaybackState playback)
+        private void StopPlayback(ManagedPlayback playback)
         {
             if (playback.Player == null)
                 return;
@@ -425,10 +425,10 @@ namespace AudioConductor.Core
 
             if (eviction.IsManaged)
             {
-                if (_playbacks.TryGetValue(eviction.Id, out var pb))
+                if (_managedPlaybacks.TryGetValue(eviction.Id, out var pb))
                 {
                     StopPlayback(pb);
-                    _playbacks.Remove(eviction.Id);
+                    _managedPlaybacks.Remove(eviction.Id);
                 }
             }
             else
@@ -444,12 +444,13 @@ namespace AudioConductor.Core
 
         private bool RemoveOneShotById(uint id, out IInternalPlayer player)
         {
-            for (var i = 0; i < _oneShotStates.Count; i++)
-                if (_oneShotStates[i].Id == id)
+            for (var i = 0; i < _oneShotPlaybacks.Count; i++)
+                if (_oneShotPlaybacks[i].Id == id)
                 {
-                    player = _oneShotStates[i].Player;
-                    _oneShotStates[i] = _oneShotStates[_oneShotStates.Count - 1];
-                    _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
+                    player = _oneShotPlaybacks[i].Player;
+                    _oneShotPlaybacks[i] = _oneShotPlaybacks[_oneShotPlaybacks.Count - 1];
+                    _oneShotPlaybacks[_oneShotPlaybacks.Count - 1] = default;
+                    _oneShotPlaybacks.RemoveAt(_oneShotPlaybacks.Count - 1);
                     return true;
                 }
 

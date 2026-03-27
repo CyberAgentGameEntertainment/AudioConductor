@@ -14,9 +14,9 @@ namespace AudioConductor.Core
         {
             _fadeManager.Update(deltaTime);
 
-            // Iterate _playbacks.Values directly; collect removal keys in _removeKeyBuffer.
+            // Iterate _managedPlaybacks.Values directly; collect removal keys in _removeKeyBuffer.
             _removeKeyBuffer.Clear();
-            foreach (var playback in _playbacks.Values)
+            foreach (var playback in _managedPlaybacks.Values)
             {
                 if (playback.Player == null)
                     continue;
@@ -39,12 +39,12 @@ namespace AudioConductor.Core
             }
 
             for (var i = 0; i < _removeKeyBuffer.Count; i++)
-                _playbacks.Remove(_removeKeyBuffer[i]);
+                _managedPlaybacks.Remove(_removeKeyBuffer[i]);
 
             // Process one-shot states (swap-remove for O(1) removal).
-            for (var i = 0; i < _oneShotStates.Count; i++)
+            for (var i = 0; i < _oneShotPlaybacks.Count; i++)
             {
-                var state = _oneShotStates[i];
+                var state = _oneShotPlaybacks[i];
                 if (state.Player == null)
                     continue;
 
@@ -53,8 +53,8 @@ namespace AudioConductor.Core
                 if (state.Player.State == PlayerState.Stopped)
                 {
                     _oneShotProvider.Return(state.Player);
-                    _oneShotStates[i] = _oneShotStates[^1];
-                    _oneShotStates.RemoveAt(_oneShotStates.Count - 1);
+                    _oneShotPlaybacks[i] = _oneShotPlaybacks[^1];
+                    _oneShotPlaybacks.RemoveAt(_oneShotPlaybacks.Count - 1);
                     i--;
                 }
             }

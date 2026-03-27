@@ -21,7 +21,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return;
 
             state.Player.SetVolume(volume);
@@ -37,7 +37,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return;
 
             state.Player.SetPitch(pitch);
@@ -53,7 +53,7 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return false;
 
-            if (!_playbacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
                 return false;
 
             return state.Player.State == PlayerState.Playing || state.Player.FadeState != FadeState.None;
@@ -76,9 +76,9 @@ namespace AudioConductor.Core
         public void SetMasterVolume(float volume)
         {
             _masterVolume = ValueRangeConst.Volume.Clamp(volume);
-            foreach (var playback in _playbacks.Values)
+            foreach (var playback in _managedPlaybacks.Values)
                 playback.Player?.SetMasterVolume(_masterVolume);
-            foreach (var state in _oneShotStates)
+            foreach (var state in _oneShotPlaybacks)
                 state.Player?.SetMasterVolume(_masterVolume);
         }
 
@@ -103,10 +103,10 @@ namespace AudioConductor.Core
         {
             var clamped = ValueRangeConst.Volume.Clamp(volume);
             _categoryVolumes[categoryId] = clamped;
-            foreach (var playback in _playbacks.Values)
+            foreach (var playback in _managedPlaybacks.Values)
                 if (playback.Player?.CategoryId == categoryId)
                     playback.Player.SetCategoryVolume(clamped);
-            foreach (var state in _oneShotStates)
+            foreach (var state in _oneShotPlaybacks)
                 if (state.Player?.CategoryId == categoryId)
                     state.Player.SetCategoryVolume(clamped);
         }

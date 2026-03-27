@@ -8,8 +8,8 @@ using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
-using PlaybackState = AudioConductor.Core.Conductor.PlaybackState;
-using OneShotState = AudioConductor.Core.Conductor.OneShotState;
+using ManagedPlayback = AudioConductor.Core.Conductor.ManagedPlayback;
+using OneShotPlayback = AudioConductor.Core.Conductor.OneShotPlayback;
 using EvictionResult = AudioConductor.Core.Conductor.EvictionResult;
 
 namespace AudioConductor.Core.Tests
@@ -56,7 +56,7 @@ namespace AudioConductor.Core.Tests
         {
             var player = new SpyPlayer { IsPlaying = true };
             var cue = CreateCue();
-            var managed = new PlaybackState(1, 1, cue, player, 0);
+            var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.PriorityOrder, 1,
                 1, 0, 0, managed, null, out var eviction);
@@ -80,7 +80,7 @@ namespace AudioConductor.Core.Tests
             // Existing sounds have lower priority → force PriorityOrder eviction regardless of throttleType.
             var player = new SpyPlayer { IsPlaying = true };
             var cue = CreateCue();
-            var managed = new PlaybackState(1, 1, cue, player, 0);
+            var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 1,
                 1, 0, 5, managed, null, out var eviction);
@@ -93,11 +93,11 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var player = new SpyPlayer { IsPlaying = true };
-            var state = new PlaybackState(1, 100, cue, player, 5);
+            var state = new ManagedPlayback(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
                 ref cueCount, ref cueMin, ref cueOldest,
@@ -117,11 +117,11 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var player = new SpyPlayer { IsPlaying = false, IsPaused = false };
-            var state = new PlaybackState(1, 100, cue, player, 0);
+            var state = new ManagedPlayback(1, 100, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             ThrottleResolver.AccumulateAllScopes(state, 100, cue, 0,
                 ref cueCount, ref cueMin, ref cueOldest,
@@ -137,11 +137,11 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var player = new SpyPlayer { IsPlaying = true };
-            var state = new PlaybackState(1, 200, cue, player, 0);
+            var state = new ManagedPlayback(1, 200, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            PlaybackState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             // Target sheet is 100, but state's sheet is 200
             ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
@@ -161,11 +161,11 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var player = new SpyPlayer { IsPlaying = true };
-            var state = new OneShotState(1, 100, cue, player, 5);
+            var state = new OneShotPlayback(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            OneShotState? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            OneShotPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
                 ref cueCount, ref cueMin, ref cueOldest,
@@ -185,8 +185,8 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var player = new SpyPlayer { IsPlaying = true };
-            var managed = new PlaybackState(1, 100, cue, player, 0);
-            var oneShot = new OneShotState(2, 100, cue, player, 0);
+            var managed = new ManagedPlayback(1, 100, cue, player, 0);
+            var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
 
             var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
             Assert.That(result.Id, Is.EqualTo(1u));
@@ -198,8 +198,8 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var player = new SpyPlayer { IsPlaying = true };
-            var managed = new PlaybackState(5, 100, cue, player, 0);
-            var oneShot = new OneShotState(2, 100, cue, player, 0);
+            var managed = new ManagedPlayback(5, 100, cue, player, 0);
+            var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
 
             var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
             Assert.That(result.Id, Is.EqualTo(2u));
@@ -211,8 +211,8 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var player = new SpyPlayer { IsPlaying = true };
-            var managed = new PlaybackState(3, 100, cue, player, 0);
-            var oneShot = new OneShotState(3, 100, cue, player, 0);
+            var managed = new ManagedPlayback(3, 100, cue, player, 0);
+            var oneShot = new OneShotPlayback(3, 100, cue, player, 0);
 
             var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
 

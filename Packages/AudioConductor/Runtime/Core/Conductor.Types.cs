@@ -75,9 +75,9 @@ namespace AudioConductor.Core
             }
         }
 
-        internal readonly struct PlaybackState
+        internal readonly struct ManagedPlayback
         {
-            internal PlaybackState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal ManagedPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
@@ -93,9 +93,9 @@ namespace AudioConductor.Core
             internal int Priority { get; }
         }
 
-        internal readonly struct OneShotState
+        internal readonly struct OneShotPlayback
         {
-            internal OneShotState(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal OneShotPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
