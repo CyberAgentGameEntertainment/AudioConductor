@@ -75,9 +75,9 @@ namespace AudioConductor.Core
             }
         }
 
-        internal readonly struct ManagedPlayback
+        internal readonly struct Playback
         {
-            internal ManagedPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal Playback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
@@ -93,22 +93,34 @@ namespace AudioConductor.Core
             internal int Priority { get; }
         }
 
+        internal readonly struct ManagedPlayback
+        {
+            internal ManagedPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            {
+                Core = new Playback(id, cueSheetId, cue, player, priority);
+            }
+
+            internal Playback Core { get; }
+            internal uint Id => Core.Id;
+            internal uint CueSheetId => Core.CueSheetId;
+            internal Cue Cue => Core.Cue;
+            internal IInternalPlayer Player => Core.Player;
+            internal int Priority => Core.Priority;
+        }
+
         internal readonly struct OneShotPlayback
         {
             internal OneShotPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
             {
-                Id = id;
-                CueSheetId = cueSheetId;
-                Cue = cue;
-                Player = player;
-                Priority = priority;
+                Core = new Playback(id, cueSheetId, cue, player, priority);
             }
 
-            internal uint Id { get; }
-            internal uint CueSheetId { get; }
-            internal Cue Cue { get; }
-            internal IInternalPlayer Player { get; }
-            internal int Priority { get; }
+            internal Playback Core { get; }
+            internal uint Id => Core.Id;
+            internal uint CueSheetId => Core.CueSheetId;
+            internal Cue Cue => Core.Cue;
+            internal IInternalPlayer Player => Core.Player;
+            internal int Priority => Core.Priority;
         }
     }
 }

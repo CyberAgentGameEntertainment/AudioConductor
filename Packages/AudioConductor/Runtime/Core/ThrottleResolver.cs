@@ -16,7 +16,7 @@ namespace AudioConductor.Core
     {
         internal static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
             int playNum, int minPriority, int trackPriority,
-            ManagedPlayback? oldestManaged, OneShotPlayback? oldestOneShot,
+            Playback? oldestManaged, Playback? oldestOneShot,
             out EvictionResult eviction)
         {
             eviction = default;
@@ -60,12 +60,12 @@ namespace AudioConductor.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void AccumulateAllScopes(in ManagedPlayback p, uint targetCueSheetId, Cue targetCue,
+        internal static void AccumulateAllScopes(in Playback p, uint targetCueSheetId, Cue targetCue,
             int targetCategoryId,
-            ref int cueCount, ref int cueMin, ref ManagedPlayback? cueOldest,
-            ref int sheetCount, ref int sheetMin, ref ManagedPlayback? sheetOldest,
-            ref int catCount, ref int catMin, ref ManagedPlayback? catOldest,
-            ref int globalCount, ref int globalMin, ref ManagedPlayback? globalOldest)
+            ref int cueCount, ref int cueMin, ref Playback? cueOldest,
+            ref int sheetCount, ref int sheetMin, ref Playback? sheetOldest,
+            ref int catCount, ref int catMin, ref Playback? catOldest,
+            ref int globalCount, ref int globalMin, ref Playback? globalOldest)
         {
             if (p.Player == null || p.Player.State == PlayerState.Stopped)
                 return;
@@ -110,59 +110,8 @@ namespace AudioConductor.Core
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void AccumulateAllScopes(in OneShotPlayback s, uint targetCueSheetId, Cue targetCue,
-            int targetCategoryId,
-            ref int cueCount, ref int cueMin, ref OneShotPlayback? cueOldest,
-            ref int sheetCount, ref int sheetMin, ref OneShotPlayback? sheetOldest,
-            ref int catCount, ref int catMin, ref OneShotPlayback? catOldest,
-            ref int globalCount, ref int globalMin, ref OneShotPlayback? globalOldest)
-        {
-            if (s.Player == null || s.Player.State == PlayerState.Stopped)
-                return;
-
-            globalCount++;
-            if (s.Priority < globalMin ||
-                s.Priority == globalMin && (!globalOldest.HasValue || s.Id < globalOldest.Value.Id))
-            {
-                globalMin = s.Priority;
-                globalOldest = s;
-            }
-
-            if (s.CueSheetId == targetCueSheetId)
-            {
-                sheetCount++;
-                if (s.Priority < sheetMin ||
-                    s.Priority == sheetMin && (!sheetOldest.HasValue || s.Id < sheetOldest.Value.Id))
-                {
-                    sheetMin = s.Priority;
-                    sheetOldest = s;
-                }
-            }
-
-            if (s.Cue == targetCue)
-            {
-                cueCount++;
-                if (s.Priority < cueMin || s.Priority == cueMin && (!cueOldest.HasValue || s.Id < cueOldest.Value.Id))
-                {
-                    cueMin = s.Priority;
-                    cueOldest = s;
-                }
-            }
-
-            if (s.Cue.categoryId == targetCategoryId)
-            {
-                catCount++;
-                if (s.Priority < catMin || s.Priority == catMin && (!catOldest.HasValue || s.Id < catOldest.Value.Id))
-                {
-                    catMin = s.Priority;
-                    catOldest = s;
-                }
-            }
-        }
-
-        internal static EvictionResult SelectEvictionCandidate(ManagedPlayback? oldestManaged,
-            OneShotPlayback? oldestOneShot)
+        internal static EvictionResult SelectEvictionCandidate(Playback? oldestManaged,
+            Playback? oldestOneShot)
         {
             // Compare Managed and OneShot by their insertion-order Id to find the globally oldest.
             if (oldestManaged.HasValue &&

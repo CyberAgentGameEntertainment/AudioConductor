@@ -8,6 +8,7 @@ using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
+using Playback = AudioConductor.Core.Conductor.Playback;
 using ManagedPlayback = AudioConductor.Core.Conductor.ManagedPlayback;
 using OneShotPlayback = AudioConductor.Core.Conductor.OneShotPlayback;
 using EvictionResult = AudioConductor.Core.Conductor.EvictionResult;
@@ -59,7 +60,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.PriorityOrder, 1,
-                1, 0, 0, managed, null, out var eviction);
+                1, 0, 0, managed.Core, null, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(1u));
         }
@@ -83,7 +84,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
                 ThrottleType.FirstComeFirstServed, 1,
-                1, 0, 5, managed, null, out var eviction);
+                1, 0, 5, managed.Core, null, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.Id, Is.EqualTo(1u));
         }
@@ -97,9 +98,9 @@ namespace AudioConductor.Core.Tests
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
-            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+            ThrottleResolver.AccumulateAllScopes(state.Core, 100, cue, 10,
                 ref cueCount, ref cueMin, ref cueOldest,
                 ref sheetCount, ref sheetMin, ref sheetOldest,
                 ref catCount, ref catMin, ref catOldest,
@@ -121,9 +122,9 @@ namespace AudioConductor.Core.Tests
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
-            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 0,
+            ThrottleResolver.AccumulateAllScopes(state.Core, 100, cue, 0,
                 ref cueCount, ref cueMin, ref cueOldest,
                 ref sheetCount, ref sheetMin, ref sheetOldest,
                 ref catCount, ref catMin, ref catOldest,
@@ -141,10 +142,10 @@ namespace AudioConductor.Core.Tests
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            ManagedPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
             // Target sheet is 100, but state's sheet is 200
-            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+            ThrottleResolver.AccumulateAllScopes(state.Core, 100, cue, 10,
                 ref cueCount, ref cueMin, ref cueOldest,
                 ref sheetCount, ref sheetMin, ref sheetOldest,
                 ref catCount, ref catMin, ref catOldest,
@@ -165,9 +166,9 @@ namespace AudioConductor.Core.Tests
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            OneShotPlayback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
 
-            ThrottleResolver.AccumulateAllScopes(state, 100, cue, 10,
+            ThrottleResolver.AccumulateAllScopes(state.Core, 100, cue, 10,
                 ref cueCount, ref cueMin, ref cueOldest,
                 ref sheetCount, ref sheetMin, ref sheetOldest,
                 ref catCount, ref catMin, ref catOldest,
@@ -188,7 +189,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(1, 100, cue, player, 0);
             var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
 
-            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
             Assert.That(result.Id, Is.EqualTo(1u));
             Assert.That(result.IsManaged, Is.True);
         }
@@ -201,7 +202,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(5, 100, cue, player, 0);
             var oneShot = new OneShotPlayback(2, 100, cue, player, 0);
 
-            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
             Assert.That(result.Id, Is.EqualTo(2u));
             Assert.That(result.IsManaged, Is.False);
         }
@@ -214,7 +215,7 @@ namespace AudioConductor.Core.Tests
             var managed = new ManagedPlayback(3, 100, cue, player, 0);
             var oneShot = new OneShotPlayback(3, 100, cue, player, 0);
 
-            var result = ThrottleResolver.SelectEvictionCandidate(managed, oneShot);
+            var result = ThrottleResolver.SelectEvictionCandidate(managed.Core, oneShot.Core);
 
             Assert.That(result.Id, Is.EqualTo(3u));
             Assert.That(result.IsManaged, Is.True);

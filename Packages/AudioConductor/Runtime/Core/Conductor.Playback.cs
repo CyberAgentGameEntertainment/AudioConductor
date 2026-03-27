@@ -301,24 +301,24 @@ namespace AudioConductor.Core
             // Single pass: count playing states and track oldest per scope at once.
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
             int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            ManagedPlayback? cueOldestManaged = null,
+            Playback? cueOldestManaged = null,
                 sheetOldestManaged = null,
                 catOldestManaged = null,
                 globalOldestManaged = null;
-            OneShotPlayback? cueOldestOneShot = null,
+            Playback? cueOldestOneShot = null,
                 sheetOldestOneShot = null,
                 catOldestOneShot = null,
                 globalOldestOneShot = null;
 
             foreach (var p in _managedPlaybacks.Values)
-                ThrottleResolver.AccumulateAllScopes(p, cueSheetId, cue, cue.categoryId,
+                ThrottleResolver.AccumulateAllScopes(p.Core, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestManaged,
                     ref sheetCount, ref sheetMin, ref sheetOldestManaged,
                     ref catCount, ref catMin, ref catOldestManaged,
                     ref globalCount, ref globalMin, ref globalOldestManaged);
 
             foreach (var s in _oneShotPlaybacks)
-                ThrottleResolver.AccumulateAllScopes(s, cueSheetId, cue, cue.categoryId,
+                ThrottleResolver.AccumulateAllScopes(s.Core, cueSheetId, cue, cue.categoryId,
                     ref cueCount, ref cueMin, ref cueOldestOneShot,
                     ref sheetCount, ref sheetMin, ref sheetOldestOneShot,
                     ref catCount, ref catMin, ref catOldestOneShot,
