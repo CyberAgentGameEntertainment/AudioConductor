@@ -16,7 +16,7 @@ namespace AudioConductor.Core
     internal sealed class AudioClipPlayer : IAudioClipPlayer, IFadeable
     {
         private const int SourceNum = 2;
-        private const float MinimumDuration = 1.0f;
+        private const float LoopLookaheadDuration = 1.0f;
         private const int VolumeScale = 10000;
         private readonly IDspClock _dspClock;
         private readonly IAudioPlayerLifecycle _lifecycle;
@@ -354,7 +354,7 @@ namespace AudioConductor.Core
 
         private void PlayLoop()
         {
-            SetupPlayLoopSchedule(_nextEventTime + MinimumDuration, _loopStartSample);
+            SetupPlayLoopSchedule(_nextEventTime + LoopLookaheadDuration, _loopStartSample);
         }
 
         private void SetupPlayLoopSchedule(double playStartTime, int startSample)
@@ -377,8 +377,7 @@ namespace AudioConductor.Core
             _sources[_nextPlayAudioSourceIndex].PlayScheduled(playStartTime);
             _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
 
-            var minusDuration = _isLoop ? MinimumDuration : 0;
-            _nextEventTime = _scheduledEndTime - minusDuration;
+            UpdateNextEventTime();
 
             FlipNextPlayAudioSourceIndex();
         }
@@ -397,8 +396,7 @@ namespace AudioConductor.Core
             _scheduledEndTime = CalculateScheduledEndTime(_dspClock.DspTime, nowSample, pitch);
 
             source.SetScheduledEndTime(_scheduledEndTime);
-            var minusDuration = _isLoop ? MinimumDuration : 0;
-            _nextEventTime = _scheduledEndTime - minusDuration;
+            UpdateNextEventTime();
         }
 
         private void RescheduleEndTime(double pausedDuration)
@@ -406,6 +404,12 @@ namespace AudioConductor.Core
             _scheduledEndTime += pausedDuration;
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
             _nextEventTime += pausedDuration;
+        }
+
+        private void UpdateNextEventTime()
+        {
+            var lookaheadBuffer = _isLoop ? LoopLookaheadDuration : 0;
+            _nextEventTime = _scheduledEndTime - lookaheadBuffer;
         }
 
         private double CalculateScheduledEndTime(double baseTime, int currentSample, float absPitch)
