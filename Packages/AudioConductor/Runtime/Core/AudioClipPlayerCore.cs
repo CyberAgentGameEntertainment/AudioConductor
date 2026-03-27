@@ -97,10 +97,9 @@ namespace AudioConductor.Core
             ClipSamples = clip.samples;
             CategoryId = categoryId;
 
-            _volumeRuntime = _pitchExternal = 1f;
+            _volumeRuntime = 1f;
             SetPitchInternal(pitch);
             VolumeAsset = volume;
-            VolumeFade = 1f;
             UpdateVolume();
 
             _onEnd = _onStop = null;
