@@ -86,10 +86,7 @@ namespace AudioConductor.Core
 
             internal Playback Core { get; }
             internal uint Id => Core.Id;
-            internal uint CueSheetId => Core.CueSheetId;
-            internal Cue Cue => Core.Cue;
             internal IInternalPlayer Player => Core.Player;
-            internal int Priority => Core.Priority;
         }
 
         internal readonly struct OneShotPlayback
@@ -101,10 +98,7 @@ namespace AudioConductor.Core
 
             internal Playback Core { get; }
             internal uint Id => Core.Id;
-            internal uint CueSheetId => Core.CueSheetId;
-            internal Cue Cue => Core.Cue;
             internal IInternalPlayer Player => Core.Player;
-            internal int Priority => Core.Priority;
         }
     }
 }
