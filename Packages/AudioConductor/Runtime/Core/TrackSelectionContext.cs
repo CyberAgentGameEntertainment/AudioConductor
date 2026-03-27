@@ -5,6 +5,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Core.Models;
 
 namespace AudioConductor.Core
@@ -20,9 +21,7 @@ namespace AudioConductor.Core
             CurrentIndex = -1;
             PlayCount = 0;
 
-            var total = 0;
-            for (var i = 0; i < tracks.Count; i++)
-                total += tracks[i].randomWeight;
+            var total = tracks.Sum(t => t.randomWeight);
             WeightTotal = total;
         }
 

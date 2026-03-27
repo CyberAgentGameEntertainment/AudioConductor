@@ -435,8 +435,8 @@ namespace AudioConductor.Core
                 if (_oneShotPlaybacks[i].Id == id)
                 {
                     player = _oneShotPlaybacks[i].Player;
-                    _oneShotPlaybacks[i] = _oneShotPlaybacks[_oneShotPlaybacks.Count - 1];
-                    _oneShotPlaybacks[_oneShotPlaybacks.Count - 1] = default;
+                    _oneShotPlaybacks[i] = _oneShotPlaybacks[^1];
+                    _oneShotPlaybacks[^1] = default;
                     _oneShotPlaybacks.RemoveAt(_oneShotPlaybacks.Count - 1);
                     return true;
                 }

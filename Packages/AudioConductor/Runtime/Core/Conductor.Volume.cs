@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Shared;
 
@@ -90,7 +91,7 @@ namespace AudioConductor.Core
         /// <returns>Category volume in the range [0, 1].</returns>
         public float GetCategoryVolume(int categoryId)
         {
-            return _categoryVolumes.TryGetValue(categoryId, out var volume) ? volume : 1f;
+            return _categoryVolumes.GetValueOrDefault(categoryId, 1f);
         }
 
         /// <summary>
