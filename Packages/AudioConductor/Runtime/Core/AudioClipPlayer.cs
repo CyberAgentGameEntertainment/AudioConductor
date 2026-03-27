@@ -163,7 +163,7 @@ namespace AudioConductor.Core
 
             _pauseEndTime = _dspClock.DspTime;
             var pausedDuration = _pauseEndTime - _pauseStartTime;
-            RescheduleEndTime(pausedDuration);
+            ShiftScheduleByPauseDuration(pausedDuration);
 
             if (_isLoop)
             {
@@ -256,7 +256,7 @@ namespace AudioConductor.Core
                 _sources[0].TimeSamples = sample;
             }
 
-            RescheduleEndTime();
+            RecalculateScheduledEndTime();
         }
 
         public uint ActiveFadeId { get; set; }
@@ -382,7 +382,7 @@ namespace AudioConductor.Core
             FlipNextPlayAudioSourceIndex();
         }
 
-        private void RescheduleEndTime()
+        private void RecalculateScheduledEndTime()
         {
             var source = GetPlayingSource();
             if (source == null)
@@ -399,7 +399,7 @@ namespace AudioConductor.Core
             UpdateNextEventTime();
         }
 
-        private void RescheduleEndTime(double pausedDuration)
+        private void ShiftScheduleByPauseDuration(double pausedDuration)
         {
             _scheduledEndTime += pausedDuration;
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
@@ -450,7 +450,7 @@ namespace AudioConductor.Core
         {
             var pitch = GetActualPitch();
             _sources[0].Pitch = pitch;
-            RescheduleEndTime();
+            RecalculateScheduledEndTime();
 
             if (_isLoop)
                 _sources[1].Pitch = pitch;
