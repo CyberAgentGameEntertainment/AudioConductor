@@ -222,7 +222,7 @@ namespace AudioConductor.Core.Tests
             var handle3 = conductor.Play(sheetHandle, "cueX");
 
             Assert.That(handle3.IsValid, Is.True);
-            Assert.That(oneShotPlayer.IsPlaying, Is.False, "OneShot evicted by cue scope");
+            Assert.That(oneShotPlayer.State, Is.EqualTo(PlayerState.Stopped), "OneShot evicted by cue scope");
             Assert.That(conductor.IsPlaying(handle2), Is.True,
                 "handle2 not evicted - sheet count adjusted below limit");
         }
@@ -249,7 +249,7 @@ namespace AudioConductor.Core.Tests
             var handle3 = conductor.Play(sheetHandle, "cueX");
 
             Assert.That(handle3.IsValid, Is.True);
-            Assert.That(oneShotPlayer.IsPlaying, Is.False);
+            Assert.That(oneShotPlayer.State, Is.EqualTo(PlayerState.Stopped));
             Assert.That(conductor.IsPlaying(handle2), Is.True);
         }
 

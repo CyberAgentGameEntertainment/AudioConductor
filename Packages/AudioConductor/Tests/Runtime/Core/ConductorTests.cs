@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
-    public class ConductorTests
+    internal sealed class ConductorTests
     {
         private AudioConductorSettings _settings = null!;
 
@@ -89,7 +89,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void GetCategoryVolume_WhenNotSet_ReturnsOne()
         {
-            using var conductor = new Conductor(_settings, new SpyPlayerProvider(), new SpyPlayerProvider());
+            using var conductor = new Conductor(_settings, new StubPlayerProvider(), new StubPlayerProvider());
 
             Assert.That(conductor.GetCategoryVolume(1), Is.EqualTo(1f).Within(0.0001f));
         }
@@ -97,7 +97,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_ThenGetCategoryVolume_ReturnsSameValue()
         {
-            using var conductor = new Conductor(_settings, new SpyPlayerProvider(), new SpyPlayerProvider());
+            using var conductor = new Conductor(_settings, new StubPlayerProvider(), new StubPlayerProvider());
 
             conductor.SetCategoryVolume(1, 0.5f);
 
@@ -107,8 +107,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_AppliedToManagedPlayerWithMatchingCategory()
         {
-            var managedProvider = new SpyPlayerProvider();
-            var oneShotProvider = new SpyPlayerProvider();
+            var managedProvider = new StubPlayerProvider();
+            var oneShotProvider = new StubPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 1 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -122,7 +122,7 @@ namespace AudioConductor.Core.Tests
             conductor.SetCategoryVolume(1, 0.4f);
 
             var player = managedProvider.Created[0];
-            Assert.That(player.CategoryVolume, Is.EqualTo(0.4f).Within(0.0001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.4f).Within(0.0001f));
 
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(clip);
@@ -131,8 +131,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_AppliedToOneShotPlayerWithMatchingCategory()
         {
-            var managedProvider = new SpyPlayerProvider();
-            var oneShotProvider = new SpyPlayerProvider();
+            var managedProvider = new StubPlayerProvider();
+            var oneShotProvider = new StubPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 2 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -146,7 +146,7 @@ namespace AudioConductor.Core.Tests
             conductor.SetCategoryVolume(2, 0.3f);
 
             var player = oneShotProvider.Created[0];
-            Assert.That(player.CategoryVolume, Is.EqualTo(0.3f).Within(0.0001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.3f).Within(0.0001f));
 
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(clip);
@@ -155,8 +155,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void SetCategoryVolume_NotAppliedToPlayerWithDifferentCategory()
         {
-            var managedProvider = new SpyPlayerProvider();
-            var oneShotProvider = new SpyPlayerProvider();
+            var managedProvider = new StubPlayerProvider();
+            var oneShotProvider = new StubPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 10 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -170,7 +170,7 @@ namespace AudioConductor.Core.Tests
             conductor.SetCategoryVolume(99, 0.1f);
 
             var player = managedProvider.Created[0];
-            Assert.That(player.CategoryVolume, Is.EqualTo(1f).Within(0.0001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(1f).Within(0.0001f));
 
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(clip);
@@ -179,8 +179,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Play_AppliesCategoryVolumeAtStart()
         {
-            var managedProvider = new SpyPlayerProvider();
-            var oneShotProvider = new SpyPlayerProvider();
+            var managedProvider = new StubPlayerProvider();
+            var oneShotProvider = new StubPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 5 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -193,7 +193,7 @@ namespace AudioConductor.Core.Tests
             conductor.Play(sheetHandle, "cue1");
 
             var player = managedProvider.Created[0];
-            Assert.That(player.CategoryVolume, Is.EqualTo(0.7f).Within(0.0001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.7f).Within(0.0001f));
 
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(clip);
@@ -202,8 +202,8 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void PlayOneShot_AppliesCategoryVolumeAtStart()
         {
-            var managedProvider = new SpyPlayerProvider();
-            var oneShotProvider = new SpyPlayerProvider();
+            var managedProvider = new StubPlayerProvider();
+            var oneShotProvider = new StubPlayerProvider();
             var clip = AudioClip.Create("test", 44100, 1, 44100, false);
             var cue = new Cue { name = "cue1", categoryId = 5 };
             cue.trackList.Add(new Track { name = "track1", audioClip = clip });
@@ -216,7 +216,7 @@ namespace AudioConductor.Core.Tests
             conductor.PlayOneShot(sheetHandle, "cue1");
 
             var player = oneShotProvider.Created[0];
-            Assert.That(player.CategoryVolume, Is.EqualTo(0.7f).Within(0.0001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.7f).Within(0.0001f));
 
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(clip);

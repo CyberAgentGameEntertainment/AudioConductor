@@ -176,8 +176,7 @@ namespace AudioConductor.Core.Tests
 
             conductor.Play(sheetHandle, "cue");
             // Simulate natural playback end
-            var player1 = _managedProvider.Created[0];
-            player1.IsPlaying = false;
+            _managedProvider.Created[0].Stop();
             conductor.Update(0f);
             var handle2 = conductor.Play(sheetHandle, "cue");
 

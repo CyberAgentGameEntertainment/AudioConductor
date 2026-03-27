@@ -20,8 +20,8 @@ namespace AudioConductor.Core.Tests
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new SpyPlayerProvider();
-            _oneShotProvider = new SpyPlayerProvider();
+            _managedProvider = new StubPlayerProvider();
+            _oneShotProvider = new StubPlayerProvider();
         }
 
         [TearDown]
@@ -30,8 +30,8 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(_settings);
         }
 
-        private SpyPlayerProvider _managedProvider = null!;
-        private SpyPlayerProvider _oneShotProvider = null!;
+        private StubPlayerProvider _managedProvider = null!;
+        private StubPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         private Conductor CreateConductor()

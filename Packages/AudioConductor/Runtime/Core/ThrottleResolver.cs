@@ -70,12 +70,11 @@ namespace AudioConductor.Core
             ref int catCount, ref int catMin, ref Playback? catOldest,
             ref int globalCount, ref int globalMin, ref Playback? globalOldest)
         {
-            if (p.Player == null || p.Player.State == PlayerState.Stopped)
+            if (p.Player.State == PlayerState.Stopped)
                 return;
 
             globalCount++;
-            if (p.Priority < globalMin ||
-                p.Priority == globalMin && (!globalOldest.HasValue || p.Id < globalOldest.Value.Id))
+            if (IsMinOrOldest(in p, globalMin, globalOldest))
             {
                 globalMin = p.Priority;
                 globalOldest = p;
@@ -84,8 +83,7 @@ namespace AudioConductor.Core
             if (p.CueSheetId == targetCueSheetId)
             {
                 sheetCount++;
-                if (p.Priority < sheetMin ||
-                    p.Priority == sheetMin && (!sheetOldest.HasValue || p.Id < sheetOldest.Value.Id))
+                if (IsMinOrOldest(in p, sheetMin, sheetOldest))
                 {
                     sheetMin = p.Priority;
                     sheetOldest = p;
@@ -95,7 +93,7 @@ namespace AudioConductor.Core
             if (p.Cue == targetCue)
             {
                 cueCount++;
-                if (p.Priority < cueMin || p.Priority == cueMin && (!cueOldest.HasValue || p.Id < cueOldest.Value.Id))
+                if (IsMinOrOldest(in p, cueMin, cueOldest))
                 {
                     cueMin = p.Priority;
                     cueOldest = p;
@@ -105,12 +103,19 @@ namespace AudioConductor.Core
             if (p.Cue.categoryId == targetCategoryId)
             {
                 catCount++;
-                if (p.Priority < catMin || p.Priority == catMin && (!catOldest.HasValue || p.Id < catOldest.Value.Id))
+                if (IsMinOrOldest(in p, catMin, catOldest))
                 {
                     catMin = p.Priority;
                     catOldest = p;
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsMinOrOldest(in Playback p, int currentMin, Playback? currentOldest)
+        {
+            return p.Priority < currentMin ||
+                   p.Priority == currentMin && (!currentOldest.HasValue || p.Id < currentOldest.Value.Id);
         }
     }
 }

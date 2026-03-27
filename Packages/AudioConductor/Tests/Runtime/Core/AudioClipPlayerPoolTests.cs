@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
-    public class AudioClipPlayerPoolTests
+    internal sealed class AudioClipPlayerPoolTests
     {
         private AudioClipPlayerPool _pool = null!;
         private GameObject _root = null!;
@@ -50,7 +50,7 @@ namespace AudioConductor.Core.Tests
 
             var rented = _pool.Rent();
 
-            Assert.That(rented.gameObject.activeSelf, Is.True);
+            Assert.That(_root.transform.GetChild(0).gameObject.activeSelf, Is.True);
 
             _pool.Return(rented);
         }
@@ -62,7 +62,7 @@ namespace AudioConductor.Core.Tests
 
             _pool.Return(player);
 
-            Assert.That(player.gameObject.activeSelf, Is.False);
+            Assert.That(_root.transform.GetChild(0).gameObject.activeSelf, Is.False);
         }
 
         [Test]

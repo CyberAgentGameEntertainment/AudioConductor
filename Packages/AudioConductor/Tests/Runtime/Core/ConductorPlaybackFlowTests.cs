@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
@@ -19,8 +20,8 @@ namespace AudioConductor.Core.Tests
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new SpyPlayerProvider();
-            _oneShotProvider = new SpyPlayerProvider();
+            _managedProvider = new StubPlayerProvider();
+            _oneShotProvider = new StubPlayerProvider();
         }
 
         [TearDown]
@@ -29,8 +30,8 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(_settings);
         }
 
-        private SpyPlayerProvider _managedProvider = null!;
-        private SpyPlayerProvider _oneShotProvider = null!;
+        private StubPlayerProvider _managedProvider = null!;
+        private StubPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         private Conductor CreateConductor()
@@ -74,9 +75,8 @@ namespace AudioConductor.Core.Tests
             conductor.Play(sheet, "cue1");
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.SetupCount, Is.EqualTo(1));
-            Assert.That(player.PlayCount, Is.EqualTo(1));
-            Assert.That(player.IsPlaying, Is.True);
+            Assert.That(player.ClipSamples, Is.GreaterThan(0));
+            Assert.That(player.State, Is.EqualTo(PlayerState.Playing));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -100,8 +100,8 @@ namespace AudioConductor.Core.Tests
 
             var player = _managedProvider.Created[0];
             Assert.That(player.CategoryId, Is.EqualTo(3));
-            Assert.That(player.SetupVolume, Is.EqualTo(0.8f).Within(0.001f));
-            Assert.That(player.SetupPitch, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.8f).Within(0.001f));
+            Assert.That(player.GetActualPitch(), Is.EqualTo(1.2f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -120,8 +120,8 @@ namespace AudioConductor.Core.Tests
             conductor.Play(sheet, "cue1");
 
             var player = _managedProvider.Created[0];
-            // Default _masterVolume is 1f.
-            Assert.That(player.MasterVolume, Is.EqualTo(1f));
+            // Default _masterVolume is 1f; GetActualVolume = VolumeAsset(1) * 1 * 1 * master(1) * cat(1) = 1.
+            Assert.That(player.GetActualVolume(), Is.EqualTo(1f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -141,7 +141,7 @@ namespace AudioConductor.Core.Tests
             conductor.Play(sheet, "cue1");
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.MasterVolume, Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.5f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -197,14 +197,13 @@ namespace AudioConductor.Core.Tests
             var handle = conductor.Play(sheet, "cue1");
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.IsPlaying, Is.True);
+            Assert.That(player.State, Is.EqualTo(PlayerState.Playing));
 
             conductor.Stop(handle);
 
             // StopPlayback() calls player.Stop() then Return() which calls ResetState(),
-            // so StopCount is reset to 0. Verify the inactive state instead.
-            Assert.That(player.IsPlaying, Is.False);
-            Assert.That(player.IsPaused, Is.False);
+            // so sources.IsPlaying is reset to false. Verify the inactive state instead.
+            Assert.That(player.State, Is.EqualTo(PlayerState.Stopped));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -224,14 +223,14 @@ namespace AudioConductor.Core.Tests
             conductor.Pause(handle);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.IsPaused, Is.True);
+            Assert.That(player.State, Is.EqualTo(PlayerState.Paused));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
         }
 
         [Test]
-        public void Resume_AfterPause_CallsSpyPlayerResume()
+        public void Resume_AfterPause_PlayerIsPlaying()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -245,9 +244,7 @@ namespace AudioConductor.Core.Tests
             conductor.Resume(handle);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.ResumeCount, Is.EqualTo(1));
-            Assert.That(player.IsPlaying, Is.True);
-            Assert.That(player.IsPaused, Is.False);
+            Assert.That(player.State, Is.EqualTo(PlayerState.Playing));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -310,7 +307,7 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void SetVolume_AfterPlay_CallsSpyPlayerSetVolume()
+        public void SetVolume_AfterPlay_PlayerVolumeIsUpdated()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -323,14 +320,14 @@ namespace AudioConductor.Core.Tests
             conductor.SetVolume(handle, 0.6f);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.Volume, Is.EqualTo(0.6f).Within(0.001f));
+            Assert.That(player.GetVolume(), Is.EqualTo(0.6f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
         }
 
         [Test]
-        public void SetPitch_AfterPlay_CallsSpyPlayerSetPitch()
+        public void SetPitch_AfterPlay_PlayerPitchIsUpdated()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -343,14 +340,14 @@ namespace AudioConductor.Core.Tests
             conductor.SetPitch(handle, 1.5f);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.Pitch, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(player.GetPitch(), Is.EqualTo(1.5f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
         }
 
         [Test]
-        public void Update_WithActivePlayback_CallsManualUpdate()
+        public void Update_WithActivePlayback_PlayerRemainsPlaying()
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
@@ -363,9 +360,7 @@ namespace AudioConductor.Core.Tests
 
             conductor.Update(0.016f);
 
-            var player = _managedProvider.Created[0];
-            Assert.That(player.ManualUpdateCount, Is.GreaterThanOrEqualTo(1));
-            Assert.That(player.LastDeltaTime, Is.EqualTo(0.016f).Within(0.0001f));
+            Assert.That(_managedProvider.Created[0].State, Is.EqualTo(PlayerState.Playing));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -385,7 +380,7 @@ namespace AudioConductor.Core.Tests
             conductor.SetMasterVolume(0.7f);
 
             var player = _managedProvider.Created[0];
-            Assert.That(player.MasterVolume, Is.EqualTo(0.7f).Within(0.001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.7f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -405,7 +400,7 @@ namespace AudioConductor.Core.Tests
             conductor.SetMasterVolume(0.3f);
 
             var player = _oneShotProvider.Created[0];
-            Assert.That(player.MasterVolume, Is.EqualTo(0.3f).Within(0.001f));
+            Assert.That(player.GetActualVolume(), Is.EqualTo(0.3f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);

@@ -13,6 +13,8 @@ namespace AudioConductor.Core
     {
         private sealed class CueSheetRegistration
         {
+            private const int UnassignedCueId = 0;
+
             private readonly Dictionary<int, Cue> _cueIdLookup;
             private readonly Dictionary<string, Cue> _cueNameLookup;
             private readonly Dictionary<Cue, CueState> _cueStateCache = new();
@@ -27,7 +29,7 @@ namespace AudioConductor.Core
                 for (var i = 0; i < cueList.Count; i++)
                 {
                     _cueNameLookup[cueList[i].name] = cueList[i];
-                    if (cueList[i].cueId != 0)
+                    if (cueList[i].cueId != UnassignedCueId)
                         _cueIdLookup[cueList[i].cueId] = cueList[i];
                 }
             }
@@ -61,7 +63,7 @@ namespace AudioConductor.Core
 
         internal readonly struct Playback
         {
-            internal Playback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal Playback(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
             {
                 Id = id;
                 CueSheetId = cueSheetId;
@@ -73,32 +75,32 @@ namespace AudioConductor.Core
             internal uint Id { get; }
             internal uint CueSheetId { get; }
             internal Cue Cue { get; }
-            internal IInternalPlayer Player { get; }
+            internal AudioClipPlayer Player { get; }
             internal int Priority { get; }
         }
 
         internal readonly struct ManagedPlayback
         {
-            internal ManagedPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal ManagedPlayback(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
             {
                 Core = new Playback(id, cueSheetId, cue, player, priority);
             }
 
             internal Playback Core { get; }
             internal uint Id => Core.Id;
-            internal IInternalPlayer Player => Core.Player;
+            internal AudioClipPlayer Player => Core.Player;
         }
 
         internal readonly struct OneShotPlayback
         {
-            internal OneShotPlayback(uint id, uint cueSheetId, Cue cue, IInternalPlayer player, int priority)
+            internal OneShotPlayback(uint id, uint cueSheetId, Cue cue, AudioClipPlayer player, int priority)
             {
                 Core = new Playback(id, cueSheetId, cue, player, priority);
             }
 
             internal Playback Core { get; }
             internal uint Id => Core.Id;
-            internal IInternalPlayer Player => Core.Player;
+            internal AudioClipPlayer Player => Core.Player;
         }
     }
 }

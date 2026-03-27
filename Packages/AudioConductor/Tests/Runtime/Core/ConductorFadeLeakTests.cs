@@ -13,18 +13,18 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
-    public class ConductorFadeLeakTests
+    internal sealed class ConductorFadeLeakTests
     {
-        private SpyPlayerProvider _managedProvider = null!;
-        private SpyPlayerProvider _oneShotProvider = null!;
+        private StubPlayerProvider _managedProvider = null!;
+        private StubPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new SpyPlayerProvider();
-            _oneShotProvider = new SpyPlayerProvider();
+            _managedProvider = new StubPlayerProvider();
+            _oneShotProvider = new StubPlayerProvider();
         }
 
         [TearDown]

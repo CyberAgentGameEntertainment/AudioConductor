@@ -22,6 +22,25 @@ namespace AudioConductor.Core.Tests
             return new Cue { categoryId = categoryId };
         }
 
+        private static AudioClipPlayer CreatePlayingPlayer()
+        {
+            var source = new SpyAudioSourceWrapper { IsPlaying = true };
+            return new AudioClipPlayer(
+                new IAudioSourceWrapper[] { source, new SpyAudioSourceWrapper() },
+                new StubDspClock(),
+                NullLifecycle.Instance
+            );
+        }
+
+        private static AudioClipPlayer CreateStoppedPlayer()
+        {
+            return new AudioClipPlayer(
+                new IAudioSourceWrapper[] { new SpyAudioSourceWrapper(), new SpyAudioSourceWrapper() },
+                new StubDspClock(),
+                NullLifecycle.Instance
+            );
+        }
+
         [Test]
         public void ResolveThrottle_LimitZero_ReturnsTrue()
         {
@@ -54,7 +73,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void ResolveThrottle_AtLimit_PriorityOrder_WithCandidate_ReturnsTrue()
         {
-            var player = new SpyPlayer { IsPlaying = true };
+            var player = CreatePlayingPlayer();
             var cue = CreateCue();
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
@@ -78,7 +97,7 @@ namespace AudioConductor.Core.Tests
         public void ResolveThrottle_AtLimit_MinPriorityLowerThanTrack_ForcesEviction()
         {
             // Existing sounds have lower priority → force PriorityOrder eviction regardless of throttleType.
-            var player = new SpyPlayer { IsPlaying = true };
+            var player = CreatePlayingPlayer();
             var cue = CreateCue();
             var managed = new ManagedPlayback(1, 1, cue, player, 0);
             var result = ThrottleResolver.ResolveThrottle(
@@ -92,7 +111,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_Playback_CountsAndTracksOldest()
         {
             var cue = CreateCue(10);
-            var player = new SpyPlayer { IsPlaying = true };
+            var player = CreatePlayingPlayer();
             var state = new ManagedPlayback(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -116,7 +135,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_Playback_SkipsStoppedPlayer()
         {
             var cue = CreateCue();
-            var player = new SpyPlayer { IsPlaying = false, IsPaused = false };
+            var player = CreateStoppedPlayer();
             var state = new ManagedPlayback(1, 100, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -133,10 +152,10 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void AccumulateAllScopes_Playback_DifferentSheet_OnlyCounts_GlobalAndCategory()
+        public void AccumulateAllScopes_Playback_DifferentSheet_CountsGlobalCategoryAndCue_SkipsSheet()
         {
             var cue = CreateCue(10);
-            var player = new SpyPlayer { IsPlaying = true };
+            var player = CreatePlayingPlayer();
             var state = new ManagedPlayback(1, 200, cue, player, 0);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -160,7 +179,7 @@ namespace AudioConductor.Core.Tests
         public void AccumulateAllScopes_OneShot_CountsAndTracksOldest()
         {
             var cue = CreateCue(10);
-            var player = new SpyPlayer { IsPlaying = true };
+            var player = CreatePlayingPlayer();
             var state = new OneShotPlayback(1, 100, cue, player, 5);
 
             int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
@@ -197,7 +216,7 @@ namespace AudioConductor.Core.Tests
         public void AdjustCountsAfterEviction_MatchingScopes_DecrementsAll()
         {
             var cue = CreateCue(10);
-            var eviction = new Playback(1, 100, cue, null!, 0);
+            var eviction = new Playback(1, 100, cue, CreateStoppedPlayer(), 0);
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
             ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,
@@ -213,7 +232,7 @@ namespace AudioConductor.Core.Tests
         public void AdjustCountsAfterEviction_DifferentSheet_OnlyDecrementsGlobalAndCategory()
         {
             var cue = CreateCue(10);
-            var eviction = new Playback(1, 200, cue, null!, 0);
+            var eviction = new Playback(1, 200, cue, CreateStoppedPlayer(), 0);
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
             ThrottleResolver.AdjustCountsAfterEviction(eviction, 100, cue, 10,

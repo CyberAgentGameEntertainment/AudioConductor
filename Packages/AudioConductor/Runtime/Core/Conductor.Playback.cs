@@ -95,22 +95,22 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state))
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return;
 
             if (fadeTime > 0f)
             {
                 // Do not start a duplicate fade-out if one is already in progress or completed.
-                if (state.Player.FadeState == FadeState.FadingOut ||
-                    state.Player.FadeState == FadeState.FadingOutComplete)
+                if (playback.Player.FadeState == FadeState.FadingOut ||
+                    playback.Player.FadeState == FadeState.FadingOutComplete)
                     return;
 
-                _fadeManager.StartFade(state.Player, fader ?? Faders.Linear, state.Player.VolumeFade, 0f,
+                _fadeManager.StartFade(playback.Player, fader ?? Faders.Linear, playback.Player.VolumeFade, 0f,
                     fadeTime.Value);
                 return;
             }
 
-            StopPlayback(state);
+            StopPlayback(playback);
             _managedPlaybacks.Remove(handle.Id);
         }
 
@@ -123,10 +123,10 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return;
 
-            state.Player.Pause();
+            playback.Player.Pause();
         }
 
         /// <summary>
@@ -138,10 +138,10 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return;
 
-            state.Player.Resume();
+            playback.Player.Resume();
         }
 
         /// <summary>
@@ -389,13 +389,10 @@ namespace AudioConductor.Core
         {
             for (var i = _oneShotPlaybacks.Count - 1; i >= 0; i--)
             {
-                var state = _oneShotPlaybacks[i];
-                if (state.Player != null)
-                {
-                    _fadeManager.CancelFade(state.Player);
-                    state.Player.Stop();
-                    _oneShotProvider.Return(state.Player);
-                }
+                var playback = _oneShotPlaybacks[i];
+                _fadeManager.CancelFade(playback.Player);
+                playback.Player.Stop();
+                _oneShotProvider.Return(playback.Player);
             }
 
             _oneShotPlaybacks.Clear();
@@ -403,9 +400,6 @@ namespace AudioConductor.Core
 
         private void StopPlayback(ManagedPlayback playback)
         {
-            if (playback.Player == null)
-                return;
-
             _fadeManager.CancelFade(playback.Player);
             playback.Player.Stop();
             _playerProvider.Return(playback.Player);
@@ -429,14 +423,13 @@ namespace AudioConductor.Core
             }
         }
 
-        private bool RemoveOneShotById(uint id, out IInternalPlayer player)
+        private bool RemoveOneShotById(uint id, out AudioClipPlayer player)
         {
             for (var i = 0; i < _oneShotPlaybacks.Count; i++)
                 if (_oneShotPlaybacks[i].Id == id)
                 {
                     player = _oneShotPlaybacks[i].Player;
                     _oneShotPlaybacks[i] = _oneShotPlaybacks[^1];
-                    _oneShotPlaybacks[^1] = default;
                     _oneShotPlaybacks.RemoveAt(_oneShotPlaybacks.Count - 1);
                     return true;
                 }

@@ -88,7 +88,7 @@ namespace AudioConductor.Core.Tests
             // Sheet full, Category FCFS rejects.
             conductor.PlayOneShot(sheetHandle, "cueB");
 
-            Assert.That(oneShotPlayerA.IsPlaying, Is.True,
+            Assert.That(oneShotPlayerA.State, Is.EqualTo(PlayerState.Playing),
                 "OneShot cueA must NOT be evicted — the play was rejected");
         }
     }

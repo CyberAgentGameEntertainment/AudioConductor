@@ -66,7 +66,7 @@ namespace AudioConductor.Core.Tests
             var handle2 = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle2.IsValid, Is.True);
-            Assert.That(oneShotPlayer.IsPlaying, Is.False);
+            Assert.That(oneShotPlayer.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace AudioConductor.Core.Tests
 
             Assert.That(handle3.IsValid, Is.True);
             Assert.That(conductor.IsPlaying(handle1), Is.False);
-            Assert.That(oneShotPlayer.IsPlaying, Is.True);
+            Assert.That(oneShotPlayer.State, Is.EqualTo(PlayerState.Playing));
         }
 
         [Test]
@@ -202,7 +202,7 @@ namespace AudioConductor.Core.Tests
             var handle = conductor.Play(sheetHandle, "cue");
 
             Assert.That(handle.IsValid, Is.True);
-            Assert.That(secondOneShotPlayer.IsPlaying, Is.False,
+            Assert.That(secondOneShotPlayer.State, Is.EqualTo(PlayerState.Stopped),
                 "Second OneShot should be evicted by managed Play, proving third PlayOneShot evicted first OneShot");
         }
     }

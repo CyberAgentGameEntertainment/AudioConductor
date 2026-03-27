@@ -13,24 +13,25 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
-    public class AudioClipPlayerPlayModeTests
+    internal sealed class AudioClipPlayerPlayModeTests
     {
         private AudioClip _clip = null!;
         private AudioClipPlayer _player = null!;
+        private GameObject _root = null!;
 
         [SetUp]
         public void SetUp()
         {
-            var root = new GameObject("TestRoot");
-            root.AddComponent<AudioListener>();
-            _player = AudioClipPlayer.Create(root.transform);
+            _root = new GameObject("TestRoot");
+            _root.AddComponent<AudioListener>();
+            _player = AudioClipPlayer.Create(_root.transform);
             _clip = CreatePlayableClip();
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(_player.gameObject.transform.parent.gameObject);
+            Object.Destroy(_root);
             Object.Destroy(_clip);
         }
 

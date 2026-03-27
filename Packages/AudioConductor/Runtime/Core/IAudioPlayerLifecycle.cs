@@ -4,10 +4,9 @@
 
 namespace AudioConductor.Core
 {
-    internal interface IInternalPlayer : IAudioClipPlayer, IFadeable
+    internal interface IAudioPlayerLifecycle
     {
-        void SetMasterVolume(float volume);
-        void SetCategoryVolume(float volume);
-        void ManualUpdate(float deltaTime);
+        void SetActive(bool active);
+        void Destroy();
     }
 }

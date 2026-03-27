@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayerPool : ComponentPool<AudioClipPlayer>
+    internal sealed class AudioClipPlayerPool : ObjectPool<AudioClipPlayer>
     {
         private readonly bool _deactivateOnReturn;
         private readonly Transform _parent;
@@ -23,7 +23,7 @@ namespace AudioConductor.Core
         protected override void OnBeforeRent(AudioClipPlayer instance)
         {
             if (_deactivateOnReturn)
-                instance.gameObject.SetActive(true);
+                instance.SetActive(true);
         }
 
         protected override void OnBeforeReturn(AudioClipPlayer instance)
@@ -31,7 +31,12 @@ namespace AudioConductor.Core
             instance.ResetState();
 
             if (_deactivateOnReturn)
-                instance.gameObject.SetActive(false);
+                instance.SetActive(false);
+        }
+
+        protected override void OnClear(AudioClipPlayer instance)
+        {
+            instance.Destroy();
         }
 
         protected override AudioClipPlayer CreateInstance()

@@ -98,12 +98,11 @@ namespace AudioConductor.Core
                 StopPlayback(playback);
             _managedPlaybacks.Clear();
 
-            foreach (var state in _oneShotPlaybacks)
-                if (state.Player != null)
-                {
-                    state.Player.Stop();
-                    _oneShotProvider.Return(state.Player);
-                }
+            foreach (var playback in _oneShotPlaybacks)
+            {
+                playback.Player.Stop();
+                _oneShotProvider.Return(playback.Player);
+            }
 
             _oneShotPlaybacks.Clear();
             _fadeManager.Dispose();

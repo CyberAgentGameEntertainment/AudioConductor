@@ -11,23 +11,24 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Tests
 {
-    public class AudioClipPlayerTests
+    internal sealed class AudioClipPlayerTests
     {
         private AudioClip _clip = null!;
         private AudioClipPlayer _player = null!;
+        private GameObject _root = null!;
 
         [SetUp]
         public void SetUp()
         {
-            var root = new GameObject("TestRoot");
-            _player = AudioClipPlayer.Create(root.transform);
+            _root = new GameObject("TestRoot");
+            _player = AudioClipPlayer.Create(_root.transform);
             _clip = AudioClip.Create("test", 44100, 1, 44100, false);
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(_player.gameObject.transform.parent.gameObject);
+            Object.DestroyImmediate(_root);
             Object.DestroyImmediate(_clip);
         }
 
@@ -46,9 +47,11 @@ namespace AudioConductor.Core.Tests
         }
 
         [Test]
-        public void Create_HasTwoAudioSourceChildren()
+        public void Create_HasTwoAudioSources()
         {
-            Assert.That(_player.GetComponentsInChildren<AudioSource>().Length, Is.EqualTo(2));
+            var child = _root.transform.GetChild(0).gameObject;
+
+            Assert.That(child.GetComponents<AudioSource>().Length, Is.EqualTo(2));
         }
     }
 }

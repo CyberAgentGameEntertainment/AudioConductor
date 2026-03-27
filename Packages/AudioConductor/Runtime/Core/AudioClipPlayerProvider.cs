@@ -22,18 +22,14 @@ namespace AudioConductor.Core
             _pool.Prewarm(count);
         }
 
-        public IInternalPlayer Rent()
+        public AudioClipPlayer Rent()
         {
             return _pool.Rent();
         }
 
-        public void Return(IInternalPlayer player)
+        public void Return(AudioClipPlayer player)
         {
-            if (player == null)
-                return;
-
-            var clipPlayer = (AudioClipPlayer)player;
-            _pool.Return(clipPlayer);
+            _pool.Return(player);
         }
     }
 }

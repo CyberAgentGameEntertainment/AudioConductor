@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
@@ -19,8 +20,8 @@ namespace AudioConductor.Core.Tests
         public void SetUp()
         {
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
-            _managedProvider = new SpyPlayerProvider();
-            _oneShotProvider = new SpyPlayerProvider();
+            _managedProvider = new StubPlayerProvider();
+            _oneShotProvider = new StubPlayerProvider();
         }
 
         [TearDown]
@@ -29,8 +30,8 @@ namespace AudioConductor.Core.Tests
             Object.DestroyImmediate(_settings);
         }
 
-        private SpyPlayerProvider _managedProvider = null!;
-        private SpyPlayerProvider _oneShotProvider = null!;
+        private StubPlayerProvider _managedProvider = null!;
+        private StubPlayerProvider _oneShotProvider = null!;
         private AudioConductorSettings _settings = null!;
 
         private Conductor CreateConductor()
@@ -74,8 +75,8 @@ namespace AudioConductor.Core.Tests
             conductor.PlayOneShot(sheet, "cue1");
 
             var player = _oneShotProvider.Created[0];
-            Assert.That(player.SetupCount, Is.EqualTo(1));
-            Assert.That(player.PlayCount, Is.EqualTo(1));
+            Assert.That(player.ClipSamples, Is.GreaterThan(0));
+            Assert.That(player.State, Is.EqualTo(PlayerState.Playing));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -94,8 +95,8 @@ namespace AudioConductor.Core.Tests
             conductor.PlayOneShot(sheet, "cue1");
 
             var player = _oneShotProvider.Created[0];
-            // Default _masterVolume is 1f.
-            Assert.That(player.MasterVolume, Is.EqualTo(1f));
+            // Default _masterVolume is 1f; GetActualVolume = VolumeAsset(1) * 1 * 1 * master(1) * cat(1) = 1.
+            Assert.That(player.GetActualVolume(), Is.EqualTo(1f).Within(0.001f));
 
             Object.DestroyImmediate(clip);
             Object.DestroyImmediate(asset);
@@ -113,8 +114,8 @@ namespace AudioConductor.Core.Tests
             var sheet = conductor.RegisterCueSheet(asset);
             conductor.PlayOneShot(sheet, "cue1");
 
-            var player = _oneShotProvider.Created[0];
-            player.IsPlaying = false;
+            var oneShotPlayer = _oneShotProvider.Created[0];
+            oneShotPlayer.Stop();
 
             conductor.Update(0.016f);
 

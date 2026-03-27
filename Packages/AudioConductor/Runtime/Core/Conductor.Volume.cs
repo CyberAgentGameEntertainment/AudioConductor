@@ -22,10 +22,10 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return;
 
-            state.Player.SetVolume(volume);
+            playback.Player.SetVolume(volume);
         }
 
         /// <summary>
@@ -38,10 +38,10 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return;
 
-            state.Player.SetPitch(pitch);
+            playback.Player.SetPitch(pitch);
         }
 
         /// <summary>
@@ -54,10 +54,10 @@ namespace AudioConductor.Core
             if (!handle.IsValid)
                 return false;
 
-            if (!_managedPlaybacks.TryGetValue(handle.Id, out var state) || state.Player == null)
+            if (!_managedPlaybacks.TryGetValue(handle.Id, out var playback))
                 return false;
 
-            return state.Player.State == PlayerState.Playing || state.Player.FadeState != FadeState.None;
+            return playback.Player.State == PlayerState.Playing || playback.Player.FadeState != FadeState.None;
         }
 
         /// <summary>
@@ -78,9 +78,9 @@ namespace AudioConductor.Core
         {
             _masterVolume = ValueRangeConst.Volume.Clamp(volume);
             foreach (var playback in _managedPlaybacks.Values)
-                playback.Player?.SetMasterVolume(_masterVolume);
-            foreach (var state in _oneShotPlaybacks)
-                state.Player?.SetMasterVolume(_masterVolume);
+                playback.Player.SetMasterVolume(_masterVolume);
+            foreach (var playback in _oneShotPlaybacks)
+                playback.Player.SetMasterVolume(_masterVolume);
         }
 
         /// <summary>
@@ -105,11 +105,11 @@ namespace AudioConductor.Core
             var clamped = ValueRangeConst.Volume.Clamp(volume);
             _categoryVolumes[categoryId] = clamped;
             foreach (var playback in _managedPlaybacks.Values)
-                if (playback.Player?.CategoryId == categoryId)
+                if (playback.Player.CategoryId == categoryId)
                     playback.Player.SetCategoryVolume(clamped);
-            foreach (var state in _oneShotPlaybacks)
-                if (state.Player?.CategoryId == categoryId)
-                    state.Player.SetCategoryVolume(clamped);
+            foreach (var playback in _oneShotPlaybacks)
+                if (playback.Player.CategoryId == categoryId)
+                    playback.Player.SetCategoryVolume(clamped);
         }
     }
 }

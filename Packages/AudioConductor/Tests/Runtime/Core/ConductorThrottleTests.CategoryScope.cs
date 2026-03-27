@@ -319,7 +319,7 @@ namespace AudioConductor.Core.Tests
             var sheetHandle = conductor.RegisterCueSheet(asset);
 
             conductor.Play(sheetHandle, "cue");
-            _managedProvider.Created[0].IsPlaying = false;
+            _managedProvider.Created[0].Stop();
             conductor.Update(0f);
             var handle2 = conductor.Play(sheetHandle, "cue");
 

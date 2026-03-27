@@ -2,12 +2,10 @@
 // Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-namespace AudioConductor.Core
+namespace AudioConductor.Core.Tests.Fakes
 {
-    internal interface IPlayerProvider
+    internal sealed class StubDspClock : IDspClock
     {
-        void Prewarm(int count);
-        AudioClipPlayer Rent();
-        void Return(AudioClipPlayer player);
+        public double DspTime { get; set; }
     }
 }
