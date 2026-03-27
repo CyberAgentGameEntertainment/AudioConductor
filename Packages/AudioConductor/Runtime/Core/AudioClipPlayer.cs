@@ -363,17 +363,15 @@ namespace AudioConductor.Core
             if (pitch == 0f)
                 return;
 
-            var samples = _endSample > startSample ? _endSample - startSample : startSample - _endSample;
             // In loop mode, zero-length region would cause _nextEventTime to never advance,
             // resulting in PlayLoop being called every ManualUpdate frame indefinitely.
-            if (_isLoop && samples == 0)
+            if (_isLoop && _endSample == startSample)
             {
                 _nextEventTime = double.MaxValue;
                 return;
             }
 
-            var duration = (float)samples / _frequency;
-            _scheduledEndTime = playStartTime + duration / pitch;
+            _scheduledEndTime = CalculateScheduledEndTime(playStartTime, startSample, pitch);
 
             _sources[_nextPlayAudioSourceIndex].TimeSamples = startSample;
             _sources[_nextPlayAudioSourceIndex].PlayScheduled(playStartTime);
@@ -396,9 +394,7 @@ namespace AudioConductor.Core
                 return;
 
             var nowSample = source.TimeSamples;
-            var samples = _endSample > nowSample ? _endSample - nowSample : nowSample - _endSample;
-            var duration = (float)samples / _frequency;
-            _scheduledEndTime = _dspClock.DspTime + duration / pitch;
+            _scheduledEndTime = CalculateScheduledEndTime(_dspClock.DspTime, nowSample, pitch);
 
             source.SetScheduledEndTime(_scheduledEndTime);
             var minusDuration = _isLoop ? MinimumDuration : 0;
@@ -410,6 +406,15 @@ namespace AudioConductor.Core
             _scheduledEndTime += pausedDuration;
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
             _nextEventTime += pausedDuration;
+        }
+
+        private double CalculateScheduledEndTime(double baseTime, int currentSample, float absPitch)
+        {
+            var samples = _endSample > currentSample
+                ? _endSample - currentSample
+                : currentSample - _endSample;
+            var duration = (float)samples / _frequency;
+            return baseTime + duration / absPitch;
         }
 
         private void FlipNextPlayAudioSourceIndex()
