@@ -17,9 +17,9 @@ namespace AudioConductor.Core
         internal static bool ResolveThrottle(ThrottleType throttleType, int throttleLimit,
             int playNum, int minPriority, int trackPriority,
             Playback? oldest,
-            out Playback eviction)
+            out Playback? eviction)
         {
-            eviction = default;
+            eviction = null;
 
             if (throttleLimit <= 0 || playNum < throttleLimit)
                 return true;
@@ -45,19 +45,20 @@ namespace AudioConductor.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void AdjustCountsAfterEviction(in Playback eviction,
+        internal static void AdjustCountsAfterEviction(Playback? eviction,
             uint targetCueSheetId, Cue targetCue, int targetCategoryId,
             ref int cueCount, ref int sheetCount, ref int catCount, ref int globalCount)
         {
-            if (eviction.Id == 0)
+            if (!eviction.HasValue)
                 return;
 
+            var e = eviction.Value;
             globalCount--;
-            if (eviction.CueSheetId == targetCueSheetId)
+            if (e.CueSheetId == targetCueSheetId)
                 sheetCount--;
-            if (eviction.Cue == targetCue)
+            if (e.Cue == targetCue)
                 cueCount--;
-            if (eviction.Cue.categoryId == targetCategoryId)
+            if (e.Cue.categoryId == targetCategoryId)
                 catCount--;
         }
 

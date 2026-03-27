@@ -411,17 +411,17 @@ namespace AudioConductor.Core
             _playerProvider.Return(playback.Player);
         }
 
-        private void ExecuteEviction(in Playback eviction)
+        private void ExecuteEviction(Playback? eviction)
         {
-            if (eviction.Id == 0)
+            if (!eviction.HasValue)
                 return;
 
-            if (_managedPlaybacks.TryGetValue(eviction.Id, out var pb))
+            if (_managedPlaybacks.TryGetValue(eviction.Value.Id, out var pb))
             {
                 StopPlayback(pb);
-                _managedPlaybacks.Remove(eviction.Id);
+                _managedPlaybacks.Remove(eviction.Value.Id);
             }
-            else if (RemoveOneShotById(eviction.Id, out var player))
+            else if (RemoveOneShotById(eviction.Value.Id, out var player))
             {
                 _fadeManager.CancelFade(player);
                 player.Stop();

@@ -29,7 +29,7 @@ namespace AudioConductor.Core.Tests
                 ThrottleType.FirstComeFirstServed, 0,
                 10, 0, 0, null, out var eviction);
             Assert.That(result, Is.True);
-            Assert.That(eviction.Id, Is.EqualTo(0));
+            Assert.That(eviction.HasValue, Is.False);
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace AudioConductor.Core.Tests
                 ThrottleType.FirstComeFirstServed, 3,
                 2, 0, 0, null, out var eviction);
             Assert.That(result, Is.True);
-            Assert.That(eviction.Id, Is.EqualTo(0));
+            Assert.That(eviction.HasValue, Is.False);
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace AudioConductor.Core.Tests
                 ThrottleType.PriorityOrder, 1,
                 1, 0, 0, managed.Core, out var eviction);
             Assert.That(result, Is.True);
-            Assert.That(eviction.Id, Is.EqualTo(1u));
+            Assert.That(eviction!.Value.Id, Is.EqualTo(1u));
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace AudioConductor.Core.Tests
                 ThrottleType.FirstComeFirstServed, 1,
                 1, 0, 5, managed.Core, out var eviction);
             Assert.That(result, Is.True);
-            Assert.That(eviction.Id, Is.EqualTo(1u));
+            Assert.That(eviction!.Value.Id, Is.EqualTo(1u));
         }
 
         [Test]
@@ -183,7 +183,7 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void AdjustCountsAfterEviction_ZeroId_NoChange()
         {
-            var eviction = default(Playback);
+            Playback? eviction = null;
             var cue = CreateCue();
             int cueCount = 3, sheetCount = 3, catCount = 3, globalCount = 3;
 
