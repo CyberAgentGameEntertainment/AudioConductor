@@ -1,0 +1,72 @@
+name: Release Unity Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:  # Use for re-build or re-release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from package.json
+        id: version
+        working-directory: Packages/AudioConductor
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing Audio Conductor v$VERSION"
+
+      - name: Verify version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PACKAGE_VERSION=${{ steps.version.outputs.VERSION }}
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Error: Tag (v$TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+          echo "Version verified: $TAG_VERSION = $PACKAGE_VERSION ✓"
+
+      - name: Create package archive with npm pack
+        working-directory: Packages/AudioConductor
+        run: |
+          npm pack
+          mv jp.co.cyberagent.audioconductor-${{ steps.version.outputs.VERSION }}.tgz \
+             ../../audioconductor-${{ steps.version.outputs.VERSION }}.tgz
+          echo "Package archive created"
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          awk "/## v${VERSION}/{flag=1; next} /^## v/{flag=0} flag" \
+            Packages/AudioConductor/CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG entry found. Using default message."
+            echo "Release Audio Conductor v$VERSION" > release-notes.md
+          fi
+
+      - name: Create installation instructions
+        run: |
+          echo "" >> release-notes.md
+          echo "## Installation" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "1. Download \`audioconductor-${{ steps.version.outputs.VERSION }}.tgz\`" >> release-notes.md
+          echo "2. In Unity Package Manager, select \"Add package from tarball...\" to install" >> release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Audio Conductor v${{ steps.version.outputs.VERSION }}"
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          files: |
+            audioconductor-${{ steps.version.outputs.VERSION }}.tgz
