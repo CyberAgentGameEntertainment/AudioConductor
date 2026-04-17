@@ -27,16 +27,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.tag }}
         run: |
+          shopt -s inherit_errexit
           TAG="${INPUT_TAG:-${GITHUB_REF#refs/tags/}}"
           if ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "Error: Tag '$TAG' does not match expected format v<major>.<minor>.<patch>"
             exit 1
           fi
-          REF_JSON="$(gh api "repos/${{ github.repository }}/git/ref/tags/${TAG}")"
+          REF_JSON="$(gh api "repos/${{ github.repository }}/git/ref/tags/${TAG}")" || {
+            echo "Error: Tag $TAG not found or API request failed" >&2
+            exit 1
+          }
           OBJ_TYPE="$(echo "$REF_JSON" | jq -r '.object.type')"
           OBJ_SHA="$(echo "$REF_JSON" | jq -r '.object.sha')"
           if [ "$OBJ_TYPE" = "tag" ]; then
-            COMMIT_SHA="$(gh api "repos/${{ github.repository }}/git/tags/${OBJ_SHA}" --jq '.object.sha')"
+            COMMIT_SHA="$(gh api "repos/${{ github.repository }}/git/tags/${OBJ_SHA}" --jq '.object.sha')" || {
+              echo "Error: Failed to dereference annotated tag $TAG" >&2
+              exit 1
+            }
           elif [ "$OBJ_TYPE" = "commit" ]; then
             COMMIT_SHA="$OBJ_SHA"
           else
