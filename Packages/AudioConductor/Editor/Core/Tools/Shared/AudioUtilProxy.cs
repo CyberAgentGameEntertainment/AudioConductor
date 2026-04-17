@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -14,13 +16,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 {
     internal static class AudioUtilProxy
     {
-        private static Type _audioUtil;
-        private static Dictionary<string, MethodInfo> _cache;
+        private static Type? _audioUtil;
+        private static Dictionary<string, MethodInfo>? _cache;
 
         private static Type AudioUtil => _audioUtil ??= typeof(AudioImporter).Assembly.GetType("UnityEditor.AudioUtil");
         private static Dictionary<string, MethodInfo> Cache => _cache ??= new Dictionary<string, MethodInfo>();
 
-        private static object InvokeMethod(string name, params object[] args)
+        private static object? InvokeMethod(string name, params object[] args)
         {
             Cache.TryGetValue(name, out var method);
             if (method == null)
@@ -34,10 +36,16 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return method.Invoke(null, args);
         }
 
-        public static AudioImporter GetImporterFromClip(AudioClip clip)
-            => InvokeMethod("GetImporterFromClip", clip) as AudioImporter;
+        public static AudioImporter? GetImporterFromClip(AudioClip clip)
+        {
+            return InvokeMethod("GetImporterFromClip", clip) as AudioImporter;
+        }
 
-        public static float[] GetMinMaxData(AudioImporter importer)
-            => InvokeMethod("GetMinMaxData", importer) as float[];
+        public static float[]? GetMinMaxData(AudioImporter? importer)
+        {
+            if (importer == null)
+                return null;
+            return InvokeMethod("GetMinMaxData", importer) as float[];
+        }
     }
 }

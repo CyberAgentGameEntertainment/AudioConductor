@@ -1,13 +1,14 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
-using AudioConductor.Runtime.Core.Models;
+#nullable enable
+
+using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class ItemTrackTests
     {

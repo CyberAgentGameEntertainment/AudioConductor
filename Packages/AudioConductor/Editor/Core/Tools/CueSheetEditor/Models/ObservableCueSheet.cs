@@ -1,11 +1,13 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Diagnostics.CodeAnalysis;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
@@ -14,11 +16,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly CueSheet _cueSheet;
 
         private readonly ObservableProperty<string> _name;
-        private readonly ObservableProperty<ThrottleType> _throttleType;
-        private readonly ObservableProperty<int> _throttleLimit;
-        private readonly ObservableProperty<float> _volume;
         private readonly ObservableProperty<float> _pitch;
         private readonly ObservableProperty<bool> _pitchInvert;
+        private readonly ObservableProperty<int> _throttleLimit;
+        private readonly ObservableProperty<ThrottleType> _throttleType;
+        private readonly ObservableProperty<float> _volume;
 
         public ObservableCueSheet([NotNull] CueSheet cueSheet)
         {

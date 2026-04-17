@@ -1,15 +1,17 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Linq;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
     internal static class CueExtensions
     {
-        public static Cue Duplicate(this Cue cue)
+        public static Cue? Duplicate(this Cue? cue)
         {
             if (cue == null)
                 return null;
@@ -26,7 +28,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 pitchRange = cue.pitchRange,
                 pitchInvert = cue.pitchInvert,
                 playType = cue.playType,
-                trackList = cue.trackList.Select(track => track.Duplicate()).ToList()
+                trackList = cue.trackList.Select(track => track.Duplicate()!).ToList()
+                // cueId intentionally omitted; caller is responsible for assigning a new ID.
             };
         }
     }

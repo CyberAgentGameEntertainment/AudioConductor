@@ -1,16 +1,18 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.DataTransferObjects;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -27,16 +29,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 MoveCue(evt.oldIndex, evt.newIndex);
             else
                 MoveTrack(evt.oldIndex, (ItemCue)evt.oldParent,
-                          evt.newIndex, (ItemCue)evt.newParent,
-                          (ItemTrack)evt.target);
+                    evt.newIndex, (ItemCue)evt.newParent,
+                    (ItemTrack)evt.target);
         }
 
         public void AddCue(CueAddOperationRequestedEvent evt)
         {
-            var newItem = new ItemCue(CreateNewId, new Cue
+            var newCue = new Cue
             {
-                name = DefaultNewCueName
-            });
+                name = DefaultNewCueName,
+                cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList)
+            };
+            var newItem = new ItemCue(CreateNewId, newCue);
             AddCue(_root.children.Count, newItem, $"Add Cue {Time.frameCount}");
         }
 
@@ -76,7 +80,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             {
                 var parentCue = new ItemCue(CreateNewId, new Cue
                 {
-                    name = evt.asset.name
+                    name = evt.asset.name,
+                    cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList)
                 });
                 AddCue(index, parentCue, actionTypeId);
                 parent = parentCue;
@@ -114,6 +119,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void MoveCue(int oldIndex, int newIndex)
         {
+            if (oldIndex < 0 || oldIndex >= _root.children.Count)
+                return;
+
+            if (newIndex < 0 || newIndex >= _root.children.Count)
+                return;
+
+            if (oldIndex == newIndex)
+                return;
+
             _history.Register($"Move Cue {Time.frameCount}", Redo, Undo);
 
             #region LocalMethods
@@ -137,6 +151,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void MoveTrack(int oldIndex, ItemCue oldParent, int newIndex, ItemCue newParent, ItemTrack target)
         {
+            if (oldIndex < 0 || oldIndex >= oldParent.children.Count)
+                return;
+
+            if (newIndex < 0 || newIndex > newParent.children.Count)
+                return;
+
+            if (oldParent == newParent && oldIndex == newIndex)
+                return;
+
             _history.Register($"Move Cue {Time.frameCount}", Redo, Undo);
 
             #region LocalMethods
@@ -272,6 +295,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         {
             var actionTypeId = $"Duplicate Cue {Time.frameCount}";
             var newCue = cue.RawData.Duplicate();
+            if (newCue == null)
+                return;
+            newCue.cueId = CueIdAssigner.GetNextCueId(_root.RawData.cueList);
             var newItem = new ItemCue(CreateNewId, newCue);
             foreach (var track in newCue.trackList)
                 newItem.AddChild(new ItemTrack(CreateNewId, track));
@@ -280,7 +306,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private void DuplicateTrack(int index, ItemCue parent, ItemTrack track)
         {
-            var newItem = new ItemTrack(CreateNewId, track.RawData.Duplicate());
+            var duplicated = track.RawData.Duplicate();
+            if (duplicated == null)
+                return;
+            var newItem = new ItemTrack(CreateNewId, duplicated);
             AddTrack(index, parent, newItem, $"Duplicate Track {Time.frameCount}");
         }
 
@@ -311,6 +340,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     break;
                 case CueListTreeView.ColumnType.PlayType:
                     ChangeCuePlayType(item, (CuePlayType)newValue);
+                    break;
+                case CueListTreeView.ColumnType.CueId:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);
@@ -519,6 +550,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     break;
                 case CueListTreeView.ColumnType.VolumeRange:
                     ChangeTrackVolumeRange(item, (float)newValue);
+                    break;
+                case CueListTreeView.ColumnType.CueId:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);

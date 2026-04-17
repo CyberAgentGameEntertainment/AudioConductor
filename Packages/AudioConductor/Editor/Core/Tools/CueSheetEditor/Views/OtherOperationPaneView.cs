@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -24,6 +26,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             _exportButton = this.Q<Button>("Export");
             _importButton = this.Q<Button>("Import");
+            ApplyTooltips();
         }
 
         internal IObservable<Empty> ExportClickedAsObservable => _exportClickedSubject;
@@ -32,11 +35,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public void Dispose()
         {
             CleanupEventHandlers();
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
         {
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void Open()
@@ -47,6 +52,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal void Close()
         {
             this.SetDisplay(false);
+        }
+
+        private void ApplyTooltips()
+        {
+            _exportButton.tooltip = Localization.Localization.Tr("other_operation.export_csv");
+            _importButton.tooltip = Localization.Localization.Tr("other_operation.import_csv");
         }
 
         internal void SetupEventHandlers()
@@ -64,10 +75,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         #region Methods - EventHandlers
 
         private void OnExportButtonClicked(ClickEvent _)
-            => _exportClickedSubject.OnNext(Empty.Default);
+        {
+            _exportClickedSubject.OnNext(Empty.Default);
+        }
 
         private void OnImportButtonClicked(ClickEvent _)
-            => _importClickedSubject.OnNext(Empty.Default);
+        {
+            _importClickedSubject.OnNext(Empty.Default);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
 
         #endregion
 

@@ -1,10 +1,14 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -14,24 +18,29 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class InspectorModel : IInspectorModel
     {
-        private readonly CueInspectorModel _cueInspectorModel;
-        private readonly TrackInspectorModel _trackInspectorModel;
+        private readonly CueInspectorModel? _cueInspectorModel;
+        private readonly TrackInspectorModel? _trackInspectorModel;
 
         public InspectorModel([NotNull] CueListItem[] items,
-                              [NotNull] AutoIncrementHistory history,
-                              [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             var cueItems = items.OfType<ItemCue>().ToArray();
             var trackItems = items.OfType<ItemTrack>().ToArray();
 
             if (cueItems.Length == 0 && trackItems.Length == 0)
+            {
                 InspectorType = InspectorType.None;
+            }
             else if (cueItems.Length > 0 && trackItems.Length > 0)
+            {
                 InspectorType = InspectorType.CueAndTrack;
+            }
             else if (cueItems.Length > 0)
             {
                 InspectorType = InspectorType.Cue;
-                _cueInspectorModel = new CueInspectorModel(cueItems, history, assetSaveService);
+                _cueInspectorModel = new CueInspectorModel(cueItems, history, assetSaveService, settingsProvider);
             }
             else
             {
@@ -42,9 +51,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         public InspectorType InspectorType { get; }
 
-        public ICueInspectorModel CueInspectorModel => _cueInspectorModel;
+        public ICueInspectorModel? CueInspectorModel => _cueInspectorModel;
 
-        public ITrackInspectorModel TrackInspectorModel => _trackInspectorModel;
+        public ITrackInspectorModel? TrackInspectorModel => _trackInspectorModel;
 
         public bool Contains(int itemId)
         {

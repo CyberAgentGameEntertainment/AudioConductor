@@ -1,8 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-namespace AudioConductor.Runtime.Core.Enums
+namespace AudioConductor.Core.Enums
 {
     /// <summary>
     ///     Type of concurrent play control.

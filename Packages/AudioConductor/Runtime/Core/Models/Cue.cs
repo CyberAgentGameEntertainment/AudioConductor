@@ -1,14 +1,16 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     /// <summary>
     ///     An object that groups tracks.
@@ -16,18 +18,10 @@ namespace AudioConductor.Runtime.Core.Models
     [Serializable]
     public sealed class Cue
     {
-#if UNITY_EDITOR
-        [SerializeField]
-        private string id = IdentifierFactory.Create();
-        public string Id => id;
-        
-        public string colorId;
-#endif
-        
         /// <summary>
         ///     Cue name.
         /// </summary>
-        public string name;
+        public string name = null!;
 
         /// <summary>
         ///     <see cref="Category" /> id.
@@ -75,8 +69,21 @@ namespace AudioConductor.Runtime.Core.Models
         public CuePlayType playType;
 
         /// <summary>
+        ///     Stable integer ID for runtime playback.
+        ///     0 is reserved as an unassigned sentinel value; valid IDs start from 1.
+        /// </summary>
+        public int cueId;
+
+        /// <summary>
         ///     List of <see cref="Track" />.
         /// </summary>
         public List<Track> trackList = new();
+#if UNITY_EDITOR
+        [SerializeField] private string id = IdentifierFactory.Create();
+
+        public string Id => id;
+
+        public string? colorId;
+#endif
     }
 }

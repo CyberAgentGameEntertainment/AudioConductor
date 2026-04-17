@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -9,7 +11,9 @@ namespace AudioConductor.Editor.Foundation.TinyRx
     internal static class ConvertObservable
     {
         public static IObservable<TDst> Convert<TSrc, TDst>(this IObservable<TSrc> source, Func<TSrc, TDst> converter)
-            => new ConvertObservable<TSrc, TDst>(source, converter);
+        {
+            return new ConvertObservable<TSrc, TDst>(source, converter);
+        }
     }
 
     internal class ConvertObservable<TSrc, TDst> : IObservable<TDst>

@@ -1,10 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     /// <summary>
     ///     Base class of ComponentPool.

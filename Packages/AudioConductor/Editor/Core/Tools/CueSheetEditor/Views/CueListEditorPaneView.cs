@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -15,19 +17,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
     internal sealed class CueListEditorPaneView : VisualElement, IDisposable
     {
         private readonly ToolbarToggle _inspectorToggle;
-        private readonly ToolbarToggle _volumeToggle;
-        private readonly ToolbarToggle _playInfoToggle;
-        private readonly ToolbarToggle _throttleToggle;
-        private readonly ToolbarToggle _memoToggle;
-        private readonly ToolbarSearchField _searchField;
-        private readonly TwoPaneSplitView _twoPaneSplitView;
 
         private readonly Subject<bool> _inspectorToggleChangedSubject = new();
-        private readonly Subject<bool> _volumeToggleChangedSubject = new();
-        private readonly Subject<bool> _playInfoToggleChangedSubject = new();
-        private readonly Subject<bool> _throttleInfoToggleChangedSubject = new();
+        private readonly ToolbarToggle _memoToggle;
         private readonly Subject<bool> _memoToggleChangedSubject = new();
+        private readonly ToolbarToggle _playInfoToggle;
+        private readonly Subject<bool> _playInfoToggleChangedSubject = new();
+        private readonly ToolbarSearchField _searchField;
         private readonly Subject<string> _searchFieldChangedSubject = new();
+        private readonly Subject<bool> _throttleInfoToggleChangedSubject = new();
+        private readonly ToolbarToggle _throttleToggle;
+        private readonly TwoPaneSplitView _twoPaneSplitView;
+        private readonly ToolbarToggle _volumeToggle;
+        private readonly Subject<bool> _volumeToggleChangedSubject = new();
 
         public CueListEditorPaneView()
         {
@@ -42,6 +44,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _throttleToggle = this.Q<ToolbarToggle>("Throttle");
             _memoToggle = this.Q<ToolbarToggle>("Memo");
             _searchField = this.Q<ToolbarSearchField>();
+            ApplyTooltips();
         }
 
         internal IObservable<bool> InspectorToggleChangedAsObservable => _inspectorToggleChangedSubject;
@@ -54,11 +57,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public void Dispose()
         {
             CleanupEventHandlers();
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
         {
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void SetButtonState(IReadOnlyCollection<int> visibleColumns)
@@ -97,6 +102,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             this.SetDisplay(false);
         }
 
+        private void ApplyTooltips()
+        {
+            _volumeToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_volume");
+            _playInfoToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_play_info");
+            _throttleToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_throttle");
+            _memoToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_memo");
+            _inspectorToggle.tooltip = Localization.Localization.Tr("cue_list.toggle_inspector");
+        }
+
         private void SetupEventHandlers()
         {
             _inspectorToggle.RegisterValueChangedCallback(OnInspectorToggle);
@@ -129,23 +143,40 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Methods - EventHandlers
 
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
+
         private void OnInspectorToggle(ChangeEvent<bool> evt)
-            => _inspectorToggleChangedSubject.OnNext(evt.newValue);
+        {
+            _inspectorToggleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeToggleChanged(ChangeEvent<bool> evt)
-            => _volumeToggleChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeToggleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPlayInfoToggleChanged(ChangeEvent<bool> evt)
-            => _playInfoToggleChangedSubject.OnNext(evt.newValue);
+        {
+            _playInfoToggleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnThrottleToggleChanged(ChangeEvent<bool> evt)
-            => _throttleInfoToggleChangedSubject.OnNext(evt.newValue);
+        {
+            _throttleInfoToggleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnMemoToggleChanged(ChangeEvent<bool> evt)
-            => _memoToggleChangedSubject.OnNext(evt.newValue);
+        {
+            _memoToggleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnSearchFieldChanged(ChangeEvent<string> evt)
-            => _searchFieldChangedSubject.OnNext(evt.newValue);
+        {
+            _searchFieldChangedSubject.OnNext(evt.newValue);
+        }
 
         #endregion
 

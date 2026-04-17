@@ -1,17 +1,19 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
-    internal sealed class ColorDefinePopupField : BindableElement, INotifyValueChanged<string>
+    internal sealed class ColorDefinePopupField : BindableElement, INotifyValueChanged<string?>
     {
         private readonly IMGUIContainer _imguiContainer = new();
         private readonly Label _label = new();
 
-        private string _value;
+        private string? _value;
 
         public ColorDefinePopupField()
         {
@@ -48,7 +50,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public bool showMixedValue { get; set; }
 
-        public string value
+        public string? value
         {
             get => _value;
             set
@@ -62,21 +64,21 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                     return;
                 }
 
-                using var pooled = ChangeEvent<string>.GetPooled(this.value, value);
+                using var pooled = ChangeEvent<string?>.GetPooled(this.value, value);
                 pooled.target = this;
                 SetValueWithoutNotify(value);
                 SendEvent(pooled);
             }
         }
 
-        public void SetValueWithoutNotify(string newValue)
+        public void SetValueWithoutNotify(string? newValue)
         {
             _value = newValue;
         }
 
         private void OnGUI()
         {
-            value = AudioConductorGUI.ColorDefine.Popup(_imguiContainer.contentRect, _value, showMixedValue);
+            value = AudioConductorGUI.ColorDefine.Popup(_imguiContainer.contentRect, _value, showMixedValue) ?? _value;
         }
 
         public new class UxmlFactory : UxmlFactory<ColorDefinePopupField, UxmlTraits>

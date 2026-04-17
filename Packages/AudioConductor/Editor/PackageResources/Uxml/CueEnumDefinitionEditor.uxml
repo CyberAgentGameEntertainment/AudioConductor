@@ -1,0 +1,77 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
+         editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="True">
+    <!-- Toolbar -->
+    <uie:ObjectField name="DefinitionField" label="Definition" style="margin-bottom: 4px;" />
+
+    <!-- Main horizontal split -->
+    <ui:VisualElement name="MainContainer" style="flex-direction: row; flex-grow: 1;">
+        <!-- Left pane -->
+        <ui:VisualElement name="LeftPane" style="width: 55%; min-width: 300px;">
+            <!-- Default Settings -->
+            <ui:VisualElement name="DefaultSettings" style="margin-bottom: 4px;">
+                <ui:Label text="Default Settings" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:TextField name="DefaultOutputPath" label="Output Path" is-delayed="true" />
+                <ui:TextField name="DefaultNamespace" label="Namespace" is-delayed="true" />
+                <ui:TextField name="DefaultClassSuffix" label="Class Suffix" is-delayed="true" />
+            </ui:VisualElement>
+
+            <!-- TreeView (IMGUI) -->
+            <ui:IMGUIContainer name="TreeViewContainer" style="flex-grow: 1;" />
+
+            <!-- Buttons -->
+            <ui:VisualElement name="TreeViewButtons" style="flex-direction: row; margin-top: 2px;">
+                <ui:Button name="AddFileGroupButton" text="+ Sheet Group" style="width: 100px;" />
+                <ui:Button name="RemoveButton" text="Remove" style="width: 80px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Right pane (Inspector) -->
+        <ui:ScrollView name="InspectorPane" style="flex-grow: 1; margin-left: 4px;">
+            <!-- Empty state -->
+            <ui:HelpBox name="EmptyInspectorHelpBox" text="Select an item to view details." />
+
+            <!-- FileEntry inspector -->
+            <ui:VisualElement name="FileEntryInspector" style="display: none;">
+                <ui:Label text="Sheet Group" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:TextField name="FileName" label="File Name" is-delayed="true" />
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Toggle name="UseDefaultOutputPath" label="Use Default Output Path" style="padding-top: 2px;" />
+                </ui:VisualElement>
+                <ui:TextField name="OutputPath" label="Output Path" is-delayed="true" />
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Toggle name="UseDefaultNamespace" label="Use Default Namespace" style="padding-top: 2px;" />
+                </ui:VisualElement>
+                <ui:TextField name="Namespace" label="Namespace" is-delayed="true" />
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Toggle name="UseDefaultClassSuffix" label="Use Default Class Suffix" style="padding-top: 2px;" />
+                </ui:VisualElement>
+                <ui:TextField name="ClassSuffix" label="Class Suffix" is-delayed="true" />
+                <ui:TextField name="PathRule" label="Path Rule (glob)" is-delayed="true" />
+            </ui:VisualElement>
+
+            <!-- Excluded inspector -->
+            <ui:VisualElement name="ExcludedInspector" style="display: none;">
+                <ui:Label text="Excluded" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:TextField name="ExcludePathRule" label="Path Rule (glob)" is-delayed="true" />
+            </ui:VisualElement>
+
+            <!-- Asset inspector -->
+            <ui:VisualElement name="AssetInspector" style="display: none;">
+                <ui:Label text="CueSheet Asset" style="-unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:Button name="OpenCueSheetEditorButton" text="Open EditorWindow" style="margin-bottom: 4px;" />
+                <uie:ObjectField name="AssetField" label="Asset" />
+                <ui:TextField name="CueSheetName" label="CueSheet Name" />
+                <uie:IntegerField name="CueCount" label="Cue Count" />
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+
+    <!-- Footer -->
+    <ui:VisualElement name="Footer" style="flex-direction: row; margin-top: 4px; align-items: center;">
+        <ui:Button name="GenerateButton" text="Generate" style="width: 120px;" />
+        <ui:VisualElement style="flex-grow: 1;" />
+        <ui:Label name="StatusLabel" text="Status: Ready" style="font-size: 10px; -unity-text-align: middle-right;" />
+    </ui:VisualElement>
+</ui:UXML>

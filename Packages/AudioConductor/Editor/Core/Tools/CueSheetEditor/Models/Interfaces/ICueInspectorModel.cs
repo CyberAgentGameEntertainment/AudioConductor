@@ -1,11 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using AudioConductor.Core.Enums;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core;
-using AudioConductor.Runtime.Core.Enums;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 {
@@ -17,9 +18,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<MixedValue<string>> NameObservable { get; }
 
-        string Color { get; set; }
+        IReadOnlyObservableProperty<MixedValue<int>> CueIdObservable { get; }
 
-        IReadOnlyObservableProperty<MixedValue<string>> ColorObservable { get; }
+        string? Color { get; set; }
+
+        IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable { get; }
 
         int CategoryId { get; set; }
 
@@ -57,7 +60,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         IReadOnlyObservableProperty<MixedValue<CuePlayType>> PlayTypeObservable { get; }
 
-        ICueController PlayCue();
+        void PlayCue();
+
+        void TogglePauseCue();
 
         void StopCue();
     }

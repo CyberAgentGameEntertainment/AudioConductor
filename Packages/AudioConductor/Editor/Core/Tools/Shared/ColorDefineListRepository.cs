@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Linq;
 using AudioConductor.Editor.Core.Models;
@@ -18,11 +20,15 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             color = new Color(0, 0, 0, 0)
         };
 
-        private ColorDefine[] _colorDefines;
-        public GUIContent[] ColorDefineContents { get; private set; }
+        private ColorDefine[]? _colorDefines;
+        public GUIContent[]? ColorDefineContents { get; private set; }
 
         public void Update()
         {
+            if (ColorDefineContents != null)
+                foreach (var content in ColorDefineContents)
+                    DestroyImmediate(content.image);
+
             var settings = AudioConductorEditorSettingsRepository.instance.Settings;
             var enumerable = settings == null ? Enumerable.Empty<ColorDefine>() : settings.colorDefineList;
 
@@ -32,14 +38,14 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             {
                 var colorDefine = _colorDefines[i];
                 var content = new GUIContent(colorDefine.name,
-                                             TextureGenerator.CreateTexture(16, 16, colorDefine.color));
+                    TextureGenerator.CreateTexture(16, 16, colorDefine.color));
                 contents[i] = content;
             }
 
             ColorDefineContents = contents;
         }
 
-        public string ToColorId(int index)
+        public string? ToColorId(int index)
         {
             if (index < 0 || _colorDefines == null || _colorDefines.Length <= index)
                 return null;
@@ -47,7 +53,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return _colorDefines[index].id;
         }
 
-        public int ToIndex(string colorId)
+        public int ToIndex(string? colorId)
         {
             if (_colorDefines == null)
                 return 0;
@@ -59,7 +65,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             return 0;
         }
 
-        public string GetName(string colorId)
-            => _colorDefines?.FirstOrDefault(colorDefine => colorDefine.id == colorId)?.name ?? string.Empty;
+        public string GetName(string? colorId)
+        {
+            return _colorDefines?.FirstOrDefault(colorDefine => colorDefine.id == colorId)?.name ?? string.Empty;
+        }
     }
 }

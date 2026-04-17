@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using UnityEngine.UIElements;
@@ -27,7 +29,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         /// <summary>
         ///     Callback for when the tab selected;
         /// </summary>
-        public event Action<int> OnTabSelected;
+        public event Action<int> OnTabSelected = null!;
 
         public void Setup()
         {
@@ -35,7 +37,10 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         private void OnClick(ClickEvent evt)
-            => OnClick(evt.currentTarget as VisualElement);
+        {
+            if (evt.currentTarget is VisualElement clickedTabElement)
+                OnClick(clickedTabElement);
+        }
 
         private void OnClick(VisualElement clickedTab)
         {
@@ -43,14 +48,20 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 return;
 
             GetAllTabs().Where(tab => tab != clickedTab && TabIsCurrentlySelected(tab))
-                        .ForEach(tab => tab.RemoveFromClassList(SelectedClassName));
+                .ForEach(tab => tab.RemoveFromClassList(SelectedClassName));
             clickedTab.AddToClassList(SelectedClassName);
             OnTabSelected?.Invoke(clickedTab.tabIndex);
         }
 
-        private static bool TabIsCurrentlySelected(VisualElement tab) => tab.ClassListContains(SelectedClassName);
+        private static bool TabIsCurrentlySelected(VisualElement tab)
+        {
+            return tab.ClassListContains(SelectedClassName);
+        }
 
-        private UQueryBuilder<VisualElement> GetAllTabs() => _tabContainer.Query(className: TabClassName);
+        private UQueryBuilder<VisualElement> GetAllTabs()
+        {
+            return _tabContainer.Query(className: TabClassName);
+        }
 
         public void SelectTab(int tabIndex)
         {

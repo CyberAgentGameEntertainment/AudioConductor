@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -16,8 +18,7 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableProperty
     [Serializable]
     public class ObservableProperty<T> : IObservableProperty<T>, IReadOnlyObservableProperty<T>
     {
-        [SerializeField]
-        private T _value;
+        [SerializeField] private T _value = default!;
 
         private readonly HashSet<IObserver<T>> _observers = new();
         private bool _didDispose;
@@ -108,6 +109,9 @@ namespace AudioConductor.Editor.Foundation.TinyRx.ObservableProperty
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        protected virtual bool EqualsInternal(T a, T b) => EqualityComparer<T>.Default.Equals(a, b);
+        protected virtual bool EqualsInternal(T a, T b)
+        {
+            return EqualityComparer<T>.Default.Equals(a, b);
+        }
     }
 }

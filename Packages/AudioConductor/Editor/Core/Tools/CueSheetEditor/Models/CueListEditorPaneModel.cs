@@ -1,27 +1,32 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueListEditorPaneModel : ICueListEditorPaneModel
     {
         public CueListEditorPaneModel([NotNull] CueSheet cueSheet,
-                                      [NotNull] AutoIncrementHistory history,
-                                      [NotNull] IAssetSaveService assetSaveService,
-                                      IObservableProperty<bool> inspectorUnCollapsed,
-                                      CueListTreeView.State cueListTreeViewState)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            IObservableProperty<bool> inspectorUnCollapsed,
+            CueListTreeView.State cueListTreeViewState,
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
-            CueListModel = new CueListModel(cueSheet, history, assetSaveService, cueListTreeViewState);
+            CueListModel =
+                new CueListModel(cueSheet, history, assetSaveService, cueListTreeViewState, settingsProvider);
             ObservableInspectorUnCollapsed = inspectorUnCollapsed;
             VisibleColumns = cueListTreeViewState.MultiColumnHeaderState.visibleColumns;
             SearchString = cueListTreeViewState.searchString;

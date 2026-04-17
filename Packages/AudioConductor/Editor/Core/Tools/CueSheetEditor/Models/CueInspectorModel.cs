@@ -1,20 +1,21 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -22,31 +23,33 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueInspectorModel : ICueInspectorModel
     {
-        private readonly string _tag;
+        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<int>> _categoryId;
+        private readonly ObservableProperty<MixedValue<string?>> _color;
+
+        private readonly ObservableProperty<MixedValue<int>> _cueId;
+        private readonly AutoIncrementHistory _history;
+        private readonly HashSet<int> _itemIds;
 
         private readonly ItemCue[] _items;
-        private readonly HashSet<int> _itemIds;
-        private readonly Cue[] _target;
-        private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
-
         private readonly ObservableProperty<MixedValue<string>> _name;
-        private readonly ObservableProperty<MixedValue<string>> _color;
-        private readonly ObservableProperty<MixedValue<int>> _categoryId;
-        private readonly ObservableProperty<MixedValue<ThrottleType>> _throttleType;
+        private readonly ObservableProperty<MixedValue<float>> _pitch;
+        private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
+        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
+        private readonly ObservableProperty<MixedValue<CuePlayType>> _playType;
+        private readonly string _tag;
+        private readonly Cue[] _target;
         private readonly ObservableProperty<MixedValue<int>> _throttleLimit;
+        private readonly ObservableProperty<MixedValue<ThrottleType>> _throttleType;
+
+        private readonly CuePreviewModel? _trackPreviewModel;
         private readonly ObservableProperty<MixedValue<float>> _volume;
         private readonly ObservableProperty<MixedValue<float>> _volumeRange;
-        private readonly ObservableProperty<MixedValue<float>> _pitch;
-        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
-        private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
-        private readonly ObservableProperty<MixedValue<CuePlayType>> _playType;
-
-        private readonly CuePreviewModel _trackPreviewModel;
 
         public CueInspectorModel([NotNull] ItemCue[] items,
-                                 [NotNull] AutoIncrementHistory history,
-                                 [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            Func<AudioConductorSettings?>? settingsProvider = null)
         {
             Assert.IsTrue(items.Length > 0);
 
@@ -65,10 +68,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _history = history;
             _assetSaveService = assetSaveService;
 
-            var mixed = new bool[11];
+            var mixed = new bool[12];
             foreach (var cue in _target)
             {
                 mixed[0] |= Name != cue.name;
+                mixed[11] |= TypicalTarget.cueId != cue.cueId;
                 mixed[1] |= Color != cue.colorId;
                 mixed[2] |= CategoryId != cue.categoryId;
                 mixed[3] |= ThrottleType != cue.throttleType;
@@ -83,6 +87,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
             _name = new(new(Name, mixed[0]));
+            _cueId = new(new(TypicalTarget.cueId, mixed[11]));
             _color = new(new(Color, mixed[1]));
             _categoryId = new(new(CategoryId, mixed[2]));
             _throttleType = new(new(ThrottleType, mixed[3]));
@@ -95,13 +100,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _playType = new(new(PlayType, mixed[10]));
             // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
 
-            if (CanPreview)
-                _trackPreviewModel = new CuePreviewModel(_items[0]);
+            if (_items.Length == 1 && settingsProvider != null)
+                _trackPreviewModel = new CuePreviewModel(_items[0], settingsProvider);
         }
 
         private Cue TypicalTarget => _target[0];
 
-        public bool CanPreview => _items.Length == 1;
+        public bool CanPreview => _trackPreviewModel != null;
 
         #region Name
 
@@ -144,9 +149,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #endregion
 
+        #region CueId
+
+        public IReadOnlyObservableProperty<MixedValue<int>> CueIdObservable => _cueId;
+
+        #endregion
+
         #region Color
 
-        public string Color
+        public string? Color
         {
             get => TypicalTarget.colorId;
             set
@@ -160,7 +171,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 {
                     foreach (var cue in _target)
                         cue.colorId = value;
-                    _color.Value = new MixedValue<string>(value, false);
+                    _color.Value = new MixedValue<string?>(value, false);
                     _assetSaveService.Save();
                 }
 
@@ -173,7 +184,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed |= Color != _target[i].colorId;
                     }
 
-                    _color.Value = new MixedValue<string>(Color, mixed);
+                    _color.Value = new MixedValue<string?>(Color, mixed);
                     _assetSaveService.Save();
                 }
 
@@ -181,7 +192,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<string>> ColorObservable => _color;
+        public IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable => _color;
 
         #endregion
 
@@ -274,6 +285,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             get => TypicalTarget.throttleLimit;
             set
             {
+                value = ValueRangeConst.ThrottleLimit.Clamp(value);
                 var old = _target.Select(cue => cue.throttleLimit).ToArray();
                 _history.Register($"{_tag} Set Cue {nameof(ThrottleLimit)} {value}", Redo, Undo);
 
@@ -558,7 +570,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #endregion
 
-        public bool Contains(int itemId) => _itemIds.Contains(itemId);
+        public bool Contains(int itemId)
+        {
+            return _itemIds.Contains(itemId);
+        }
 
         public void ChangeValue(CueListTreeView.ColumnType columnType, object value)
         {
@@ -588,15 +603,26 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 case CueListTreeView.ColumnType.PlayType:
                     PlayType = (CuePlayType)value;
                     break;
+                case CueListTreeView.ColumnType.CueId:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);
             }
         }
 
-        public ICueController PlayCue()
-            => _trackPreviewModel?.Play();
+        public void PlayCue()
+        {
+            _trackPreviewModel?.Play();
+        }
+
+        public void TogglePauseCue()
+        {
+            _trackPreviewModel?.TogglePause();
+        }
 
         public void StopCue()
-            => _trackPreviewModel?.Stop();
+        {
+            _trackPreviewModel?.Stop();
+        }
     }
 }

@@ -1,11 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Editor.Core.Tools.Shared;
+#nullable enable
+
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.Shared
+namespace AudioConductor.Editor.Core.Tools.Shared.Tests
 {
     internal class MixedValueTests
     {
@@ -25,8 +26,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<int>(value, flag);
             var mixedValue2 = new MixedValue<int>(value, flag);
 
-            Assert.True(mixedValue1.Equals(mixedValue2));
-            Assert.AreEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.True);
+            Assert.That(mixedValue1.GetHashCode(), Is.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(1, 2)]
@@ -36,8 +37,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<int>(value1, true);
             var mixedValue2 = new MixedValue<int>(value2, true);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(1)]
@@ -47,8 +48,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<int>(value, true);
             var mixedValue2 = new MixedValue<int>(value, false);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(1, true)]
@@ -56,7 +57,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
         public void ToString_int(int value, bool flag)
         {
             var mixedValue = new MixedValue<int>(value, flag);
-            Assert.AreEqual(mixedValue.ToString(), $"{value}:{flag}");
+            Assert.That(mixedValue.ToString(), Is.EqualTo($"{value}:{flag}"));
         }
 
         #endregion
@@ -70,8 +71,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<float>(value, flag);
             var mixedValue2 = new MixedValue<float>(value, flag);
 
-            Assert.True(mixedValue1.Equals(mixedValue2));
-            Assert.AreEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.True);
+            Assert.That(mixedValue1.GetHashCode(), Is.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(0.00001234000056f, 0.0000123400057f)]
@@ -81,8 +82,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<float>(value1, true);
             var mixedValue2 = new MixedValue<float>(value2, true);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(11.3f)]
@@ -92,8 +93,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<float>(value, true);
             var mixedValue2 = new MixedValue<float>(value, false);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(1.001f, true)]
@@ -101,7 +102,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
         public void ToString_float(float value, bool flag)
         {
             var mixedValue = new MixedValue<float>(value, flag);
-            Assert.AreEqual(mixedValue.ToString(), $"{value}:{flag}");
+            Assert.That(mixedValue.ToString(), Is.EqualTo($"{value}:{flag}"));
         }
 
         #endregion
@@ -115,8 +116,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<bool>(value, flag);
             var mixedValue2 = new MixedValue<bool>(value, flag);
 
-            Assert.True(mixedValue1.Equals(mixedValue2));
-            Assert.AreEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.True);
+            Assert.That(mixedValue1.GetHashCode(), Is.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [Test]
@@ -125,8 +126,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<bool>(true, true);
             var mixedValue2 = new MixedValue<bool>(false, true);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [Test]
@@ -135,8 +136,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<bool>(true, true);
             var mixedValue2 = new MixedValue<bool>(true, false);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(true, true)]
@@ -144,7 +145,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
         public void ToString_bool(bool value, bool flag)
         {
             var mixedValue = new MixedValue<bool>(value, flag);
-            Assert.AreEqual(mixedValue.ToString(), $"{value}:{flag}");
+            Assert.That(mixedValue.ToString(), Is.EqualTo($"{value}:{flag}"));
         }
 
         #endregion
@@ -158,8 +159,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<string>(value, flag);
             var mixedValue2 = new MixedValue<string>(value, flag);
 
-            Assert.True(mixedValue1.Equals(mixedValue2));
-            Assert.AreEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.True);
+            Assert.That(mixedValue1.GetHashCode(), Is.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase("abc", "bcd")]
@@ -169,8 +170,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<string>(value1, true);
             var mixedValue2 = new MixedValue<string>(value2, true);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase("a")]
@@ -180,8 +181,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<string>(value, true);
             var mixedValue2 = new MixedValue<string>(value, false);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase("abc", true)]
@@ -189,7 +190,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
         public void ToString_string(string value, bool flag)
         {
             var mixedValue = new MixedValue<string>(value, flag);
-            Assert.AreEqual(mixedValue.ToString(), $"{value}:{flag}");
+            Assert.That(mixedValue.ToString(), Is.EqualTo($"{value}:{flag}"));
         }
 
         #endregion
@@ -203,8 +204,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<TestEnum>(value, flag);
             var mixedValue2 = new MixedValue<TestEnum>(value, flag);
 
-            Assert.True(mixedValue1.Equals(mixedValue2));
-            Assert.AreEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.True);
+            Assert.That(mixedValue1.GetHashCode(), Is.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(TestEnum.One, TestEnum.Two)]
@@ -214,8 +215,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<TestEnum>(value1, true);
             var mixedValue2 = new MixedValue<TestEnum>(value2, true);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(TestEnum.One)]
@@ -225,8 +226,8 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
             var mixedValue1 = new MixedValue<TestEnum>(value, true);
             var mixedValue2 = new MixedValue<TestEnum>(value, false);
 
-            Assert.False(mixedValue1.Equals(mixedValue2));
-            Assert.AreNotEqual(mixedValue1.GetHashCode(), mixedValue2.GetHashCode());
+            Assert.That(mixedValue1.Equals(mixedValue2), Is.False);
+            Assert.That(mixedValue1.GetHashCode(), Is.Not.EqualTo(mixedValue2.GetHashCode()));
         }
 
         [TestCase(TestEnum.One, true)]
@@ -234,7 +235,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.Shared
         public void ToString_enum(TestEnum value, bool flag)
         {
             var mixedValue = new MixedValue<TestEnum>(value, flag);
-            Assert.AreEqual(mixedValue.ToString(), $"{value}:{flag}");
+            Assert.That(mixedValue.ToString(), Is.EqualTo($"{value}:{flag}"));
         }
 
         #endregion

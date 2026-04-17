@@ -1,12 +1,15 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
+using AudioConductor.Core.Enums;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     /// <summary>
     ///     User interface for AudioClip play.
@@ -24,14 +27,9 @@ namespace AudioConductor.Runtime.Core
         int CategoryId { get; }
 
         /// <summary>
-        ///     True if playing.
+        ///     Get the state of the player.
         /// </summary>
-        bool IsPlaying { get; }
-
-        /// <summary>
-        ///     True if paused.
-        /// </summary>
-        bool IsPaused { get; }
+        PlayerState State { get; }
 
         /// <summary>
         ///     Setup to play AudioClip.
@@ -45,15 +43,15 @@ namespace AudioConductor.Runtime.Core
         /// <param name="startSample">The play start position.</param>
         /// <param name="loopStartSample">The loop start position.</param>
         /// <param name="endSample">The play end position.</param>
-        public void Setup(AudioMixerGroup audioMixerGroup,
-                          AudioClip clip,
-                          int categoryId,
-                          float volume,
-                          float pitch,
-                          bool isLoop,
-                          int startSample,
-                          int loopStartSample,
-                          int endSample);
+        void Setup(AudioMixerGroup? audioMixerGroup,
+            AudioClip clip,
+            int categoryId,
+            float volume,
+            float pitch,
+            bool isLoop,
+            int startSample,
+            int loopStartSample,
+            int endSample);
 
         /// <summary>
         ///     Play the AudioClip.

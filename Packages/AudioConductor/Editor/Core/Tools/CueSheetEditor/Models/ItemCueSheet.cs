@@ -1,12 +1,13 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Diagnostics.CodeAnalysis;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
@@ -26,13 +27,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public override ItemType Type => ItemType.CueSheet;
         public override string TargetId => RawData.Id;
         public override string Name => RawData.name;
-        public override string ColorId => null;
+        public override string? ColorId => null;
         public override int? CategoryId => null;
         public override ThrottleType? ThrottleType => RawData.throttleType;
         public override int? ThrottleLimit => RawData.throttleLimit;
         public override float? Volume => RawData.volume;
         public override float? VolumeRange => null;
         public override CuePlayType? CuePlayType => null;
+        public override int? CueId => null;
 
         public void MoveChild(int oldIndex, int newIndex)
         {

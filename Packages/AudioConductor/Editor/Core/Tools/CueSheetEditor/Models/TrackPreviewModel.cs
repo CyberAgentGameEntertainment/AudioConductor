@@ -1,17 +1,19 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
+#nullable enable
+
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class TrackPreviewModel
     {
-        private readonly Track _track;
         private readonly Cue _cue;
         private readonly CueSheet _cueSheet;
+        private readonly Track _track;
 
         public TrackPreviewModel(ItemTrack item)
         {
@@ -24,7 +26,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _cueSheet = cueSheetItem.RawData;
         }
 
-        public TrackPreviewController Play(int? sample)
+        public TrackPreviewController? Play(int? sample)
         {
             var clip = _track.audioClip;
             if (clip == null)
@@ -34,11 +36,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             var pitch = Calculator.CalcPitch(_cueSheet, _cue, _track);
             var isLoop = _track.isLoop;
             var startSample = _track.startSample;
-            var loopStartSample = _track.loopStartSample;
-            var endSample = _track.endSample;
 
             var controller = new TrackPreviewController(clip, _cue.categoryId, volume, pitch, isLoop,
-                                                        sample ?? startSample, loopStartSample, endSample);
+                sample ?? startSample);
             controller.Play();
             return controller;
         }

@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Buffers;
@@ -14,7 +16,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         public static readonly Color DefaultCurveColor = new(1.0f, 140.0f / 255.0f, 0.0f, 1.0f);
 
         public static PreviewCache DoRenderPreview(AudioClip clip, Rect wantedRect, float scaleFactor = 1)
-            => DoRenderPreview(clip, wantedRect, scaleFactor, DefaultCurveColor);
+        {
+            return DoRenderPreview(clip, wantedRect, scaleFactor, DefaultCurveColor);
+        }
 
         public static PreviewCache DoRenderPreview(AudioClip clip, Rect wantedRect, float scaleFactor, Color curveColor)
         {
@@ -36,7 +40,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 var sample = 0;
 
                 var channelRect = new Rect(wantedRect.x, wantedRect.y + h * channel, wantedRect.width, h);
-                cache.ChannelRect[channel] = channelRect;
+                cache.ChannelRect![channel] = channelRect;
 
                 void Eval(float x, out Color col, out float minValue, out float maxValue)
                 {
@@ -52,13 +56,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                         var floorP = (int)Mathf.Floor(p);
                         var offset1 = (floorP * numChannels + channel) * 2;
                         var offset2 = offset1 + numChannels * 2;
-                        minValue = Mathf.Min(minMaxData[offset1 + 1], minMaxData[offset2 + 1]) * scaleFactor;
+                        minValue = Mathf.Min(minMaxData![offset1 + 1], minMaxData[offset2 + 1]) * scaleFactor;
                         maxValue = Mathf.Max(minMaxData[offset1 + 0], minMaxData[offset2 + 0]) * scaleFactor;
                         if (minValue > maxValue)
                             (minValue, maxValue) = (maxValue, minValue);
                     }
 
-                    cache.Data[channel][sample] = new Vector2(minValue, maxValue);
+                    cache.Data![channel][sample] = new Vector2(minValue, maxValue);
                     ++sample;
                 }
 
@@ -69,7 +73,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public static void DoRenderPreview(PreviewCache cache)
-            => DoRenderPreview(cache, DefaultCurveColor);
+        {
+            DoRenderPreview(cache, DefaultCurveColor);
+        }
 
         public static void DoRenderPreview(PreviewCache cache, Color curveColor)
         {
@@ -88,12 +94,12 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                     if (x <= 0f)
                         return;
 
-                    minValue = cache.Data[channel][sample].x;
+                    minValue = cache.Data![channel][sample].x;
                     maxValue = cache.Data[channel][sample].y;
                     ++sample;
                 }
 
-                AudioCurveRendering.DrawMinMaxFilledCurve(cache.ChannelRect[channel], Eval);
+                AudioCurveRendering.DrawMinMaxFilledCurve(cache.ChannelRect![channel], Eval);
             }
         }
 
@@ -115,9 +121,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
 
             public AudioClip Clip { get; }
-            public Vector2[][] Data { get; private set; }
+            public Vector2[][]? Data { get; private set; }
 
-            public Rect[] ChannelRect { get; private set; }
+            public Rect[]? ChannelRect { get; private set; }
             public Rect Rect { get; }
 
             public void Dispose()

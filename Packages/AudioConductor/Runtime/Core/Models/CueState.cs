@@ -1,45 +1,48 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using System.Linq;
-using AudioConductor.Runtime.Core.Enums;
+#nullable enable
 
-namespace AudioConductor.Runtime.Core.Models
+using System.Collections.Generic;
+using AudioConductor.Core.Enums;
+using UnityEngine;
+
+namespace AudioConductor.Core.Models
 {
     internal sealed class CueState
     {
-        private readonly ITrackSelector _selector;
+        private readonly TrackSelectionContext _context;
+        private readonly ITrackSelector _trackSelector;
+        private Dictionary<string, int>? _trackNameLookup;
 
-        public CueState(uint cueSheetManageNumber, Cue cue)
+        public CueState(uint cueSheetId, Cue cue)
         {
-            CueSheetManageNumber = cueSheetManageNumber;
+            CueSheetId = cueSheetId;
             Cue = cue;
-
-            switch (Cue.playType)
-            {
-                case CuePlayType.Random:
-                    _selector = new RandomTrackSelector();
-                    break;
-                case CuePlayType.Sequential:
-                default:
-                    _selector = new SequentialTrackSelector();
-                    break;
-            }
-
-            _selector.Setup(Cue.trackList);
+            _context = new TrackSelectionContext(cue.trackList);
+            _trackSelector = cue.playType == CuePlayType.Random
+                ? TrackSelectors.Random
+                : TrackSelectors.Sequential;
         }
 
-        public uint CueSheetManageNumber { get; }
+        public uint CueSheetId { get; }
         public Cue Cue { get; }
 
-        public Track NextTrack()
+        public Track? NextTrack(ITrackSelector? selectorOverride = null)
         {
-            var index = _selector.NextTrackIndex();
+            if (Cue.trackList.Count == 0)
+                return null;
+
+            var selector = selectorOverride ?? _trackSelector;
+            var index = selector.SelectNext(_context);
+            if (index < 0 || index >= Cue.trackList.Count)
+                return null;
+
             return Cue.trackList[index];
         }
 
-        public Track GetTrack(int index)
+        public Track? GetTrack(int index)
         {
             if (index < 0 || Cue.trackList.Count <= index)
                 return null;
@@ -47,9 +50,20 @@ namespace AudioConductor.Runtime.Core.Models
             return Cue.trackList[index];
         }
 
-        public Track GetTrack(string name)
+        public Track? GetTrack(string name)
         {
-            return Cue.trackList.FirstOrDefault(track => track.name == name);
+            if (_trackNameLookup == null)
+            {
+                _trackNameLookup = new Dictionary<string, int>(Cue.trackList.Count);
+                for (var i = 0; i < Cue.trackList.Count; i++)
+                {
+                    var trackName = Cue.trackList[i].name;
+                    var added = _trackNameLookup.TryAdd(trackName, i);
+                    Debug.Assert(added, $"Duplicate track name detected: {trackName}");
+                }
+            }
+
+            return _trackNameLookup.TryGetValue(name, out var index) ? Cue.trackList[index] : null;
         }
     }
 }

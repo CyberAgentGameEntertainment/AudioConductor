@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -15,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         {
             return AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{AssetPath}/Uxml/{name}.uxml");
         }
-        
+
         public static StyleSheet LoadUss(string name)
         {
             return AssetDatabase.LoadAssetAtPath<StyleSheet>($"{AssetPath}/Uss/{name}.uss");

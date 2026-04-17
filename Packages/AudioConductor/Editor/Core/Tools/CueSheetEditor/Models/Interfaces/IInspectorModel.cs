@@ -1,8 +1,10 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
+#nullable enable
+
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 {
@@ -10,8 +12,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
     {
         InspectorType InspectorType { get; }
 
-        ICueInspectorModel CueInspectorModel { get; }
+        ICueInspectorModel? CueInspectorModel { get; }
 
-        ITrackInspectorModel TrackInspectorModel { get; }
+        ITrackInspectorModel? TrackInspectorModel { get; }
     }
 }

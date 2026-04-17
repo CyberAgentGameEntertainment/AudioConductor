@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddb255b17fe5e47269cdbd8be0692356, type: 3}
+  m_Name: Settings_SEVoice
+  m_EditorClassIdentifier: 
+  throttleType: 1
+  throttleLimit: 0
+  managedPoolCapacity: 1
+  oneShotPoolCapacity: 8
+  deactivatePooledObjects: 1
+  categoryList:
+  - id: 0
+    name: SE
+    throttleType: 0
+    throttleLimit: 0
+    audioMixerGroup: {fileID: 0}
+  - id: 1
+    name: Voice
+    throttleType: 0
+    throttleLimit: 1
+    audioMixerGroup: {fileID: 0}

@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -11,12 +13,15 @@ using TabView = AudioConductor.Editor.Core.Tools.Shared.TabView;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
-    internal sealed class CueSheetEditorView : IDisposable
+    internal sealed class CueSheetEditorView : ICueSheetEditorView
     {
+        private readonly Button _cueListButton;
+        private readonly Button _otherOperationButton;
+        private readonly Button _parameterButton;
         private readonly VisualElement _root;
+        private readonly Subject<int> _tabSelectedSubject = new();
 
         private readonly TabView _tabView;
-        private readonly Subject<int> _tabSelectedSubject = new();
 
         public CueSheetEditorView(VisualElement root)
         {
@@ -29,6 +34,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 : AssetLoader.LoadUss("Resource_Light");
             root.styleSheets.Add(resourceStyleSheets);
             _tabView = new TabView(root.Q<VisualElement>("TabContainer"));
+            _parameterButton = root.Q<Button>("Parameter");
+            _cueListButton = root.Q<Button>("CueList");
+            _otherOperationButton = root.Q<Button>("OtherOperation");
+            ApplyTooltips();
         }
 
         public IObservable<int> TabSelectedAsObservable => _tabSelectedSubject;
@@ -39,10 +48,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _tabView.Dispose();
         }
 
-        public T Q<T>(string name = null, params string[] classes) where T : VisualElement => _root.Q<T>(name, classes);
-
         public void SelectTab(int tabIndex)
-            => _tabView.SelectTab(tabIndex);
+        {
+            _tabView.SelectTab(tabIndex);
+        }
 
         public void Setup()
         {
@@ -50,20 +59,41 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             SetupEventHandlers();
         }
 
+        public T Q<T>(string? name = null, params string[] classes) where T : VisualElement
+        {
+            return _root.Q<T>(name, classes);
+        }
+
+        private void ApplyTooltips()
+        {
+            _parameterButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_parameter");
+            _cueListButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_cue_list");
+            _otherOperationButton.tooltip = Localization.Localization.Tr("cue_sheet.tab_other_operation");
+        }
+
         private void SetupEventHandlers()
         {
             _tabView.OnTabSelected += OnTabSelected;
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         private void CleanupEventHandlers()
         {
             _tabView.OnTabSelected -= OnTabSelected;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         #region Methods - EventHandlers
 
         private void OnTabSelected(int index)
-            => _tabSelectedSubject.OnNext(index);
+        {
+            _tabSelectedSubject.OnNext(index);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
 
         #endregion
     }

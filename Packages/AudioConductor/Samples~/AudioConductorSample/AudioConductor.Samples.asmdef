@@ -1,0 +1,17 @@
+{
+    "name": "AudioConductor.Samples",
+    "rootNamespace": "AudioConductor.Samples",
+    "references": [
+        "AudioConductor",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

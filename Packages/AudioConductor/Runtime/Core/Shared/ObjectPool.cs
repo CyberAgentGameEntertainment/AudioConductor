@@ -1,12 +1,14 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     /// <summary>
     ///     Base class of ObjectPool.
@@ -14,7 +16,10 @@ namespace AudioConductor.Runtime.Core.Shared
     internal abstract class ObjectPool<T> : IDisposable
     {
         private bool _isDisposed;
-        private Stack<T> _pool;
+        private Stack<T>? _pool;
+#if UNITY_ASSERTIONS
+        private HashSet<T>? _rentedInstances;
+#endif
 
         /// <summary>
         ///     Initial capacity of pool.
@@ -25,7 +30,7 @@ namespace AudioConductor.Runtime.Core.Shared
         /// <summary>
         ///     Limit of instance count.
         /// </summary>
-        protected int MaxPoolCount => int.MaxValue;
+        protected virtual int MaxPoolCount => int.MaxValue;
 
         /// <summary>
         ///     Current pooled object count.
@@ -64,6 +69,20 @@ namespace AudioConductor.Runtime.Core.Shared
         }
 
         /// <summary>
+        ///     Pre-creates instances and pushes them into the pool.
+        /// </summary>
+        /// <param name="count">Number of instances to pre-create.</param>
+        public void Prewarm(int count)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException("ObjectPool was already disposed.");
+
+            _pool ??= new Stack<T>(Math.Max(InitialCapacity, count));
+            for (var i = 0; i < count; i++)
+                _pool.Push(CreateInstance());
+        }
+
+        /// <summary>
         ///     Get instance from pool.
         /// </summary>
         public T Rent()
@@ -77,6 +96,10 @@ namespace AudioConductor.Runtime.Core.Shared
                 ? _pool.Pop()
                 : CreateInstance();
 
+#if UNITY_ASSERTIONS
+            _rentedInstances ??= new HashSet<T>();
+            _rentedInstances.Add(instance);
+#endif
             OnBeforeRent(instance);
             return instance;
         }
@@ -91,9 +114,15 @@ namespace AudioConductor.Runtime.Core.Shared
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
+#if UNITY_ASSERTIONS
+            _rentedInstances ??= new HashSet<T>();
+            if (!_rentedInstances.Remove(instance))
+                throw new InvalidOperationException("Instance is not rented from this pool.");
+#endif
+
             _pool ??= new Stack<T>(InitialCapacity);
 
-            if (_pool.Count + 1 == MaxPoolCount)
+            if (_pool.Count >= MaxPoolCount)
                 throw new InvalidOperationException("Reached Max PoolSize");
 
             OnBeforeReturn(instance);
@@ -150,7 +179,12 @@ namespace AudioConductor.Runtime.Core.Shared
                 return;
 
             if (disposing)
+            {
                 Clear();
+#if UNITY_ASSERTIONS
+                _rentedInstances?.Clear();
+#endif
+            }
 
             _isDisposed = true;
         }

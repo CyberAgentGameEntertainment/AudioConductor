@@ -1,6 +1,6 @@
 {
     "name": "AudioConductor.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "AudioConductor.Editor",
     "references": [
         "GUID:c9bbfa2570df343ad81305168b068032"
     ],
@@ -9,10 +9,18 @@
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "",
+            "define": "AUDIOCONDUCTOR_NEWTONSOFT_JSON"
+        }
+    ],
     "noEngineReferences": false
 }

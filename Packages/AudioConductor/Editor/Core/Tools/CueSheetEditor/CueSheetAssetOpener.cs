@@ -1,8 +1,10 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Runtime.Core.Models;
+#nullable enable
+
+using AudioConductor.Core.Models;
 using UnityEditor;
 using UnityEditor.Callbacks;
 

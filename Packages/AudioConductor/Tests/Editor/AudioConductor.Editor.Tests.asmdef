@@ -1,6 +1,6 @@
 {
     "name": "AudioConductor.Editor.Tests",
-    "rootNamespace": "",
+    "rootNamespace": "AudioConductor.Editor.Tests",
     "references": [
         "GUID:c9bbfa2570df343ad81305168b068032",
         "GUID:6a4ef480a8c194dc5892dc78e15a5b27"
@@ -18,6 +18,12 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "",
+            "define": "AUDIOCONDUCTOR_NEWTONSOFT_JSON"
+        }
+    ],
     "noEngineReferences": false
 }

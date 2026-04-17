@@ -1,15 +1,17 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using System;
+#nullable enable
+
 using System.Linq;
+using System.Reflection;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
-using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,15 +22,28 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
     {
         private const KeyCode UndoKey = KeyCode.Z;
         private const KeyCode RedoKey = KeyCode.Y;
+        private const string SelectedSettingsGuidPrefKey = "AudioConductor.SelectedSettingsGuid";
 
-        [SerializeField]
-        private CueSheetAssetEditorWindowModel _target;
+        private static MethodInfo? _addTabMethod;
+        private static bool _addTabMethodResolved;
+
+        [SerializeField] private CueSheetAssetEditorWindowModel _target = null!;
+        [SerializeField] private string _selectedSettingsGuid = null!;
 
         private readonly CompositeDisposable _disposable = new();
 
-        private CueSheetEditorPresenter _cueSheetEditorPresenter;
+        private CueSheetEditorPresenter _cueSheetEditorPresenter = null!;
+        private DropdownField? _settingsDropdown;
 
-        private void OnDisable() => Cleanup();
+        private void OnEnable()
+        {
+            RefreshSettingsDropdown();
+        }
+
+        private void OnDisable()
+        {
+            Cleanup();
+        }
 
         private void OnGUI()
         {
@@ -49,31 +64,42 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
 
         private void CreateGUI()
         {
-            _target.Setup();
+            _target.Setup(GetSelectedSettings);
 
             _target.CueSheetEditorModel
-                   .CueSheetParameterPaneModel
-                   .NameObservable
-                   .Subscribe(cueSheetName =>
-                   {
-                       titleContent =
-                           new GUIContent(string.IsNullOrWhiteSpace(cueSheetName)
-                                              ? "No Title"
-                                              : cueSheetName);
-                   })
-                   .DisposeWith(_disposable);
+                .CueSheetParameterPaneModel
+                .NameObservable
+                .Subscribe(cueSheetName =>
+                {
+                    titleContent =
+                        new GUIContent(string.IsNullOrWhiteSpace(cueSheetName)
+                            ? "No Title"
+                            : cueSheetName);
+                })
+                .DisposeWith(_disposable);
 
             rootVisualElement.RegisterCallback<KeyDownEvent>(HandleKeyDownEvent);
 
             var view = new CueSheetEditorView(rootVisualElement);
             _cueSheetEditorPresenter = new CueSheetEditorPresenter(_target.CueSheetEditorModel, view);
             _cueSheetEditorPresenter.Setup();
+
+            _settingsDropdown = rootVisualElement.Q<DropdownField>("SettingsDropdown");
+            _settingsDropdown.RegisterValueChangedCallback(_ => ApplySelectedSettings());
+
+            RefreshSettingsDropdown();
         }
 
         private void OnFocus()
         {
-            CategoryListRepository.instance.Update();
+            RefreshSettingsDropdown();
+            CategoryListRepository.instance.Refresh(GetSelectedSettings());
             ColorDefineListRepository.instance.Update();
+        }
+
+        private AudioConductorSettings? GetSelectedSettings()
+        {
+            return AudioConductorSettingsRepository.instance.GetByGuid(_selectedSettingsGuid);
         }
 
         public static void Open(CueSheetAsset cueSheetAsset)
@@ -90,7 +116,39 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             var window = CreateInstance<CueSheetAssetEditorWindow>();
             window._target = new CueSheetAssetEditorWindowModel(cueSheetAsset);
             window.minSize = new Vector2(1340, 700);
+
+            var existingWindow = openedWindows.FirstOrDefault();
+            if (existingWindow != null && TryAddTab(existingWindow, window))
+                return;
+
             window.Show();
+        }
+
+        private static bool TryAddTab(EditorWindow existingWindow, EditorWindow newWindow)
+        {
+            if (!_addTabMethodResolved)
+            {
+                // UnityEditor.DockArea.AddTab(EditorWindow, bool)
+                var dockAreaType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.DockArea");
+                _addTabMethod = dockAreaType?.GetMethod("AddTab",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(EditorWindow), typeof(bool) }, null);
+                _addTabMethodResolved = true;
+            }
+
+            if (_addTabMethod == null)
+                return false;
+
+            var parent = existingWindow.GetType()
+                .GetField("m_Parent", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.GetValue(existingWindow);
+
+            if (parent == null || parent.GetType() != _addTabMethod.DeclaringType)
+                return false;
+
+            _addTabMethod.Invoke(parent, new object[] { newWindow, true });
+            newWindow.Focus();
+            return true;
         }
 
         private void Cleanup()
@@ -100,6 +158,84 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             _disposable.Clear();
 
             _cueSheetEditorPresenter?.Dispose();
+        }
+
+        private void RefreshSettingsDropdown()
+        {
+            _settingsDropdown ??= rootVisualElement?.Q<DropdownField>("SettingsDropdown");
+
+            var allSettings = AudioConductorSettingsRepository.instance.AllSettings;
+            if (allSettings == null || allSettings.Length == 0)
+            {
+                if (_settingsDropdown != null)
+                    _settingsDropdown.style.display = DisplayStyle.None;
+                return;
+            }
+
+            if (allSettings.Length == 1)
+            {
+                if (_settingsDropdown != null)
+                    _settingsDropdown.style.display = DisplayStyle.None;
+                _selectedSettingsGuid =
+                    AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(allSettings[0]));
+                return;
+            }
+
+            var choices = allSettings.Select(s => s != null ? s.name : "(Missing)").ToList();
+
+            // Restore per-window selection first, then fall back to EditorPrefs default.
+            var index = FindSettingsIndex(allSettings, _selectedSettingsGuid);
+            if (index < 0)
+                index = FindSettingsIndex(allSettings,
+                    EditorPrefs.GetString(SelectedSettingsGuidPrefKey, string.Empty));
+            if (index < 0)
+                index = 0;
+
+            _selectedSettingsGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(allSettings[index]));
+
+            if (_settingsDropdown != null)
+            {
+                _settingsDropdown.choices = choices;
+                _settingsDropdown.SetValueWithoutNotify(choices[index]);
+                _settingsDropdown.style.display = DisplayStyle.Flex;
+            }
+        }
+
+        private static int FindSettingsIndex(AudioConductorSettings[] allSettings, string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+                return -1;
+
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            for (var i = 0; i < allSettings.Length; i++)
+                if (AssetDatabase.GetAssetPath(allSettings[i]) == path)
+                    return i;
+
+            return -1;
+        }
+
+        private void ApplySelectedSettings()
+        {
+            var allSettings = AudioConductorSettingsRepository.instance.AllSettings;
+            if (_settingsDropdown == null || allSettings == null)
+                return;
+
+            var index = _settingsDropdown.index;
+            if (index < 0 || index >= allSettings.Length)
+                return;
+
+            var selected = allSettings[index];
+
+            // Persist per-window selection and global default.
+            if (selected != null)
+            {
+                var assetPath = AssetDatabase.GetAssetPath(selected);
+                var guid = AssetDatabase.AssetPathToGUID(assetPath);
+                _selectedSettingsGuid = guid;
+                EditorPrefs.SetString(SelectedSettingsGuidPrefKey, guid);
+            }
+
+            CategoryListRepository.instance.Refresh(selected);
         }
 
         private static bool GetEventAction(Event e)

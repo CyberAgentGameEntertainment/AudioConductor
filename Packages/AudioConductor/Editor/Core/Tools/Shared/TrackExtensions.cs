@@ -1,14 +1,16 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Runtime.Core.Models;
+#nullable enable
+
+using AudioConductor.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
     internal static class TrackExtensions
     {
-        public static Track Duplicate(this Track track)
+        public static Track? Duplicate(this Track? track)
         {
             if (track == null)
                 return null;

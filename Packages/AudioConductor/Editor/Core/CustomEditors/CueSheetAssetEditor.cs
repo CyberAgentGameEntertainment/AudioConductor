@@ -1,9 +1,11 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor;
-using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 using UnityEngine;
 

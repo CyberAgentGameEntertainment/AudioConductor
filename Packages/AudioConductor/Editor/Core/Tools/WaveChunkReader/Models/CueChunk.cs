@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 namespace AudioConductor.Editor.Core.Tools.WaveChunkReader.Models
 {
@@ -14,11 +16,11 @@ namespace AudioConductor.Editor.Core.Tools.WaveChunkReader.Models
         public readonly uint sampleOffset;
 
         public CueChunk(uint cueNumber,
-                        uint position,
-                        char[] chunk,
-                        uint chunkStart,
-                        uint blockStart,
-                        uint sampleOffset)
+            uint position,
+            char[] chunk,
+            uint chunkStart,
+            uint blockStart,
+            uint sampleOffset)
         {
             this.cueNumber = cueNumber;
             this.position = position;

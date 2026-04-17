@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
@@ -13,6 +15,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
         ICueListEditorPaneModel CueListEditorPaneModel { get; }
         IOtherOperationPaneModel OtherOperationPaneModel { get; }
 
-        public IObservableProperty<CueSheetEditorPresenter.Pane> ObservablePaneState { get; }
+        IObservableProperty<CueSheetEditorPresenter.Pane> ObservablePaneState { get; }
     }
 }

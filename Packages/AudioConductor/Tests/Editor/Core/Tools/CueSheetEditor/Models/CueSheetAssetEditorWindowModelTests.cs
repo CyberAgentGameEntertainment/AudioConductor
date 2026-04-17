@@ -1,13 +1,14 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
-using AudioConductor.Runtime.Core.Models;
+#nullable enable
+
+using AudioConductor.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class CueSheetAssetEditorWindowModelTests
     {
@@ -33,6 +34,10 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             model.Setup();
 
             Assert.IsNotNull(model.CueSheetEditorModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.CueSheetParameterPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.CueListEditorPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.OtherOperationPaneModel);
+            Assert.IsNotNull(model.CueSheetEditorModel.ObservablePaneState);
         }
     }
 }

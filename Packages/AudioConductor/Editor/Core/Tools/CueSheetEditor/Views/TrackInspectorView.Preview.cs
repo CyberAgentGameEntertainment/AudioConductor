@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using AudioConductor.Editor.Core.Tools.Shared;
@@ -15,7 +17,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private bool _previewAreaEnabled = true;
 
-        private AudioClipGUI.PreviewCache _previewCache;
+        private AudioClipGUI.PreviewCache? _previewCache;
 
         internal void SetPreviewAreaEnabled(bool enabled)
         {
@@ -24,7 +26,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private void DrawPreviewArea()
         {
-            if (_previewAreaEnabled == false)
+            if (!_previewAreaEnabled)
                 return;
 
             var clip = _audioClipField.value as AudioClip;
@@ -46,7 +48,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                 _previewCache = AudioClipGUI.DoRenderPreview(clip, audioRect);
             }
             else
+            {
                 AudioClipGUI.DoRenderPreview(_previewCache);
+            }
 
             DrawIndicator(audioRect);
             DrawMinMax(audioRect);
@@ -149,7 +153,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                         _endSampleChangedSubject.OnNext(sample);
                         break;
                     case DragObject.Current:
-                        if (_previewController == null || _previewController.IsPlaying == false)
+                        if (_previewController == null || !_previewController.IsPlaying)
                             _playRequestedSubject.OnNext(sample);
                         else
                             _previewController.SetCurrentSample(sample);
@@ -180,9 +184,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             EditorGUI.DrawRect(new Rect(rect.x + sample * sec2px, rect.y, 1, rect.height), Color.green);
 
             EditorGUI.DropShadowLabel(
-                                      new Rect(rect.x, rect.y, rect.width, 20),
-                                      $"{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
-                                     );
+                new Rect(rect.x, rect.y, rect.width, 20),
+                $"{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
+            );
         }
 
         private int GetClipSamples()

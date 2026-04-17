@@ -1,36 +1,37 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class OtherOperationPaneModelTests
     {
-        private const string ExpectedTestCueSheetCsvText = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,
-CueSheetName,ThrottleLimit,ThrottleType,Volume,Pitch,PitchInvert,,,,,,,,,,,,,,,,,,,,,
-TestCueSheet,0,PriorityOrder,1,1,False,,,,,,,,,,,,,,,,,,,,,
+        private const string ExpectedTestCueSheetCsvText = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueSheetName,ThrottleLimit,ThrottleType,Volume,Pitch,PitchInvert,,,,,,,,,,,,,,,,,,,,,,
+TestCueSheet,0,PriorityOrder,1,1,False,,,,,,,,,,,,,,,,,,,,,,
 
-CueListParameters,,,,,,,,,,,,,,,,,,,,,,,,,,
-CueName,ColorId,CategoryId,ThrottleLimit,ThrottleType,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,PlayType,TrackCount,TrackName,ColorId,ClipName,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,StartSample,EndSample,LoopStartSample,IsLoop,RandomWeight,Priority,FadeTime
-TestCue0,TestColorA,0,0,PriorityOrder,1,0,1,0,False,Sequential,2,TestTrackA,,,1,0,1,0,False,0,0,0,False,0,0,0
-,,,,,,,,,,,,TestTrackB,,,1,0,1,0,False,0,0,0,False,0,0,0
-TestCue1,,0,0,PriorityOrder,1,0,1,0,False,Sequential,3,TestTrackC,,,1,0,1,0,False,0,0,0,False,0,0,0
-,,,,,,,,,,,,TestTrackD,TestColorB,,1,0,1,0,False,0,0,0,False,0,0,0
-,,,,,,,,,,,,TestTrackE,,,1,0,1,0,False,0,0,0,False,0,0,0
-TestCue2,,0,0,PriorityOrder,1,0,1,0,False,Sequential,1,TestTrackF,,,1,0,1,0,False,0,0,0,False,0,0,0
+CueListParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueName,ColorId,CategoryId,ThrottleLimit,ThrottleType,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,PlayType,CueId,TrackCount,TrackName,ColorId,ClipName,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,StartSample,EndSample,LoopStartSample,IsLoop,RandomWeight,Priority,FadeTime
+TestCue0,TestColorA,0,0,PriorityOrder,1,0,1,0,False,Sequential,1,2,TestTrackA,,,1,0,1,0,False,0,0,0,False,0,0,0
+,,,,,,,,,,,,,TestTrackB,,,1,0,1,0,False,0,0,0,False,0,0,0
+TestCue1,,0,0,PriorityOrder,1,0,1,0,False,Sequential,2,3,TestTrackC,,,1,0,1,0,False,0,0,0,False,0,0,0
+,,,,,,,,,,,,,TestTrackD,TestColorB,,1,0,1,0,False,0,0,0,False,0,0,0
+,,,,,,,,,,,,,TestTrackE,,,1,0,1,0,False,0,0,0,False,0,0,0
+TestCue2,,0,0,PriorityOrder,1,0,1,0,False,Sequential,3,1,TestTrackF,,,1,0,1,0,False,0,0,0,False,0,0,0
 ";
 
-        private const string ImportTestCsvTest = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,
+        private const string ImportTestCsvV1 = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,
 CueSheetName,ThrottleLimit,ThrottleType,Volume,Pitch,PitchInvert,,,,,,,,,,,,,,,,,,,,,
 ImportTest CueSheet,3,FirstComeFirstServed,1,1,FALSE,,,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -43,60 +44,79 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
 ,,,,,,,,,,,,Voice2,,testClip5,1,0,1,0,FALSE,0,0,0,FALSE,5,0,0
 ";
 
-        private static CueSheet CreateTestCueSheet() => new()
+        private const string ImportTestCsvV2 = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueSheetName,ThrottleLimit,ThrottleType,Volume,Pitch,PitchInvert,,,,,,,,,,,,,,,,,,,,,,
+ImportTest CueSheet,3,FirstComeFirstServed,1,1,FALSE,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueListParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueName,ColorId,CategoryId,ThrottleLimit,ThrottleType,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,PlayType,CueId,TrackCount,TrackName,ColorId,ClipName,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,StartSample,EndSample,LoopStartSample,IsLoop,RandomWeight,Priority,FadeTime
+HomeBGM,Color1,1,0,PriorityOrder,0.9,0.2,1,0.1,FALSE,Sequential,10,2,BGM1,Color1,testClip1,1,0.1,1,0,FALSE,0,512768,0,TRUE,0,9,1
+,,,,,,,,,,,,,BGM2,Color2,testClip3,0.8,0,1,0,TRUE,2,18151,0,TRUE,1,8,1
+CarSE,,2,0,FirstComeFirstServed,0.85,0.3,1,0,FALSE,Random,20,1,SE1,,testClip2,1,0,0.9,0.1,FALSE,0,68864,2,FALSE,2,7,2
+CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,30,2,Voice1,,,0.6,0,1,0,FALSE,0,0,0,FALSE,4,5,0
+,,,,,,,,,,,,,Voice2,,testClip5,1,0,1,0,FALSE,0,0,0,FALSE,5,0,0
+";
+
+        private static CueSheet CreateTestCueSheet()
         {
-            name = "TestCueSheet",
-            cueList = new List<Cue>
+            return new CueSheet
             {
-                new()
+                name = "TestCueSheet",
+                cueList = new List<Cue>
                 {
-                    name = "TestCue0",
-                    colorId = "TestColorA",
-                    trackList = new List<Track>
+                    new()
                     {
-                        new()
+                        name = "TestCue0",
+                        colorId = "TestColorA",
+                        cueId = 1,
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackA"
-                        },
-                        new()
-                        {
-                            name = "TestTrackB"
+                            new()
+                            {
+                                name = "TestTrackA"
+                            },
+                            new()
+                            {
+                                name = "TestTrackB"
+                            }
                         }
-                    }
-                },
-                new()
-                {
-                    name = "TestCue1",
-                    trackList = new List<Track>
+                    },
+                    new()
                     {
-                        new()
+                        name = "TestCue1",
+                        cueId = 2,
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackC"
-                        },
-                        new()
-                        {
-                            name = "TestTrackD",
-                            colorId = "TestColorB"
-                        },
-                        new()
-                        {
-                            name = "TestTrackE"
+                            new()
+                            {
+                                name = "TestTrackC"
+                            },
+                            new()
+                            {
+                                name = "TestTrackD",
+                                colorId = "TestColorB"
+                            },
+                            new()
+                            {
+                                name = "TestTrackE"
+                            }
                         }
-                    }
-                },
-                new()
-                {
-                    name = "TestCue2",
-                    trackList = new List<Track>
+                    },
+                    new()
                     {
-                        new()
+                        name = "TestCue2",
+                        cueId = 3,
+                        trackList = new List<Track>
                         {
-                            name = "TestTrackF"
+                            new()
+                            {
+                                name = "TestTrackF"
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
+        }
 
         [Test]
         public void Properties()
@@ -123,7 +143,7 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
         }
 
         [Test]
-        public void ImportCsv()
+        public void ImportCsv_V1Format()
         {
             var history = new AutoIncrementHistory();
             var cueSheet = CreateTestCueSheet();
@@ -132,7 +152,7 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
 
             LogAssert.Expect(LogType.Warning, "AudioClip not found : testClip5");
 
-            var success = model.ImportCsv(ImportTestCsvTest.Split('\n'));
+            var success = model.ImportCsv(ImportTestCsvV1.Split('\n'));
 
             Assert.True(success);
             Assert.That(cueSheet.name, Is.EqualTo("ImportTest CueSheet"));
@@ -153,10 +173,11 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
             Assert.That(cueSheet.cueList[0].pitchRange, Is.EqualTo(0.1f));
             Assert.That(cueSheet.cueList[0].pitchInvert, Is.False);
             Assert.That(cueSheet.cueList[0].playType, Is.EqualTo(CuePlayType.Sequential));
+            Assert.That(cueSheet.cueList[0].cueId, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[0].trackList.Count, Is.EqualTo(2));
             Assert.That(cueSheet.cueList[0].trackList[0].name, Is.EqualTo("BGM1"));
             Assert.That(cueSheet.cueList[0].trackList[0].colorId, Is.EqualTo("Color1"));
-            Assert.That(cueSheet.cueList[0].trackList[0].audioClip.name, Is.EqualTo("testClip1"));
+            Assert.That(cueSheet.cueList[0].trackList[0].audioClip!.name, Is.EqualTo("testClip1"));
             Assert.That(cueSheet.cueList[0].trackList[0].volume, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[0].trackList[0].volumeRange, Is.EqualTo(0.1f));
             Assert.That(cueSheet.cueList[0].trackList[0].pitch, Is.EqualTo(1));
@@ -170,7 +191,7 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
             Assert.That(cueSheet.cueList[0].trackList[0].priority, Is.EqualTo(9));
             Assert.That(cueSheet.cueList[0].trackList[0].fadeTime, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[0].trackList[1].name, Is.EqualTo("BGM2"));
-            Assert.That(cueSheet.cueList[0].trackList[1].audioClip.name, Is.EqualTo("testClip3"));
+            Assert.That(cueSheet.cueList[0].trackList[1].audioClip!.name, Is.EqualTo("testClip3"));
             Assert.That(cueSheet.cueList[0].trackList[1].colorId, Is.EqualTo("Color2"));
             Assert.That(cueSheet.cueList[0].trackList[1].volume, Is.EqualTo(0.8f));
             Assert.That(cueSheet.cueList[0].trackList[1].volumeRange, Is.EqualTo(0));
@@ -194,9 +215,10 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
             Assert.That(cueSheet.cueList[1].pitchRange, Is.EqualTo(0));
             Assert.That(cueSheet.cueList[1].pitchInvert, Is.False);
             Assert.That(cueSheet.cueList[1].playType, Is.EqualTo(CuePlayType.Random));
+            Assert.That(cueSheet.cueList[1].cueId, Is.EqualTo(2));
             Assert.That(cueSheet.cueList[1].trackList.Count, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[1].trackList[0].name, Is.EqualTo("SE1"));
-            Assert.That(cueSheet.cueList[1].trackList[0].audioClip.name, Is.EqualTo("testClip2"));
+            Assert.That(cueSheet.cueList[1].trackList[0].audioClip!.name, Is.EqualTo("testClip2"));
             Assert.That(cueSheet.cueList[1].trackList[0].volume, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[1].trackList[0].volumeRange, Is.EqualTo(0));
             Assert.That(cueSheet.cueList[1].trackList[0].pitch, Is.EqualTo(0.9f));
@@ -219,6 +241,7 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
             Assert.That(cueSheet.cueList[2].pitchRange, Is.EqualTo(0));
             Assert.That(cueSheet.cueList[2].pitchInvert, Is.True);
             Assert.That(cueSheet.cueList[2].playType, Is.EqualTo(CuePlayType.Sequential));
+            Assert.That(cueSheet.cueList[2].cueId, Is.EqualTo(3));
             Assert.That(cueSheet.cueList[2].trackList.Count, Is.EqualTo(2));
             Assert.That(cueSheet.cueList[2].trackList[0].name, Is.EqualTo("Voice1"));
             Assert.That(cueSheet.cueList[2].trackList[0].audioClip, Is.Null);
@@ -263,6 +286,7 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
                 var cue = cueSheet.cueList[i];
                 var expectedCue = initialCueSheet.cueList[i];
                 Assert.That(cue.name, Is.EqualTo(expectedCue.name));
+                Assert.That(cue.cueId, Is.EqualTo(expectedCue.cueId));
                 Assert.That(cue.categoryId, Is.EqualTo(expectedCue.categoryId));
                 Assert.That(cue.throttleLimit, Is.EqualTo(expectedCue.throttleLimit));
                 Assert.That(cue.throttleType, Is.EqualTo(expectedCue.throttleType));
@@ -293,6 +317,30 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,2,Voice1,,,0.6,0,1,0,
                     Assert.That(track.fadeTime, Is.EqualTo(expectedTrack.fadeTime));
                 }
             }
+        }
+
+        [Test]
+        public void ImportCsv_V2Format()
+        {
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new OtherOperationPaneModel(cueSheet, history, new AssetSaveService());
+
+            LogAssert.Expect(LogType.Warning, "AudioClip not found : testClip5");
+
+            var success = model.ImportCsv(ImportTestCsvV2.Split('\n'));
+
+            Assert.True(success);
+            Assert.That(cueSheet.cueList.Count, Is.EqualTo(3));
+            Assert.That(cueSheet.cueList[0].name, Is.EqualTo("HomeBGM"));
+            Assert.That(cueSheet.cueList[0].cueId, Is.EqualTo(10));
+            Assert.That(cueSheet.cueList[0].trackList.Count, Is.EqualTo(2));
+            Assert.That(cueSheet.cueList[1].name, Is.EqualTo("CarSE"));
+            Assert.That(cueSheet.cueList[1].cueId, Is.EqualTo(20));
+            Assert.That(cueSheet.cueList[1].trackList.Count, Is.EqualTo(1));
+            Assert.That(cueSheet.cueList[2].name, Is.EqualTo("CatVoice"));
+            Assert.That(cueSheet.cueList[2].cueId, Is.EqualTo(30));
+            Assert.That(cueSheet.cueList[2].trackList.Count, Is.EqualTo(2));
         }
     }
 }

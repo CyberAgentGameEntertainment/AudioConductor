@@ -1,15 +1,16 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Collections.Generic;
 using System.Linq;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
-using AudioConductor.Runtime.Core.Models;
+using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal class ItemCueTests
     {

@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,7 @@ namespace AudioConductor.Editor.Foundation.TinyRx
         /// </summary>
         public bool DidTerminate { get; private set; }
 
-        public Exception Error { get; private set; }
+        public Exception? Error { get; private set; }
 
         public IDisposable Subscribe(IObserver<T> observer)
         {

@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -20,7 +22,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private readonly CueInspectorView _view;
         private readonly CompositeDisposable _viewEventDisposable = new();
 
-        private ICueInspectorModel _model;
+        private ICueInspectorModel? _model;
 
         public CueInspectorPresenter(CueInspectorView view)
         {
@@ -29,6 +31,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         public void Dispose()
         {
+            _model?.StopCue();
             Unbind();
             CleanupViewEventHandlers();
             _view.Dispose();
@@ -43,6 +46,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         {
             Assert.IsNotNull(model);
 
+            _model?.StopCue();
             Unbind();
             CleanupViewEventHandlers();
 
@@ -55,6 +59,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         public void Close()
         {
+            _model?.StopCue();
             Unbind();
             CleanupViewEventHandlers();
             _view.Close();
@@ -62,42 +67,46 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         private void Bind()
         {
+            var model = _model!;
             CategoryListRepository.instance.CategoryIdList
-                                  .Subscribe(_view.SetCategoryIdList)
-                                  .DisposeWith(_bindDisposable);
-            _model.NameObservable
-                  .Subscribe(_view.SetName)
-                  .DisposeWith(_bindDisposable);
-            _model.ColorObservable
-                  .Subscribe(_view.SetColor)
-                  .DisposeWith(_bindDisposable);
-            _model.CategoryIdObservable
-                  .Subscribe(_view.SetCategory)
-                  .DisposeWith(_bindDisposable);
-            _model.ThrottleTypeObservable
-                  .Subscribe(_view.SetThrottleType)
-                  .DisposeWith(_bindDisposable);
-            _model.ThrottleLimitObservable
-                  .Subscribe(_view.SetThrottleLimit)
-                  .DisposeWith(_bindDisposable);
-            _model.VolumeObservable
-                  .Subscribe(_view.SetVolume)
-                  .DisposeWith(_bindDisposable);
-            _model.VolumeRangeObservable
-                  .Subscribe(_view.SetVolumeRange)
-                  .DisposeWith(_bindDisposable);
-            _model.PitchObservable
-                  .Subscribe(_view.SetPitch)
-                  .DisposeWith(_bindDisposable);
-            _model.PitchRangeObservable
-                  .Subscribe(_view.SetPitchRange)
-                  .DisposeWith(_bindDisposable);
-            _model.PitchInvertObservable
-                  .Subscribe(_view.SetPitchInvert)
-                  .DisposeWith(_bindDisposable);
-            _model.PlayTypeObservable
-                  .Subscribe(_view.SetPlayType)
-                  .DisposeWith(_bindDisposable);
+                .Subscribe(_view.SetCategoryIdList)
+                .DisposeWith(_bindDisposable);
+            model.NameObservable
+                .Subscribe(_view.SetName)
+                .DisposeWith(_bindDisposable);
+            model.CueIdObservable
+                .Subscribe(_view.SetCueId)
+                .DisposeWith(_bindDisposable);
+            model.ColorObservable
+                .Subscribe(_view.SetColor)
+                .DisposeWith(_bindDisposable);
+            model.CategoryIdObservable
+                .Subscribe(_view.SetCategory)
+                .DisposeWith(_bindDisposable);
+            model.ThrottleTypeObservable
+                .Subscribe(_view.SetThrottleType)
+                .DisposeWith(_bindDisposable);
+            model.ThrottleLimitObservable
+                .Subscribe(_view.SetThrottleLimit)
+                .DisposeWith(_bindDisposable);
+            model.VolumeObservable
+                .Subscribe(_view.SetVolume)
+                .DisposeWith(_bindDisposable);
+            model.VolumeRangeObservable
+                .Subscribe(_view.SetVolumeRange)
+                .DisposeWith(_bindDisposable);
+            model.PitchObservable
+                .Subscribe(_view.SetPitch)
+                .DisposeWith(_bindDisposable);
+            model.PitchRangeObservable
+                .Subscribe(_view.SetPitchRange)
+                .DisposeWith(_bindDisposable);
+            model.PitchInvertObservable
+                .Subscribe(_view.SetPitchInvert)
+                .DisposeWith(_bindDisposable);
+            model.PlayTypeObservable
+                .Subscribe(_view.SetPlayType)
+                .DisposeWith(_bindDisposable);
         }
 
         private void Unbind()
@@ -107,45 +116,49 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         private void SetupViewEventHandlers()
         {
+            var model = _model!;
             _view.NameChangedAsObservable
-                 .Subscribe(value => _model.Name = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.Name = value)
+                .DisposeWith(_viewEventDisposable);
             _view.ColorChangedAsObservable
-                 .Subscribe(value => _model.Color = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.Color = value)
+                .DisposeWith(_viewEventDisposable);
             _view.CategoryChangedAsObservable
-                 .Subscribe(value => _model.CategoryId = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.CategoryId = value)
+                .DisposeWith(_viewEventDisposable);
             _view.ThrottleTypeChangedAsObservable
-                 .Subscribe(value => _model.ThrottleType = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.ThrottleType = value)
+                .DisposeWith(_viewEventDisposable);
             _view.ThrottleLimitChangedAsObservable
-                 .Subscribe(value => _model.ThrottleLimit = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.ThrottleLimit = value)
+                .DisposeWith(_viewEventDisposable);
             _view.VolumeChangedAsObservable
-                 .Subscribe(value => _model.Volume = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.Volume = value)
+                .DisposeWith(_viewEventDisposable);
             _view.VolumeRangeChangedAsObservable
-                 .Subscribe(value => _model.VolumeRange = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.VolumeRange = value)
+                .DisposeWith(_viewEventDisposable);
             _view.PitchChangedAsObservable
-                 .Subscribe(value => _model.Pitch = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.Pitch = value)
+                .DisposeWith(_viewEventDisposable);
             _view.PitchRangeChangedAsObservable
-                 .Subscribe(value => _model.PitchRange = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.PitchRange = value)
+                .DisposeWith(_viewEventDisposable);
             _view.PitchInvertChangedAsObservable
-                 .Subscribe(value => _model.PitchInvert = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.PitchInvert = value)
+                .DisposeWith(_viewEventDisposable);
             _view.PlayTypeChangedAsObservable
-                 .Subscribe(value => _model.PlayType = value)
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(value => model.PlayType = value)
+                .DisposeWith(_viewEventDisposable);
             _view.PlayRequestedAsObservable
-                 .Subscribe(_ => _model.PlayCue())
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_ => model.PlayCue())
+                .DisposeWith(_viewEventDisposable);
+            _view.PauseRequestedAsObservable
+                .Subscribe(_ => model.TogglePauseCue())
+                .DisposeWith(_viewEventDisposable);
             _view.StopRequestedAsObservable
-                 .Subscribe(_ => _model.StopCue())
-                 .DisposeWith(_viewEventDisposable);
+                .Subscribe(_ => model.StopCue())
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

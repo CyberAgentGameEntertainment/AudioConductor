@@ -1,14 +1,16 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
+#nullable enable
+
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Models;
+using AudioConductor.Editor.Core.Tests;
 using AudioConductor.Editor.Foundation.TinyRx;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Models;
 using NUnit.Framework;
 
-namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
+namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal sealed class ObservableCueSheetTests
     {
@@ -57,7 +59,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.That(observableCueSheet.ThrottleType, Is.EqualTo(cueSheet.throttleType));
 
             using (observableCueSheet.ThrottleTypeObservable.Skip(1)
-                                     .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
             {
                 observableCueSheet.ThrottleType = testValue;
 
@@ -76,7 +78,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.That(observableCueSheet.ThrottleLimit, Is.EqualTo(cueSheet.throttleLimit));
 
             using (observableCueSheet.ThrottleLimitObservable.Skip(1)
-                                     .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
             {
                 observableCueSheet.ThrottleLimit = testValue;
 
@@ -95,7 +97,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.That(observableCueSheet.Volume, Is.EqualTo(cueSheet.volume));
 
             using (observableCueSheet.VolumeObservable.Skip(1)
-                                     .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
             {
                 observableCueSheet.Volume = testValue;
 
@@ -114,7 +116,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.That(observableCueSheet.Pitch, Is.EqualTo(cueSheet.pitch));
 
             using (observableCueSheet.PitchObservable.Skip(1)
-                                     .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
             {
                 observableCueSheet.Pitch = testValue;
 
@@ -133,7 +135,7 @@ namespace AudioConductor.Tests.Editor.Core.Tools.CueSheetEditor.Models
             Assert.That(observableCueSheet.PitchInvert, Is.EqualTo(cueSheet.pitchInvert));
 
             using (observableCueSheet.PitchInvertObservable.Skip(1)
-                                     .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
+                       .Subscribe(v => { Assert.That(v, Is.EqualTo(testValue)); }))
             {
                 observableCueSheet.PitchInvert = testValue;
 

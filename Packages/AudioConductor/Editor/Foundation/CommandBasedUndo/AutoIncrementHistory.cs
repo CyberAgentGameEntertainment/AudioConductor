@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -12,7 +14,7 @@ namespace AudioConductor.Editor.Foundation.CommandBasedUndo
     public class AutoIncrementHistory
     {
         private readonly History _history = new();
-        private string _currentHistoryId;
+        private string? _currentHistoryId;
 
         /// <summary>
         ///     The maximum number of history that can be saved.

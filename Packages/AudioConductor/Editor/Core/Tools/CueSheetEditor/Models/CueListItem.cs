@@ -1,11 +1,12 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System.Collections.Generic;
-using AudioConductor.Core.Tools.CueSheetEditor.Enums;
-using AudioConductor.Editor.Core.Tools.Shared;
-using AudioConductor.Runtime.Core.Enums;
+using AudioConductor.Core.Enums;
+using AudioConductor.Editor.Core.Tools.CueSheetEditor.Enums;
 using UnityEditor.IMGUI.Controls;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
@@ -21,7 +22,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public abstract string TargetId { get; }
 
         public abstract string Name { get; }
-        public abstract string ColorId { get; }
+        public abstract string? ColorId { get; }
 
         public abstract int? CategoryId { get; }
 
@@ -34,6 +35,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public abstract float? VolumeRange { get; }
 
         public abstract CuePlayType? CuePlayType { get; }
+
+        public abstract int? CueId { get; }
 
         public void InsertOrAddChild(int index, CueListItem child)
         {

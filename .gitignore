@@ -74,3 +74,6 @@ crashlytics-build.properties
 # Jetbrain Rider Cache
 .idea/
 Assets/Plugins/Editor/JetBrains*
+
+# Coverage artifacts
+CodeCoverage/

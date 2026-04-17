@@ -1,14 +1,16 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Shared;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core.Models
+namespace AudioConductor.Core.Models
 {
     /// <summary>
     ///     An object that groups cues.
@@ -16,16 +18,10 @@ namespace AudioConductor.Runtime.Core.Models
     [Serializable]
     public sealed class CueSheet
     {
-#if UNITY_EDITOR
-        [SerializeField]
-        private string id = IdentifierFactory.Create();
-        public string Id => id;
-#endif
-        
         /// <summary>
         ///     Cue-sheet name.
         /// </summary>
-        public string name;
+        public string name = null!;
 
         /// <summary>
         ///     <see cref="Enums.ThrottleType" />
@@ -56,5 +52,10 @@ namespace AudioConductor.Runtime.Core.Models
         ///     List of <see cref="Cue" />.
         /// </summary>
         public List<Cue> cueList = new();
+#if UNITY_EDITOR
+        [SerializeField] private string id = IdentifierFactory.Create();
+
+        public string Id => id;
+#endif
     }
 }

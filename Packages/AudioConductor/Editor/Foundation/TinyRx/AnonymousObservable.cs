@@ -1,6 +1,8 @@
 ﻿// --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
@@ -15,6 +17,9 @@ namespace AudioConductor.Editor.Foundation.TinyRx
             _subscribe = subscribe;
         }
 
-        public IDisposable Subscribe(IObserver<T> observer) => _subscribe(observer);
+        public IDisposable Subscribe(IObserver<T> observer)
+        {
+            return _subscribe(observer);
+        }
     }
 }

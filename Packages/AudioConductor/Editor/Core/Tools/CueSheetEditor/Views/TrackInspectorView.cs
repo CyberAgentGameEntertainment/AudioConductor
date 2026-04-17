@@ -1,12 +1,15 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
 using System;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
-using AudioConductor.Runtime.Core.Shared;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,45 +19,46 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
     internal sealed partial class TrackInspectorView : VisualElement, IDisposable
     {
-        private readonly TextField _nameField;
-        private readonly ColorDefinePopupField _colorDefinePopupField;
-        private readonly ObjectField _audioClipField;
-        private readonly SliderAndFloatField _volumeField;
-        private readonly SliderAndFloatField _volumeRangeField;
-        private readonly SliderAndFloatField _pitchField;
-        private readonly SliderAndFloatField _pitchRangeField;
-        private readonly Toggle _pitchInvertField;
-        private readonly IntegerField _randomWeightField;
-        private readonly IntegerField _priorityField;
-        private readonly FloatField _fadeTimeField;
-        private readonly SliderAndIntegerField _startSampleField;
-        private readonly SliderAndIntegerField _endSampleField;
-        private readonly Toggle _isLoopField;
-        private readonly SliderAndIntegerField _loopStartSampleField;
         private readonly Button _analyzeButton;
-        private readonly Button _playButton;
-        private readonly Button _stopButton;
-        private readonly IMGUIContainer _previewAreaContainer;
-
-        private readonly Subject<string> _nameChangedSubject = new();
-        private readonly Subject<string> _colorChangedSubject = new();
-        private readonly Subject<float> _volumeChangedSubject = new();
-        private readonly Subject<float> _volumeRangeChangedSubject = new();
-        private readonly Subject<float> _pitchChangedSubject = new();
-        private readonly Subject<float> _pitchRangeChangedSubject = new();
-        private readonly Subject<bool> _pitchInvertChangedSubject = new();
-        private readonly Subject<int> _randomWeightChangedSubject = new();
-        private readonly Subject<int> _priorityChangedSubject = new();
-        private readonly Subject<float> _fadeTimeChangedSubject = new();
-        private readonly Subject<int> _startSampleChangedSubject = new();
-        private readonly Subject<int> _endSampleChangedSubject = new();
-        private readonly Subject<bool> _isLoopChangedSubject = new();
-        private readonly Subject<int> _loopStartSampleChangedSubject = new();
         private readonly Subject<Empty> _analyzeClickedSubject = new();
         private readonly Subject<AudioClip> _audioClipChangedSubject = new();
-        private readonly Subject<int?> _playRequestedSubject = new();
+        private readonly ObjectField _audioClipField;
+        private readonly Subject<string?> _colorChangedSubject = new();
+        private readonly ColorDefinePopupField _colorDefinePopupField;
+        private readonly Subject<int> _endSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _endSampleField;
+        private readonly Subject<float> _fadeTimeChangedSubject = new();
+        private readonly FloatField _fadeTimeField;
+        private readonly Subject<bool> _isLoopChangedSubject = new();
+        private readonly Toggle _isLoopField;
+        private readonly Subject<int> _loopStartSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _loopStartSampleField;
 
-        private TrackPreviewController _previewController;
+        private readonly Subject<string> _nameChangedSubject = new();
+        private readonly TextField _nameField;
+        private readonly Button _pauseButton;
+        private readonly Subject<float> _pitchChangedSubject = new();
+        private readonly SliderAndFloatField _pitchField;
+        private readonly Subject<bool> _pitchInvertChangedSubject = new();
+        private readonly Toggle _pitchInvertField;
+        private readonly Subject<float> _pitchRangeChangedSubject = new();
+        private readonly SliderAndFloatField _pitchRangeField;
+        private readonly Button _playButton;
+        private readonly Subject<int?> _playRequestedSubject = new();
+        private readonly IMGUIContainer _previewAreaContainer;
+        private readonly Subject<int> _priorityChangedSubject = new();
+        private readonly IntegerField _priorityField;
+        private readonly Subject<int> _randomWeightChangedSubject = new();
+        private readonly IntegerField _randomWeightField;
+        private readonly Subject<int> _startSampleChangedSubject = new();
+        private readonly SliderAndIntegerField _startSampleField;
+        private readonly Button _stopButton;
+        private readonly Subject<float> _volumeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeField;
+        private readonly Subject<float> _volumeRangeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeRangeField;
+
+        private TrackPreviewController? _previewController;
 
         public TrackInspectorView()
         {
@@ -78,6 +82,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField = this.Q<SliderAndIntegerField>("LoopStartSample");
             _analyzeButton = this.Q<Button>("Analyze");
             _playButton = this.Q<Button>("Play");
+            _pauseButton = this.Q<Button>("Pause");
+            _pauseButton.style.backgroundImage =
+                new StyleBackground((Texture2D)EditorGUIUtility.IconContent("PauseButton").image);
             _stopButton = this.Q<Button>("Stop");
             _previewAreaContainer = this.Q<IMGUIContainer>("Preview");
 
@@ -92,10 +99,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchField.highValue = ValueRangeConst.Pitch.Max;
             _pitchRangeField.lowValue = ValueRangeConst.PitchRange.Min;
             _pitchRangeField.highValue = ValueRangeConst.PitchRange.Max;
+            ApplyTooltips();
         }
 
         internal IObservable<string> NameChangedAsObservable => _nameChangedSubject;
-        internal IObservable<string> ColorChangedAsObservable => _colorChangedSubject;
+        internal IObservable<string?> ColorChangedAsObservable => _colorChangedSubject;
         internal IObservable<AudioClip> AudioClipChangedAsObservable => _audioClipChangedSubject;
         internal IObservable<float> VolumeChangedAsObservable => _volumeChangedSubject;
         internal IObservable<float> VolumeRangeChangedAsObservable => _volumeRangeChangedSubject;
@@ -118,6 +126,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             CleanupEventHandlers();
             _previewAreaContainer.onGUIHandler = null;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
@@ -125,6 +134,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _previewAreaContainer.onGUIHandler = DrawPreviewArea;
 
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void Open()
@@ -140,6 +150,29 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             Stop();
 
             this.SetDisplay(false);
+        }
+
+        private void ApplyTooltips()
+        {
+            _nameField.tooltip = Localization.Localization.Tr("track_inspector.name");
+            _colorDefinePopupField.tooltip = Localization.Localization.Tr("track_inspector.color");
+            _audioClipField.tooltip = Localization.Localization.Tr("track_inspector.audio_clip");
+            _volumeField.tooltip = Localization.Localization.Tr("track_inspector.volume");
+            _volumeRangeField.tooltip = Localization.Localization.Tr("track_inspector.volume_range");
+            _pitchField.tooltip = Localization.Localization.Tr("track_inspector.pitch");
+            _pitchRangeField.tooltip = Localization.Localization.Tr("track_inspector.pitch_range");
+            _pitchInvertField.tooltip = Localization.Localization.Tr("track_inspector.pitch_invert");
+            _randomWeightField.tooltip = Localization.Localization.Tr("track_inspector.random_weight");
+            _priorityField.tooltip = Localization.Localization.Tr("track_inspector.priority");
+            _fadeTimeField.tooltip = Localization.Localization.Tr("track_inspector.fade_time");
+            _startSampleField.tooltip = Localization.Localization.Tr("track_inspector.start_sample");
+            _endSampleField.tooltip = Localization.Localization.Tr("track_inspector.end_sample");
+            _isLoopField.tooltip = Localization.Localization.Tr("track_inspector.loop");
+            _loopStartSampleField.tooltip = Localization.Localization.Tr("track_inspector.loop_start_sample");
+            _analyzeButton.tooltip = Localization.Localization.Tr("track_inspector.analyze");
+            _playButton.tooltip = Localization.Localization.Tr("track_inspector.play");
+            _pauseButton.tooltip = Localization.Localization.Tr("track_inspector.pause");
+            _stopButton.tooltip = Localization.Localization.Tr("track_inspector.stop");
         }
 
         private void SetupEventHandlers()
@@ -161,12 +194,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField.RegisterValueChangedCallback(OnLoopStartSampleChanged);
             _analyzeButton.RegisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
             _playButton.RegisterCallback<ClickEvent>(OnPlayButtonClicked);
+            _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
             _stopButton.RegisterCallback<ClickEvent>(OnStopButtonClicked);
         }
 
         private void CleanupEventHandlers()
         {
             _stopButton.UnregisterCallback<ClickEvent>(OnStopButtonClicked);
+            _pauseButton.UnregisterCallback<ClickEvent>(OnPauseButtonClicked);
             _playButton.UnregisterCallback<ClickEvent>(OnPlayButtonClicked);
             _analyzeButton.UnregisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
             _loopStartSampleField.UnregisterValueChangedCallback(OnLoopStartSampleChanged);
@@ -186,7 +221,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.UnregisterValueChangedCallback(OnNameChanged);
         }
 
-        internal void SetController(TrackPreviewController controller)
+        internal void SetController(TrackPreviewController? controller)
         {
             Stop();
             _previewController = controller;
@@ -214,14 +249,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetColor(MixedValue<string> value)
+        internal void SetColor(MixedValue<string?> value)
         {
             _colorDefinePopupField.showMixedValue = false;
             _colorDefinePopupField.SetValueWithoutNotify(value.Value);
             _colorDefinePopupField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetAudioClip(MixedValue<AudioClip> value)
+        internal void SetAudioClip(MixedValue<AudioClip?> value)
         {
             _audioClipField.showMixedValue = false;
             _audioClipField.SetValueWithoutNotify(value.Value);
@@ -312,7 +347,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetSampleRange(MixedValue<AudioClip> value)
+        internal void SetSampleRange(MixedValue<AudioClip?> value)
         {
             var audioClip = value.Value;
             var samples = audioClip != null ? audioClip.samples : 0;
@@ -338,56 +373,106 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameChangedSubject.OnNext(evt.newValue);
         }
 
-        private void OnColorChanged(ChangeEvent<string> evt)
-            => _colorChangedSubject.OnNext(evt.newValue);
+        private void OnColorChanged(ChangeEvent<string?> evt)
+        {
+            _colorChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnAudioClipChanged(ChangeEvent<Object> evt)
-            => _audioClipChangedSubject.OnNext((AudioClip)evt.newValue);
+        {
+            _audioClipChangedSubject.OnNext((AudioClip)evt.newValue);
+        }
 
         private void OnVolumeChanged(ChangeEvent<float> evt)
-            => _volumeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeRangeChanged(ChangeEvent<float> evt)
-            => _volumeRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchChanged(ChangeEvent<float> evt)
-            => _pitchChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchRangeChanged(ChangeEvent<float> evt)
-            => _pitchRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchInvertChanged(ChangeEvent<bool> evt)
-            => _pitchInvertChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchInvertChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnRandomWeightChanged(ChangeEvent<int> evt)
-            => _randomWeightChangedSubject.OnNext(evt.newValue);
+        {
+            _randomWeightChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPriorityChanged(ChangeEvent<int> evt)
-            => _priorityChangedSubject.OnNext(evt.newValue);
+        {
+            _priorityChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnFadeTimeChanged(ChangeEvent<float> evt)
-            => _fadeTimeChangedSubject.OnNext(evt.newValue);
+        {
+            _fadeTimeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnStartSampleChanged(ChangeEvent<int> evt)
-            => _startSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _startSampleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnEndSampleChanged(ChangeEvent<int> evt)
-            => _endSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _endSampleChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnIsLoopChanged(ChangeEvent<bool> evt)
-            => _isLoopChangedSubject.OnNext(evt.newValue);
+        {
+            _isLoopChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnLoopStartSampleChanged(ChangeEvent<int> evt)
-            => _loopStartSampleChangedSubject.OnNext(evt.newValue);
+        {
+            _loopStartSampleChangedSubject.OnNext(evt.newValue);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
 
         private void OnAnalyzeButtonClicked(ClickEvent _)
-            => _analyzeClickedSubject.OnNext(Empty.Default);
+        {
+            _analyzeClickedSubject.OnNext(Empty.Default);
+        }
 
         private void OnPlayButtonClicked(ClickEvent _)
-            => _playRequestedSubject.OnNext(null);
+        {
+            _playRequestedSubject.OnNext(null);
+        }
+
+        private void OnPauseButtonClicked(ClickEvent _)
+        {
+            if (_previewController == null)
+                return;
+
+            if (_previewController.IsPlaying)
+                _previewController.Pause();
+            else
+                _previewController.UnPause();
+        }
 
         private void OnStopButtonClicked(ClickEvent _)
-            => Stop();
+        {
+            Stop();
+        }
 
         #endregion
 

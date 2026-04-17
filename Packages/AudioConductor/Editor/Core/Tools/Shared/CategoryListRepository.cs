@@ -1,11 +1,13 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System.Collections.Generic;
 using System.Linq;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
@@ -22,15 +24,14 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         private readonly ObservableProperty<List<int>> _categoryIdList = new();
 
-        private Category[] _categories;
+        private Category[]? _categories;
 
-        public string[] CategoryNames { get; private set; }
+        public string[]? CategoryNames { get; private set; }
 
         public IReadOnlyObservableProperty<List<int>> CategoryIdList => _categoryIdList;
 
-        public void Update()
+        public void Refresh(AudioConductorSettings? settings)
         {
-            var settings = AudioConductorSettingsRepository.instance.Settings;
             var enumerable = settings == null ? Enumerable.Empty<Category>() : settings.categoryList;
 
             _categories = enumerable.Prepend(Invalid).ToArray();
@@ -59,9 +60,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         }
 
         public Category Find(int categoryId)
-            => _categories?.FirstOrDefault(category => category.id == categoryId) ?? Invalid;
+        {
+            return _categories?.FirstOrDefault(category => category.id == categoryId) ?? Invalid;
+        }
 
         public string GetName(int categoryId)
-            => _categories?.FirstOrDefault(category => category.id == categoryId)?.name ?? Invalid.name;
+        {
+            return _categories?.FirstOrDefault(category => category.id == categoryId)?.name ?? Invalid.name;
+        }
     }
 }

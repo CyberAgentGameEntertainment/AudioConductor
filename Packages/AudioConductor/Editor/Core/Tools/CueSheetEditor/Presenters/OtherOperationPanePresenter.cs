@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.IO;
@@ -12,7 +14,7 @@ using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class OtherOperationPanePresenter : IDisposable
+    internal sealed class OtherOperationPanePresenter : ICueSheetEditorPanePresenter
     {
         private readonly IOtherOperationPaneModel _model;
 
@@ -37,22 +39,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             SetupViewEventHandlers();
         }
 
-        private void SetupViewEventHandlers()
-        {
-            _view.ExportClickedAsObservable
-                 .Subscribe(_ => Export())
-                 .DisposeWith(_viewEventDisposable);
-
-            _view.ImportClickedAsObservable
-                 .Subscribe(_ => Import())
-                 .DisposeWith(_viewEventDisposable);
-        }
-
-        private void CleanupViewEventHandlers()
-        {
-            _viewEventDisposable.Clear();
-        }
-
         public void Open()
         {
             _view.Open();
@@ -61,6 +47,22 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         public void Close()
         {
             _view.Close();
+        }
+
+        private void SetupViewEventHandlers()
+        {
+            _view.ExportClickedAsObservable
+                .Subscribe(_ => Export())
+                .DisposeWith(_viewEventDisposable);
+
+            _view.ImportClickedAsObservable
+                .Subscribe(_ => Import())
+                .DisposeWith(_viewEventDisposable);
+        }
+
+        private void CleanupViewEventHandlers()
+        {
+            _viewEventDisposable.Clear();
         }
 
         private void Export()

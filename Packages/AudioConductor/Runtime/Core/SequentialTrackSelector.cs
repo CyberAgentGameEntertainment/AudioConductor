@@ -1,36 +1,25 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using System.Collections.Generic;
-using AudioConductor.Runtime.Core.Models;
+#nullable enable
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
     internal sealed class SequentialTrackSelector : ITrackSelector
     {
-        private int _currentIndex = -1;
-        private int _trackNum = -1;
-
-        public void Setup(IReadOnlyList<Track> tracks)
+        public int SelectNext(TrackSelectionContext context)
         {
-            Reset();
-            _trackNum = tracks.Count;
-        }
+            if (context.Tracks.Count == 0)
+                return -1;
 
-        public int NextTrackIndex()
-        {
-            _currentIndex++;
-            if (_currentIndex >= _trackNum)
-                _currentIndex = 0;
+            var next = context.CurrentIndex + 1;
+            if (next >= context.Tracks.Count)
+                next = 0;
 
-            return _currentIndex;
-        }
-
-        public void Reset()
-        {
-            _trackNum = -1;
-            _currentIndex = -1;
+            context.CurrentIndex = next;
+            context.PlayCount++;
+            return next;
         }
     }
 }

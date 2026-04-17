@@ -1,6 +1,8 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -18,20 +20,20 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
     internal sealed class CueListView : VisualElement, IDisposable
     {
         private readonly List<int> _addedItemIds = new();
-        private readonly IMGUIContainer _imguiContainer;
-
-        private readonly Subject<SelectionChangedEvent> _selectionChangedSubject = new();
-        private readonly Subject<ItemMoveOperationRequestedEvent> _itemMoveOperationRequestedSubject = new();
-        private readonly Subject<CueAddOperationRequestedEvent> _cueAddOperationRequestedSubject = new();
-        private readonly Subject<TrackAddOperationRequestedEvent> _trackAddOperationRequestedSubject = new();
-        private readonly Subject<ItemRemoveOperationRequestedEvent> _itemRemoveOperationRequestedSubject = new();
-        private readonly Subject<ItemDuplicateOperationRequestedEvent> _itemDuplicateOperationRequestedSubject = new();
         private readonly Subject<AssetAddOperationRequestedEvent> _assetAddOperationRequestedSubject = new();
         private readonly Subject<ColumnValueChangedEvent> _columnValueChangedSubject = new();
+        private readonly Subject<CueAddOperationRequestedEvent> _cueAddOperationRequestedSubject = new();
+        private readonly IMGUIContainer _imguiContainer;
+        private readonly Subject<ItemDuplicateOperationRequestedEvent> _itemDuplicateOperationRequestedSubject = new();
+        private readonly Subject<ItemMoveOperationRequestedEvent> _itemMoveOperationRequestedSubject = new();
+        private readonly Subject<ItemRemoveOperationRequestedEvent> _itemRemoveOperationRequestedSubject = new();
+
+        private readonly Subject<SelectionChangedEvent> _selectionChangedSubject = new();
+        private readonly Subject<TrackAddOperationRequestedEvent> _trackAddOperationRequestedSubject = new();
 
         private int _lastAddedFrame;
 
-        private CueListTreeView _treeView;
+        private CueListTreeView _treeView = null!;
 
         public CueListView()
         {
@@ -69,6 +71,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         {
             CleanupEventHandlers();
             _imguiContainer.onGUIHandler = null;
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup(TreeViewItem root, CueListTreeView.State state)
@@ -77,6 +80,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             _treeView = new CueListTreeView(root, state);
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnGUI()
@@ -85,7 +89,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             var treeViewRect =
                 GUILayoutUtility.GetRect(rect.width, rect.height, GUILayout.ExpandWidth(true),
-                                         GUILayout.ExpandHeight(true));
+                    GUILayout.ExpandHeight(true));
             _treeView?.OnGUI(treeViewRect);
         }
 
@@ -135,6 +139,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _treeView.Reload();
         }
 
+        private void OnLanguageChanged()
+        {
+            _treeView.ApplyHeaderContent();
+        }
+
         private void SetupEventHandlers()
         {
             _treeView.OnSelectionChanged += OnSelectionChanged;
@@ -162,28 +171,44 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         #region Methods - EventHandlers
 
         private void OnSelectionChanged(SelectionChangedEvent evt)
-            => _selectionChangedSubject.OnNext(evt);
+        {
+            _selectionChangedSubject.OnNext(evt);
+        }
 
         private void OnItemMoveOperationRequested(ItemMoveOperationRequestedEvent evt)
-            => _itemMoveOperationRequestedSubject.OnNext(evt);
+        {
+            _itemMoveOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnCueAddOperationRequested(CueAddOperationRequestedEvent evt)
-            => _cueAddOperationRequestedSubject.OnNext(evt);
+        {
+            _cueAddOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnTrackAddOperationRequested(TrackAddOperationRequestedEvent evt)
-            => _trackAddOperationRequestedSubject.OnNext(evt);
+        {
+            _trackAddOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnItemRemoveOperationRequested(ItemRemoveOperationRequestedEvent evt)
-            => _itemRemoveOperationRequestedSubject.OnNext(evt);
+        {
+            _itemRemoveOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnItemDuplicateOperationRequested(ItemDuplicateOperationRequestedEvent evt)
-            => _itemDuplicateOperationRequestedSubject.OnNext(evt);
+        {
+            _itemDuplicateOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnAssetAddOperationRequested(AssetAddOperationRequestedEvent evt)
-            => _assetAddOperationRequestedSubject.OnNext(evt);
+        {
+            _assetAddOperationRequestedSubject.OnNext(evt);
+        }
 
         private void OnColumnValueChanged(ColumnValueChangedEvent evt)
-            => _columnValueChangedSubject.OnNext(evt);
+        {
+            _columnValueChangedSubject.OnNext(evt);
+        }
 
         #endregion
 

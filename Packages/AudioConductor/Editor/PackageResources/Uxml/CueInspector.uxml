@@ -1,5 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:TextField picking-mode="Ignore" label="Cue Name" name="Name" is-delayed="true" />
+    <uie:IntegerField label="Cue ID" name="CueId" is-delayed="false" />
     <AudioConductor.Editor.Core.Tools.Shared.ColorDefinePopupField label="Color" />
     <AudioConductor.Editor.Foundation.PopupIntField label="Category" name="Category" />
     <AudioConductor.Editor.Core.Tools.Shared.ThrottleTypeField focusable="true" />
@@ -13,6 +14,7 @@
     <ui:VisualElement name="Border" class="border-element" style="height: 1px; max-height: initial; min-height: initial; margin-top: 3px; margin-bottom: 3px;" />
     <ui:VisualElement style="flex-direction: row;">
         <ui:Button display-tooltip-when-elided="true" name="Play" class="audio-play" style="width: 24px; height: 24px;" />
+        <ui:Button display-tooltip-when-elided="true" name="Pause" style="width: 24px; height: 24px;" />
         <ui:Button display-tooltip-when-elided="true" name="Stop" class="audio-stop" style="width: 24px; height: 24px;" />
     </ui:VisualElement>
 </ui:UXML>

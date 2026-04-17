@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a2a166b4c2c548b991995a3cb1b2885, type: 3}
+  m_Name: BGM_Field
+  m_EditorClassIdentifier: 
+  cueSheet:
+    name: BGM_Field
+    throttleType: 0
+    throttleLimit: 0
+    volume: 1
+    pitch: 1
+    pitchInvert: 0
+    cueList:
+    - name: FieldBGM
+      categoryId: 0
+      throttleType: 0
+      throttleLimit: 0
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      cueId: 1
+      trackList:
+      - name: FieldBGM
+        audioClip: {fileID: 8300000, guid: 8aca016aaccef4391ab62da9a836ad92, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 2384949
+        loopStartSample: 0
+        isLoop: 0
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 2c3e288e-6e3a-4b76-95b3-930f5eb9bcc3
+        colorId: 
+      id: 24b5bc48-649c-4cfe-ba78-6c8ddd712f5f
+      colorId: 617312f4-1252-4dcf-a2ae-b7dc08a7978c
+    id: 2937d470-52d9-4749-aef3-2009079bc9cc

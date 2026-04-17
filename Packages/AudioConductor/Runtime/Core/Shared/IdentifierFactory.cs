@@ -1,13 +1,18 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 
-namespace AudioConductor.Runtime.Core.Shared
+namespace AudioConductor.Core.Shared
 {
     internal static class IdentifierFactory
     {
-        public static string Create() => Guid.NewGuid().ToString();
+        public static string Create()
+        {
+            return Guid.NewGuid().ToString();
+        }
     }
 }

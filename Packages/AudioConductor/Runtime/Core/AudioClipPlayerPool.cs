@@ -1,22 +1,47 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
-using AudioConductor.Runtime.Core.Shared;
+#nullable enable
+
+using AudioConductor.Core.Shared;
 using UnityEngine;
 
-namespace AudioConductor.Runtime.Core
+namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayerPool : ComponentPool<AudioClipPlayer>
+    internal sealed class AudioClipPlayerPool : ObjectPool<AudioClipPlayer>
     {
-        private AudioClipPlayer _prefab;
+        private readonly bool _deactivateOnReturn;
+        private readonly Transform _parent;
+
+        internal AudioClipPlayerPool(Transform parent, bool deactivateOnReturn)
+        {
+            _parent = parent;
+            _deactivateOnReturn = deactivateOnReturn;
+        }
+
+        protected override void OnBeforeRent(AudioClipPlayer instance)
+        {
+            if (_deactivateOnReturn)
+                instance.SetActive(true);
+        }
+
+        protected override void OnBeforeReturn(AudioClipPlayer instance)
+        {
+            instance.ResetState();
+
+            if (_deactivateOnReturn)
+                instance.SetActive(false);
+        }
+
+        protected override void OnClear(AudioClipPlayer instance)
+        {
+            instance.Destroy();
+        }
 
         protected override AudioClipPlayer CreateInstance()
         {
-            if (_prefab == null)
-                _prefab = Resources.Load<AudioClipPlayer>("AudioClipPlayer");
-
-            return Object.Instantiate(_prefab, GlobalGameObject.Instance.transform);
+            return AudioClipPlayer.Create(_parent);
         }
     }
 }

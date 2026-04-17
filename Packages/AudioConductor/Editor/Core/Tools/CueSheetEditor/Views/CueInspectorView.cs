@@ -1,48 +1,54 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
+using AudioConductor.Core.Enums;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation;
 using AudioConductor.Editor.Foundation.TinyRx;
-using AudioConductor.Runtime.Core.Enums;
-using AudioConductor.Runtime.Core.Shared;
-using UnityEditor.UIElements;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
     internal sealed class CueInspectorView : VisualElement, IDisposable
     {
-        private readonly TextField _nameField;
-        private readonly ColorDefinePopupField _colorDefinePopupField;
+        private readonly Subject<int> _categoryChangedSubject = new();
         private readonly PopupIntField _categoryField;
-        private readonly ThrottleTypeField _throttleTypeField;
-        private readonly IntegerField _throttleLimitField;
-        private readonly SliderAndFloatField _volumeField;
-        private readonly SliderAndFloatField _volumeRangeField;
-        private readonly SliderAndFloatField _pitchField;
-        private readonly SliderAndFloatField _pitchRangeField;
-        private readonly Toggle _pitchInvertField;
-        private readonly CuePlayTypeField _playTypeField;
-        private readonly Button _playButton;
-        private readonly Button _stopButton;
+        private readonly Subject<string?> _colorChangedSubject = new();
+        private readonly ColorDefinePopupField _colorDefinePopupField;
+        private readonly IntegerField _cueIdField;
 
         private readonly Subject<string> _nameChangedSubject = new();
-        private readonly Subject<string> _colorChangedSubject = new();
-        private readonly Subject<int> _categoryChangedSubject = new();
-        private readonly Subject<ThrottleType> _throttleTypeChangedSubject = new();
-        private readonly Subject<int> _throttleLimitChangedSubject = new();
-        private readonly Subject<float> _volumeChangedSubject = new();
-        private readonly Subject<float> _volumeRangeChangedSubject = new();
+        private readonly TextField _nameField;
+        private readonly Button _pauseButton;
+        private readonly Subject<Empty> _pauseRequestedSubject = new();
         private readonly Subject<float> _pitchChangedSubject = new();
-        private readonly Subject<float> _pitchRangeChangedSubject = new();
+        private readonly SliderAndFloatField _pitchField;
         private readonly Subject<bool> _pitchInvertChangedSubject = new();
-        private readonly Subject<CuePlayType> _playTypeChangedSubject = new();
+        private readonly Toggle _pitchInvertField;
+        private readonly Subject<float> _pitchRangeChangedSubject = new();
+        private readonly SliderAndFloatField _pitchRangeField;
+        private readonly Button _playButton;
         private readonly Subject<Empty> _playRequestedSubject = new();
+        private readonly Subject<CuePlayType> _playTypeChangedSubject = new();
+        private readonly CuePlayTypeField _playTypeField;
+        private readonly Button _stopButton;
         private readonly Subject<Empty> _stopRequestedSubject = new();
+        private readonly Subject<int> _throttleLimitChangedSubject = new();
+        private readonly IntegerField _throttleLimitField;
+        private readonly Subject<ThrottleType> _throttleTypeChangedSubject = new();
+        private readonly ThrottleTypeField _throttleTypeField;
+        private readonly Subject<float> _volumeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeField;
+        private readonly Subject<float> _volumeRangeChangedSubject = new();
+        private readonly SliderAndFloatField _volumeRangeField;
 
         public CueInspectorView()
         {
@@ -50,6 +56,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             tree.CloneTree(this);
 
             _nameField = this.Q<TextField>("Name");
+            _cueIdField = this.Q<IntegerField>("CueId");
+            _cueIdField.SetEnabled(false);
             _colorDefinePopupField = this.Q<ColorDefinePopupField>();
             _categoryField = this.Q<PopupIntField>("Category");
             _throttleTypeField = this.Q<ThrottleTypeField>();
@@ -61,6 +69,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField = this.Q<Toggle>("PitchInvert");
             _playTypeField = this.Q<CuePlayTypeField>();
             _playButton = this.Q<Button>("Play");
+            _pauseButton = this.Q<Button>("Pause");
+            _pauseButton.style.backgroundImage =
+                new StyleBackground((Texture2D)EditorGUIUtility.IconContent("PauseButton").image);
             _stopButton = this.Q<Button>("Stop");
 
             // Smoothly moving sliders and preview
@@ -74,10 +85,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchField.highValue = ValueRangeConst.Pitch.Max;
             _pitchRangeField.lowValue = ValueRangeConst.PitchRange.Min;
             _pitchRangeField.highValue = ValueRangeConst.PitchRange.Max;
+            ApplyTooltips();
         }
 
         internal IObservable<string> NameChangedAsObservable => _nameChangedSubject;
-        internal IObservable<string> ColorChangedAsObservable => _colorChangedSubject;
+        internal IObservable<string?> ColorChangedAsObservable => _colorChangedSubject;
         internal IObservable<int> CategoryChangedAsObservable => _categoryChangedSubject;
         internal IObservable<ThrottleType> ThrottleTypeChangedAsObservable => _throttleTypeChangedSubject;
         internal IObservable<int> ThrottleLimitChangedAsObservable => _throttleLimitChangedSubject;
@@ -88,6 +100,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal IObservable<bool> PitchInvertChangedAsObservable => _pitchInvertChangedSubject;
         internal IObservable<CuePlayType> PlayTypeChangedAsObservable => _playTypeChangedSubject;
         internal IObservable<Empty> PlayRequestedAsObservable => _playRequestedSubject;
+        internal IObservable<Empty> PauseRequestedAsObservable => _pauseRequestedSubject;
         internal IObservable<Empty> StopRequestedAsObservable => _stopRequestedSubject;
 
         public void Dispose()
@@ -95,11 +108,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             StopRequest();
 
             CleanupEventHandlers();
+            Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         internal void Setup()
         {
             SetupEventHandlers();
+            Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
         internal void Open()
@@ -114,6 +129,25 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             StopRequest();
 
             this.SetDisplay(false);
+        }
+
+        private void ApplyTooltips()
+        {
+            _nameField.tooltip = Localization.Localization.Tr("cue_inspector.name");
+            _cueIdField.tooltip = Localization.Localization.Tr("cue_inspector.cue_id");
+            _colorDefinePopupField.tooltip = Localization.Localization.Tr("cue_inspector.color");
+            _categoryField.tooltip = Localization.Localization.Tr("cue_inspector.category");
+            _throttleTypeField.tooltip = Localization.Localization.Tr("cue_inspector.throttle_type");
+            _throttleLimitField.tooltip = Localization.Localization.Tr("cue_inspector.throttle_limit");
+            _volumeField.tooltip = Localization.Localization.Tr("cue_inspector.volume");
+            _volumeRangeField.tooltip = Localization.Localization.Tr("cue_inspector.volume_range");
+            _pitchField.tooltip = Localization.Localization.Tr("cue_inspector.pitch");
+            _pitchRangeField.tooltip = Localization.Localization.Tr("cue_inspector.pitch_range");
+            _pitchInvertField.tooltip = Localization.Localization.Tr("cue_inspector.pitch_invert");
+            _playTypeField.tooltip = Localization.Localization.Tr("cue_inspector.play_type");
+            _playButton.tooltip = Localization.Localization.Tr("cue_inspector.play");
+            _pauseButton.tooltip = Localization.Localization.Tr("cue_inspector.pause");
+            _stopButton.tooltip = Localization.Localization.Tr("cue_inspector.stop");
         }
 
         private void SetupEventHandlers()
@@ -132,12 +166,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _pitchInvertField.RegisterValueChangedCallback(OnPitchInvertChanged);
             _playTypeField.RegisterValueChangedCallback(OnPlayTypeChanged);
             _playButton.RegisterCallback<ClickEvent>(OnPlayButtonClicked);
+            _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
             _stopButton.RegisterCallback<ClickEvent>(OnStopButtonClicked);
         }
 
         private void CleanupEventHandlers()
         {
             _stopButton.UnregisterCallback<ClickEvent>(OnStopButtonClicked);
+            _pauseButton.UnregisterCallback<ClickEvent>(OnPauseButtonClicked);
             _playButton.UnregisterCallback<ClickEvent>(OnPlayButtonClicked);
             _playTypeField.UnregisterValueChangedCallback(OnPlayTypeChanged);
             _pitchInvertField.UnregisterValueChangedCallback(OnPitchInvertChanged);
@@ -168,7 +204,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
-        internal void SetColor(MixedValue<string> value)
+        internal void SetCueId(MixedValue<int> value)
+        {
+            _cueIdField.showMixedValue = false;
+            _cueIdField.SetValueWithoutNotify(value.Value);
+            _cueIdField.showMixedValue = value.HasMultipleDifferentValues;
+        }
+
+        internal void SetColor(MixedValue<string?> value)
         {
             _colorDefinePopupField.showMixedValue = false;
             _colorDefinePopupField.SetValueWithoutNotify(value.Value);
@@ -192,9 +235,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _throttleTypeField.showMixedValue = false;
             // NOTE: Unity 2021.3.23 or newer
             // When changing from multiple selection to single selection, there is a pattern where the display remains a mixed string.
-            _throttleTypeField.SetValueWithoutNotify(value.HasMultipleDifferentValues 
-                                                         ? null 
-                                                         : value.Value);
+            _throttleTypeField.SetValueWithoutNotify(value.HasMultipleDifferentValues
+                ? null
+                : value.Value);
             _throttleTypeField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
@@ -246,8 +289,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             // // NOTE: Unity 2021.3.23 or newer
             // When changing from multiple selection to single selection, there is a pattern where the display remains a mixed string.
             _playTypeField.SetValueWithoutNotify(value.HasMultipleDifferentValues
-                                                 ? null
-                                                 : value.Value);
+                ? null
+                : value.Value);
             _playTypeField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
@@ -265,41 +308,75 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _nameChangedSubject.OnNext(evt.newValue);
         }
 
-        private void OnColorChanged(ChangeEvent<string> evt)
-            => _colorChangedSubject.OnNext(evt.newValue);
+        private void OnColorChanged(ChangeEvent<string?> evt)
+        {
+            _colorChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnCategoryChanged(ChangeEvent<int> evt)
-            => _categoryChangedSubject.OnNext(evt.newValue);
+        {
+            _categoryChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnThrottleTypeChanged(ChangeEvent<Enum> evt)
-            => _throttleTypeChangedSubject.OnNext((ThrottleType)evt.newValue);
+        {
+            _throttleTypeChangedSubject.OnNext((ThrottleType)evt.newValue);
+        }
 
         private void OnThrottleLimitChanged(ChangeEvent<int> evt)
-            => _throttleLimitChangedSubject.OnNext(evt.newValue);
+        {
+            _throttleLimitChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeChanged(ChangeEvent<float> evt)
-            => _volumeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnVolumeRangeChanged(ChangeEvent<float> evt)
-            => _volumeRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _volumeRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchChanged(ChangeEvent<float> evt)
-            => _pitchChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchRangeChanged(ChangeEvent<float> evt)
-            => _pitchRangeChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchRangeChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPitchInvertChanged(ChangeEvent<bool> evt)
-            => _pitchInvertChangedSubject.OnNext(evt.newValue);
+        {
+            _pitchInvertChangedSubject.OnNext(evt.newValue);
+        }
 
         private void OnPlayTypeChanged(ChangeEvent<Enum> evt)
-            => _playTypeChangedSubject.OnNext((CuePlayType)evt.newValue);
+        {
+            _playTypeChangedSubject.OnNext((CuePlayType)evt.newValue);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyTooltips();
+        }
 
         private void OnPlayButtonClicked(ClickEvent _)
-            => _playRequestedSubject.OnNext(Empty.Default);
+        {
+            _playRequestedSubject.OnNext(Empty.Default);
+        }
+
+        private void OnPauseButtonClicked(ClickEvent _)
+        {
+            _pauseRequestedSubject.OnNext(Empty.Default);
+        }
 
         private void OnStopButtonClicked(ClickEvent _)
-            => StopRequest();
+        {
+            StopRequest();
+        }
 
         #endregion
 

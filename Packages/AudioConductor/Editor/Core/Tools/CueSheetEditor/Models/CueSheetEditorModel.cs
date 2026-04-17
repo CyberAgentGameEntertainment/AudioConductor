@@ -1,28 +1,31 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using System;
 using System.Diagnostics.CodeAnalysis;
+using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Models;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueSheetEditorModel : ICueSheetEditorModel
     {
-        private readonly OtherOperationPaneModel _otherOperationPaneModel;
-
         public CueSheetEditorModel([NotNull] CueSheet cueSheet,
-                                   [NotNull] AutoIncrementHistory history,
-                                   [NotNull] IAssetSaveService assetSaveService,
-                                   IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
-                                   IObservableProperty<bool> inspectorUnCollapsed,
-                                   CueListTreeView.State cueListTreeViewState
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService,
+            IObservableProperty<CueSheetEditorPresenter.Pane> paneState,
+            IObservableProperty<bool> inspectorUnCollapsed,
+            CueListTreeView.State cueListTreeViewState,
+            [NotNull] CueSheetAsset asset,
+            Func<AudioConductorSettings?>? settingsProvider = null
         )
         {
             CueSheetParameterPaneModel =
@@ -30,7 +33,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
             CueListEditorPaneModel
                 = new CueListEditorPaneModel(cueSheet, history, assetSaveService, inspectorUnCollapsed,
-                                             cueListTreeViewState);
+                    cueListTreeViewState, settingsProvider);
 
             OtherOperationPaneModel = new OtherOperationPaneModel(cueSheet, history, assetSaveService);
 

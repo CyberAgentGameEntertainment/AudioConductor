@@ -1,18 +1,21 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
+using AudioConductor.Editor.Core.Tools.WaveChunkReader;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx.ObservableProperty;
-using AudioConductor.Runtime.Core.Models;
-using AudioConductor.Runtime.Core.Shared;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -20,35 +23,35 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class TrackInspectorModel : ITrackInspectorModel
     {
-        private readonly string _tag;
+        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<AudioClip?>> _audioClip;
+        private readonly ObservableProperty<MixedValue<string?>> _color;
+        private readonly ObservableProperty<MixedValue<int>> _endSample;
+        private readonly ObservableProperty<MixedValue<float>> _fadeTime;
+        private readonly AutoIncrementHistory _history;
+        private readonly ObservableProperty<MixedValue<bool>> _isLoop;
+        private readonly HashSet<int> _itemIds;
 
         private readonly ItemTrack[] _items;
-        private readonly HashSet<int> _itemIds;
-        private readonly Track[] _target;
-        private readonly AutoIncrementHistory _history;
-        private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<MixedValue<int>> _loopStartSample;
 
         private readonly ObservableProperty<MixedValue<string>> _name;
-        private readonly ObservableProperty<MixedValue<string>> _color;
-        private readonly ObservableProperty<MixedValue<AudioClip>> _audioClip;
+        private readonly ObservableProperty<MixedValue<float>> _pitch;
+        private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
+        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
+        private readonly ObservableProperty<MixedValue<int>> _priority;
+        private readonly ObservableProperty<MixedValue<int>> _randomWeight;
+        private readonly ObservableProperty<MixedValue<int>> _startSample;
+        private readonly string _tag;
+        private readonly Track[] _target;
+
+        private readonly TrackPreviewModel? _trackPreviewModel;
         private readonly ObservableProperty<MixedValue<float>> _volume;
         private readonly ObservableProperty<MixedValue<float>> _volumeRange;
-        private readonly ObservableProperty<MixedValue<float>> _pitch;
-        private readonly ObservableProperty<MixedValue<float>> _pitchRange;
-        private readonly ObservableProperty<MixedValue<bool>> _pitchInvert;
-        private readonly ObservableProperty<MixedValue<int>> _startSample;
-        private readonly ObservableProperty<MixedValue<int>> _endSample;
-        private readonly ObservableProperty<MixedValue<int>> _loopStartSample;
-        private readonly ObservableProperty<MixedValue<bool>> _isLoop;
-        private readonly ObservableProperty<MixedValue<int>> _randomWeight;
-        private readonly ObservableProperty<MixedValue<int>> _priority;
-        private readonly ObservableProperty<MixedValue<float>> _fadeTime;
-
-        private readonly TrackPreviewModel _trackPreviewModel;
 
         public TrackInspectorModel([NotNull] ItemTrack[] items,
-                                   [NotNull] AutoIncrementHistory history,
-                                   [NotNull] IAssetSaveService assetSaveService)
+            [NotNull] AutoIncrementHistory history,
+            [NotNull] IAssetSaveService assetSaveService)
         {
             Assert.IsTrue(items.Length > 0);
 
@@ -111,7 +114,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         private readonly struct AudioClipAndDependencyValueBackup
         {
-            public readonly AudioClip audioClip;
+            public readonly AudioClip? audioClip;
             public readonly int startSample;
             public readonly int endSample;
             public readonly int loopStartSample;
@@ -186,7 +189,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
         #region Color
 
-        public string Color
+        public string? Color
         {
             get => TypicalTarget.colorId;
             set
@@ -200,7 +203,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 {
                     foreach (var track in _target)
                         track.colorId = value;
-                    _color.Value = new MixedValue<string>(value, false);
+                    _color.Value = new MixedValue<string?>(value, false);
                     _assetSaveService.Save();
                 }
 
@@ -213,7 +216,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed |= Color != _target[i].colorId;
                     }
 
-                    _color.Value = new MixedValue<string>(Color, mixed);
+                    _color.Value = new MixedValue<string?>(Color, mixed);
                     _assetSaveService.Save();
                 }
 
@@ -221,19 +224,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<string>> ColorObservable => _color;
+        public IReadOnlyObservableProperty<MixedValue<string?>> ColorObservable => _color;
 
         #endregion
 
         #region AudioClip
 
-        public AudioClip AudioClip
+        public AudioClip? AudioClip
         {
             get => TypicalTarget.audioClip;
             set
             {
                 var actionTypeId = value == null
-                    ? $"{_tag} Unset Track {nameof(AudioClip)} {AudioClip.GetInstanceID()}"
+                    ? $"{_tag} Unset Track {nameof(AudioClip)} {(AudioClip == null ? 0 : AudioClip.GetInstanceID())}"
                     : $"{_tag} Set Track {nameof(AudioClip)} {value.GetInstanceID()}";
 
                 var old = _target.Select(track => new AudioClipAndDependencyValueBackup(track)).ToArray();
@@ -252,7 +255,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         track.loopStartSample = ValueRangeConst.LoopStartSample.Clamp(track.loopStartSample, samples);
                     }
 
-                    _audioClip.Value = new MixedValue<AudioClip>(value, false);
+                    _audioClip.Value = new MixedValue<AudioClip?>(value, false);
                     _startSample.Value = new MixedValue<int>(StartSample, false);
                     _endSample.Value = new MixedValue<int>(EndSample, false);
                     _loopStartSample.Value = new MixedValue<int>(LoopStartSample, false);
@@ -274,7 +277,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                         mixed[3] |= LoopStartSample != _target[i].loopStartSample;
                     }
 
-                    _audioClip.Value = new MixedValue<AudioClip>(AudioClip, mixed[0]);
+                    _audioClip.Value = new MixedValue<AudioClip?>(AudioClip, mixed[0]);
                     _startSample.Value = new MixedValue<int>(StartSample, mixed[1]);
                     _endSample.Value = new MixedValue<int>(EndSample, mixed[2]);
                     _loopStartSample.Value = new MixedValue<int>(LoopStartSample, mixed[3]);
@@ -285,7 +288,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             }
         }
 
-        public IReadOnlyObservableProperty<MixedValue<AudioClip>> AudioClipObservable => _audioClip;
+        public IReadOnlyObservableProperty<MixedValue<AudioClip?>> AudioClipObservable => _audioClip;
 
         #endregion
 
@@ -832,18 +835,27 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 
                 void Apply(Track track)
                 {
+                    var audioClip = track.audioClip;
+                    if (audioClip == null)
+                        return;
+
                     var waveChunkReader = new WaveChunkReader.WaveChunkReader();
                     try
                     {
-                        waveChunkReader.Execute(track.audioClip);
+                        waveChunkReader.Execute(audioClip);
                     }
-                    catch (Exception)
+                    catch (WaveParseException ex)
                     {
-                        Debug.LogWarning($"{track.name} hasn't Loop information.");
+                        Debug.LogWarning($"{track.name}: {ex.Message}");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"{track.name}: Failed to parse WAV file. {ex.Message}");
                         return;
                     }
 
-                    if (waveChunkReader.HasLoop() == false)
+                    if (!waveChunkReader.HasLoop())
                         return;
 
                     var loopInfoList = waveChunkReader.LoopInfoList;
@@ -878,7 +890,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             #endregion
         }
 
-        public bool Contains(int itemId) => _itemIds.Contains(itemId);
+        public bool Contains(int itemId)
+        {
+            return _itemIds.Contains(itemId);
+        }
 
         public void ChangeValue(CueListTreeView.ColumnType columnType, object value)
         {
@@ -896,12 +911,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                 case CueListTreeView.ColumnType.VolumeRange:
                     VolumeRange = (float)value;
                     break;
+                case CueListTreeView.ColumnType.CueId:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(columnType), columnType, null);
             }
         }
 
-        public TrackPreviewController PlayClip(int? sample)
-            => _trackPreviewModel?.Play(sample);
+        public TrackPreviewController? PlayClip(int? sample)
+        {
+            return _trackPreviewModel?.Play(sample);
+        }
     }
 }

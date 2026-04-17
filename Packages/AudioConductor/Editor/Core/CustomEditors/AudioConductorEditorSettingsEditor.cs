@@ -1,7 +1,10 @@
 // --------------------------------------------------------------
-// Copyright 2023 CyberAgent, Inc.
+// Copyright 2026 CyberAgent, Inc.
 // --------------------------------------------------------------
 
+#nullable enable
+
+using System.Collections.Generic;
 using AudioConductor.Editor.Core.Models;
 using AudioConductor.Editor.Core.Tools.Shared;
 using UnityEditor;
@@ -13,7 +16,7 @@ namespace AudioConductor.Editor.Core.CustomEditors
     [CustomEditor(typeof(AudioConductorEditorSettings))]
     internal sealed class AudioConductorEditorSettingsEditor : UnityEditor.Editor
     {
-        private AudioConductorEditorSettings _settings;
+        private AudioConductorEditorSettings _settings = null!;
 
         private void OnEnable()
         {
@@ -28,22 +31,24 @@ namespace AudioConductor.Editor.Core.CustomEditors
             var colorDefineListView = container.Q<ListView>();
             colorDefineListView.bindingPath = nameof(AudioConductorEditorSettings.colorDefineList);
             colorDefineListView.makeItem = () => new ColorDefineView();
-            colorDefineListView.itemsAdded += indices =>
-            {
-                var list = _settings.colorDefineList;
-                foreach (var index in indices)
-                    // Use default values instead of trailing copy.
-                    list[index] = new ColorDefine();
-            };
+            colorDefineListView.itemsAdded += OnColorDefineListItemsAdded;
 
             var sizeField = colorDefineListView.Q<TextField>("unity-list-view__size-field");
             sizeField.SetVisible(false);
 
             container.schedule
-                     .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
-                     .Every(1000);
+                .Execute(() => AssetDatabase.SaveAssetIfDirty(target))
+                .Every(1000);
 
             return container;
+        }
+
+        private void OnColorDefineListItemsAdded(IEnumerable<int> indices)
+        {
+            var list = _settings.colorDefineList;
+            foreach (var index in indices)
+                // Use default values instead of trailing copy.
+                list[index] = new ColorDefine();
         }
 
         private class ColorDefineView : BindableElement
