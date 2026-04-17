@@ -26,6 +26,10 @@ jobs:
           else
             TAG="${GITHUB_REF#refs/tags/}"
           fi
+          if ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Tag '$TAG' does not match expected format v<major>.<minor>.<patch>"
+            exit 1
+          fi
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Validate tag exists
@@ -92,8 +96,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          TAG="${{ steps.tag.outputs.TAG }}"
           VERSION="${{ steps.version.outputs.VERSION }}"
-          gh release create "${{ steps.tag.outputs.TAG }}" \
-            --title "Audio Conductor ${{ steps.tag.outputs.TAG }}" \
-            --notes-file release-notes.md \
-            audioconductor-${VERSION}.tgz
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "Audio Conductor $TAG" \
+              --notes-file release-notes.md
+            gh release upload "$TAG" audioconductor-${VERSION}.tgz --clobber
+          else
+            gh release create "$TAG" \
+              --title "Audio Conductor $TAG" \
+              --notes-file release-notes.md \
+              audioconductor-${VERSION}.tgz
+          fi
