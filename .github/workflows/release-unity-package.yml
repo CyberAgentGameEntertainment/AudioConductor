@@ -4,7 +4,11 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:  # Use for re-build or re-release
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0)'
+        required: true
 
 jobs:
   release:
@@ -13,22 +17,38 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Extract version from package.json
         id: version
         working-directory: Packages/AudioConductor
         run: |
           VERSION=$(jq -r '.version' package.json)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing Audio Conductor v$VERSION"
 
       - name: Verify version matches tag
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          PACKAGE_VERSION=${{ steps.version.outputs.VERSION }}
+          TAG_VERSION="${{ steps.tag.outputs.TAG }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          PACKAGE_VERSION="${{ steps.version.outputs.VERSION }}"
           if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "Error: Tag (v$TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
+            echo "Error: Tag (${{ steps.tag.outputs.TAG }}) does not match package.json version ($PACKAGE_VERSION)"
             exit 1
           fi
           echo "Version verified: $TAG_VERSION = $PACKAGE_VERSION ✓"
@@ -41,8 +61,7 @@ jobs:
              ../../audioconductor-${{ steps.version.outputs.VERSION }}.tgz
           echo "Package archive created"
 
-      - name: Extract changelog
-        id: changelog
+      - name: Extract changelog and create release notes
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           awk "/## v${VERSION}/{flag=1; next} /^## v/{flag=0} flag" \
@@ -51,22 +70,23 @@ jobs:
             echo "No CHANGELOG entry found. Using default message."
             echo "Release Audio Conductor v$VERSION" > release-notes.md
           fi
-
-      - name: Create installation instructions
-        run: |
           echo "" >> release-notes.md
           echo "## Installation" >> release-notes.md
           echo "" >> release-notes.md
-          echo "1. Download \`audioconductor-${{ steps.version.outputs.VERSION }}.tgz\`" >> release-notes.md
+          echo "1. Download \`audioconductor-${VERSION}.tgz\`" >> release-notes.md
           echo "2. In Unity Package Manager, select \"Add package from tarball...\" to install" >> release-notes.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "Audio Conductor v${{ steps.version.outputs.VERSION }}"
-          body_path: release-notes.md
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
-          files: |
-            audioconductor-${{ steps.version.outputs.VERSION }}.tgz
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          PRERELEASE_FLAG=""
+          if echo "$VERSION" | grep -q '-'; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "${{ steps.tag.outputs.TAG }}" \
+            --title "Audio Conductor ${{ steps.tag.outputs.TAG }}" \
+            --notes-file release-notes.md \
+            $PRERELEASE_FLAG \
+            audioconductor-${VERSION}.tgz
