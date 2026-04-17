@@ -1,0 +1,126 @@
+name: Release Unity Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve immutable target
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          shopt -s inherit_errexit
+          TAG="${INPUT_TAG:-${GITHUB_REF#refs/tags/}}"
+          if ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Tag '$TAG' does not match expected format v<major>.<minor>.<patch>"
+            exit 1
+          fi
+          REF_JSON="$(gh api "repos/${{ github.repository }}/git/ref/tags/${TAG}")" || {
+            echo "Error: Tag $TAG not found or API request failed" >&2
+            exit 1
+          }
+          OBJ_TYPE="$(echo "$REF_JSON" | jq -r '.object.type')"
+          OBJ_SHA="$(echo "$REF_JSON" | jq -r '.object.sha')"
+          if [ "$OBJ_TYPE" = "tag" ]; then
+            COMMIT_SHA="$(gh api "repos/${{ github.repository }}/git/tags/${OBJ_SHA}" --jq '.object.sha')" || {
+              echo "Error: Failed to dereference annotated tag $TAG" >&2
+              exit 1
+            }
+          elif [ "$OBJ_TYPE" = "commit" ]; then
+            COMMIT_SHA="$OBJ_SHA"
+          else
+            echo "Error: Unsupported tag object type: $OBJ_TYPE" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Extract version from package.json
+        id: version
+        working-directory: Packages/AudioConductor
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: version '$VERSION' in package.json does not match semver format"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing Audio Conductor v$VERSION"
+
+      - name: Verify version matches tag
+        run: |
+          TAG_VERSION="${{ steps.target.outputs.tag }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          PACKAGE_VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Error: Tag (${{ steps.target.outputs.tag }}) does not match package.json version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+          echo "Version verified: $TAG_VERSION = $PACKAGE_VERSION ✓"
+
+      - name: Create package archive with npm pack
+        working-directory: Packages/AudioConductor
+        run: |
+          TARBALL=$(npm pack --json | jq -r '.[0].filename')
+          mv "$TARBALL" ../../audioconductor-${{ steps.version.outputs.VERSION }}.tgz
+          echo "Package archive created"
+
+      - name: Extract changelog and create release notes
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          awk "/## v${VERSION}/{flag=1; next} /^## v/{flag=0} flag" \
+            Packages/AudioConductor/CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Error: No CHANGELOG entry found for v$VERSION"
+            exit 1
+          fi
+          echo "" >> release-notes.md
+          echo "## Installation" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "1. Download \`audioconductor-${VERSION}.tgz\`" >> release-notes.md
+          echo "2. In Unity Package Manager, select \"Add package from tarball...\" to install" >> release-notes.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.target.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "Audio Conductor $TAG" \
+              --notes-file release-notes.md
+            gh release upload "$TAG" audioconductor-${VERSION}.tgz --clobber
+          else
+            gh release create "$TAG" \
+              --title "Audio Conductor $TAG" \
+              --notes-file release-notes.md \
+              audioconductor-${VERSION}.tgz
+          fi
