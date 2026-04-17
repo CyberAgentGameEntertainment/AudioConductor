@@ -16,14 +16,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-
       - name: Resolve tag
         id: tag
         run: |
@@ -33,6 +25,24 @@ jobs:
             TAG="${GITHUB_REF#refs/tags/}"
           fi
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag exists
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/git/refs/tags/${{ inputs.tag }}" --silent || {
+            echo "Error: Tag ${{ inputs.tag }} does not exist as a tag"
+            exit 1
+          }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
 
       - name: Extract version from package.json
         id: version
@@ -56,9 +66,8 @@ jobs:
       - name: Create package archive with npm pack
         working-directory: Packages/AudioConductor
         run: |
-          npm pack
-          mv jp.co.cyberagent.audioconductor-${{ steps.version.outputs.VERSION }}.tgz \
-             ../../audioconductor-${{ steps.version.outputs.VERSION }}.tgz
+          TARBALL=$(npm pack --json | jq -r '.[0].filename')
+          mv "$TARBALL" ../../audioconductor-${{ steps.version.outputs.VERSION }}.tgz
           echo "Package archive created"
 
       - name: Extract changelog and create release notes
@@ -81,12 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          PRERELEASE_FLAG=""
-          if echo "$VERSION" | grep -q '-'; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
           gh release create "${{ steps.tag.outputs.TAG }}" \
             --title "Audio Conductor ${{ steps.tag.outputs.TAG }}" \
             --notes-file release-notes.md \
-            $PRERELEASE_FLAG \
             audioconductor-${VERSION}.tgz
