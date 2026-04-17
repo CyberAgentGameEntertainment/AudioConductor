@@ -18,9 +18,11 @@ jobs:
     steps:
       - name: Resolve tag
         id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
+            TAG="$INPUT_TAG"
           else
             TAG="${GITHUB_REF#refs/tags/}"
           fi
@@ -30,9 +32,10 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          gh api "repos/${{ github.repository }}/git/refs/tags/${{ inputs.tag }}" --silent || {
-            echo "Error: Tag ${{ inputs.tag }} does not exist as a tag"
+          gh api "repos/${{ github.repository }}/git/refs/tags/$INPUT_TAG" --silent || {
+            echo "Error: Tag $INPUT_TAG does not exist as a tag"
             exit 1
           }
 
@@ -42,7 +45,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: '22'
 
       - name: Extract version from package.json
         id: version
