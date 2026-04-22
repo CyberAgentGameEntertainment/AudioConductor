@@ -71,7 +71,13 @@ namespace AudioConductor.Core.Tests
 
         private static Track CreateTrack(AudioClip clip)
         {
-            return new Track { name = "track", audioClip = clip };
+            return new Track
+            {
+                name = "track",
+                audioClip = clip,
+                startSample = 0,
+                endSample = clip.samples
+            };
         }
 
         private void TriggerNaturalEnd(Conductor conductor, int playerIndex = 0)
