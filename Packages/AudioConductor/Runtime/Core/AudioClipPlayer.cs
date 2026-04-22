@@ -223,12 +223,12 @@ namespace AudioConductor.Core
 
         public void AddStopAction(Action onStop)
         {
-            _onStop += onStop;
+            _onStop = onStop;
         }
 
         public void AddEndAction(Action onEnd)
         {
-            _onEnd += onEnd;
+            _onEnd = onEnd;
         }
 
         public int GetCurrentSample()

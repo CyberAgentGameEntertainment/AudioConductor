@@ -16,11 +16,14 @@ namespace AudioConductor.Core.Tests
     internal sealed class ConductorCallbackPlayModeTests
     {
         private CueSheetAsset _cueSheetAsset = null!;
+        private GameObject _listenerGo = null!;
         private AudioConductorSettings _settings = null!;
 
         [SetUp]
         public void SetUp()
         {
+            _listenerGo = new GameObject("AudioListener");
+            _listenerGo.AddComponent<AudioListener>();
             _settings = ScriptableObject.CreateInstance<AudioConductorSettings>();
             _cueSheetAsset = ScriptableObject.CreateInstance<CueSheetAsset>();
         }
@@ -28,6 +31,7 @@ namespace AudioConductor.Core.Tests
         [TearDown]
         public void TearDown()
         {
+            Object.Destroy(_listenerGo);
             Object.Destroy(_settings);
             Object.Destroy(_cueSheetAsset);
         }

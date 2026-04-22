@@ -506,23 +506,6 @@ namespace AudioConductor.Core.Tests
             Assert.That(called, Is.True);
         }
 
-        [Test]
-        public void AddEndAction_Multiple_InvokesAllCallbacks()
-        {
-            _clock.DspTime = 0.0;
-            SetupPlayer(isLoop: false, endSample: _clip.samples);
-            _player.Play();
-
-            var count = 0;
-            _player.AddEndAction(() => count++);
-            _player.AddEndAction(() => count++);
-
-            _clock.DspTime = 10.0;
-            _player.ManualUpdate(10.0f);
-
-            Assert.That(count, Is.EqualTo(2));
-        }
-
         // --- GetCurrentSample / SetCurrentSample ---
 
         [Test]
