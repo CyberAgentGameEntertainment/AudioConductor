@@ -66,6 +66,17 @@ namespace AudioConductor.Core
                 : PlayerState.Stopped;
         }
 
+        public uint ActiveFadeId { get; set; }
+        public FadeState FadeState { get; set; }
+
+        public float VolumeFade { get; private set; } = 1f;
+
+        public void SetVolumeFade(float fade)
+        {
+            VolumeFade = fade;
+            UpdateVolume();
+        }
+
         public void Setup(AudioMixerGroup? audioMixerGroup,
             AudioClip clip,
             int categoryId,
@@ -231,6 +242,11 @@ namespace AudioConductor.Core
             _onEnd = onEnd;
         }
 
+        internal void ClearEndAction()
+        {
+            _onEnd = null;
+        }
+
         public int GetCurrentSample()
         {
             if (_isLoop)
@@ -257,17 +273,6 @@ namespace AudioConductor.Core
             }
 
             RecalculateScheduledEndTime();
-        }
-
-        public uint ActiveFadeId { get; set; }
-        public FadeState FadeState { get; set; }
-
-        public float VolumeFade { get; private set; } = 1f;
-
-        public void SetVolumeFade(float fade)
-        {
-            VolumeFade = fade;
-            UpdateVolume();
         }
 
         public void SetMasterVolume(float volume)

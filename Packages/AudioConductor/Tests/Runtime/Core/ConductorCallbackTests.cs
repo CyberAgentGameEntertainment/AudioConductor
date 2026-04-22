@@ -124,6 +124,25 @@ namespace AudioConductor.Core.Tests
             Assert.That(endCalled, Is.False);
         }
 
+        [Test]
+        public void Play_WithOnEndInPlayOptions_DoesNotInvoke_WhenNaturalEndOccursDuringFadeOut()
+        {
+            var clip = CreateClip();
+            var cue = CreateCue("cue1");
+            cue.trackList.Add(CreateTrack(clip));
+            var asset = CreateSheetAsset(cue);
+
+            var endCalled = false;
+            using var conductor = CreateConductor();
+            var sheet = conductor.RegisterCueSheet(asset);
+            var handle = conductor.Play(sheet, "cue1", new PlayOptions { OnEnd = () => endCalled = true });
+
+            conductor.Stop(handle, 0.5f);
+            TriggerNaturalEnd(conductor); // clip ends before fade completes
+
+            Assert.That(endCalled, Is.False);
+        }
+
         // --- OnStop via PlayOptions ---
 
         [Test]

@@ -105,6 +105,7 @@ namespace AudioConductor.Core
                     playback.Player.FadeState == FadeState.FadingOutComplete)
                     return;
 
+                playback.Player.ClearEndAction();
                 _fadeManager.StartFade(playback.Player, fader ?? Faders.Linear, playback.Player.VolumeFade, 0f,
                     fadeTime.Value);
                 return;
