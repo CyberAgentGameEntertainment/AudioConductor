@@ -645,7 +645,11 @@ namespace AudioConductor.Samples
         public void PlayVoice()
         {{
             if (_seVoiceConductor == null) return;
-            _voicePlayback = _seVoiceConductor.Play(_voiceSheetHandle, ""Voice"");
+            _voicePlayback = _seVoiceConductor.Play(_voiceSheetHandle, ""Voice"", new PlayOptions
+            {{
+                OnEnd = () => Debug.Log(""[AudioConductor] Voice playback ended naturally.""),
+                OnStop = () => Debug.Log(""[AudioConductor] Voice playback stopped."")
+            }});
             _voicePaused = false;
         }}
 

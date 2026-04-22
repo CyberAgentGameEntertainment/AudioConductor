@@ -46,7 +46,7 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 50e3c925-73cf-4813-886f-af4e69dc1372
+        id: 6d05f3b1-f5d0-4670-bee1-3f18ca7f04fa
         colorId: 
       - name: Voice02
         audioClip: {fileID: 8300000, guid: 51ad22bd14d9f41c1ad2d43354dc6d8a, type: 3}
@@ -62,8 +62,8 @@ MonoBehaviour:
         randomWeight: 0
         priority: 0
         fadeTime: 0
-        id: 6a0601f7-2d7e-43b9-8897-18b298e92f36
+        id: 74a86a0b-6d8e-4b81-b67f-93380eedc580
         colorId: 
-      id: 5ec0b745-0fb5-42f3-a66c-3eace15d353f
-      colorId: 9998d808-d82a-4d5b-b201-d48e7642b0f5
-    id: 81d7f873-b92d-4eac-ba7a-8e185cfe9578
+      id: 5857b66c-bcb3-40e9-bcd6-bd0395ea6ddd
+      colorId: 200801ba-085d-466d-a1c7-07b9569758ca
+    id: 6801d2a4-1d8a-4de6-86be-f3560f1623d9

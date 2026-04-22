@@ -4,6 +4,8 @@
 
 #nullable enable
 
+using System;
+
 namespace AudioConductor.Core
 {
     /// <summary>
@@ -43,5 +45,16 @@ namespace AudioConductor.Core
         ///     Mutually exclusive with <see cref="TrackIndex" /> and <see cref="TrackName" />.
         /// </summary>
         public ITrackSelector? Selector;
+
+        /// <summary>
+        ///     Called once when playback stops for any reason (explicit stop, fade-out completion, eviction, or natural end).
+        /// </summary>
+        public Action? OnStop;
+
+        /// <summary>
+        ///     Called once when non-looping playback reaches its natural end.
+        ///     Not invoked on explicit stop, fade-out completion, or eviction.
+        /// </summary>
+        public Action? OnEnd;
     }
 }

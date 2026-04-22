@@ -301,7 +301,18 @@ namespace AudioConductor.Core
             }
             else
             {
-                _onEnd?.Invoke();
+                var onEnd = _onEnd;
+                _onEnd = null;
+                if (onEnd != null)
+                    try
+                    {
+                        onEnd();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+
                 Stop();
             }
         }
@@ -458,8 +469,17 @@ namespace AudioConductor.Core
 
         private void InvokeStopAction()
         {
-            _onStop?.Invoke();
+            var onStop = _onStop;
             _onStop = null;
+            if (onStop == null) return;
+            try
+            {
+                onStop();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         private IAudioSourceWrapper? GetPlayingSource()
