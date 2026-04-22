@@ -13,7 +13,7 @@ using UnityEngine.Audio;
 
 namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayer : IAudioClipPlayer, IFadeable
+    internal sealed class AudioClipPlayer : IFadeable
     {
         private const int SourceNum = 2;
         private const float LoopLookaheadDuration = 1.0f;
