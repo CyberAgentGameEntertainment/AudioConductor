@@ -207,7 +207,7 @@ namespace AudioConductor.Core.Tests
         {
             SetupPlayer();
             var called = false;
-            _player.AddStopAction(() => called = true);
+            _player.SetStopAction(() => called = true);
 
             _player.Stop();
 
@@ -219,7 +219,7 @@ namespace AudioConductor.Core.Tests
         {
             SetupPlayer();
             var callCount = 0;
-            _player.AddStopAction(() => callCount++);
+            _player.SetStopAction(() => callCount++);
 
             _player.Stop();
             _player.Stop();
@@ -487,40 +487,23 @@ namespace AudioConductor.Core.Tests
             Assert.That(_source0.UnPauseCount, Is.EqualTo(1));
         }
 
-        // --- AddEndAction / _onEnd fire ---
+        // --- SetEndAction / _onEnd fire ---
 
         [Test]
-        public void AddEndAction_OnPlaybackEnd_InvokesCallback()
+        public void SetEndAction_OnPlaybackEnd_InvokesCallback()
         {
             _clock.DspTime = 0.0;
             SetupPlayer(isLoop: false, endSample: _clip.samples);
             _player.Play();
 
             var called = false;
-            _player.AddEndAction(() => called = true);
+            _player.SetEndAction(() => called = true);
 
             // Advance past scheduledEndTime to trigger ManualUpdate → _onEnd
             _clock.DspTime = 10.0;
             _player.ManualUpdate(10.0f);
 
             Assert.That(called, Is.True);
-        }
-
-        [Test]
-        public void AddEndAction_Multiple_InvokesAllCallbacks()
-        {
-            _clock.DspTime = 0.0;
-            SetupPlayer(isLoop: false, endSample: _clip.samples);
-            _player.Play();
-
-            var count = 0;
-            _player.AddEndAction(() => count++);
-            _player.AddEndAction(() => count++);
-
-            _clock.DspTime = 10.0;
-            _player.ManualUpdate(10.0f);
-
-            Assert.That(count, Is.EqualTo(2));
         }
 
         // --- GetCurrentSample / SetCurrentSample ---

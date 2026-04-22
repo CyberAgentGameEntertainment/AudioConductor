@@ -105,6 +105,7 @@ namespace AudioConductor.Core
                     playback.Player.FadeState == FadeState.FadingOutComplete)
                     return;
 
+                playback.Player.ClearEndAction();
                 _fadeManager.StartFade(playback.Player, fader ?? Faders.Linear, playback.Player.VolumeFade, 0f,
                     fadeTime.Value);
                 return;
@@ -183,6 +184,48 @@ namespace AudioConductor.Core
             PlayOneShotCue(sheetHandle.Id, registration, cue);
         }
 
+        /// <summary>
+        ///     Plays a cue as a fire-and-forget OneShot with optional callbacks.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueName">The name of the cue to play.</param>
+        /// <param name="options">Optional callbacks for stop and end events.</param>
+        public void PlayOneShot(CueSheetHandle sheetHandle, string cueName, PlayOneShotOptions? options)
+        {
+            if (!sheetHandle.IsValid)
+                return;
+
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cue = registration.FindCue(cueName);
+            if (cue == null)
+                return;
+
+            PlayOneShotCue(sheetHandle.Id, registration, cue, options);
+        }
+
+        /// <summary>
+        ///     Plays a cue as a fire-and-forget OneShot with optional callbacks using an integer cue ID.
+        /// </summary>
+        /// <param name="sheetHandle">The handle identifying the registered CueSheet.</param>
+        /// <param name="cueId">The integer ID of the cue to play.</param>
+        /// <param name="options">Optional callbacks for stop and end events.</param>
+        public void PlayOneShot(CueSheetHandle sheetHandle, int cueId, PlayOneShotOptions? options)
+        {
+            if (!sheetHandle.IsValid)
+                return;
+
+            if (!_cueSheets.TryGetValue(sheetHandle.Id, out var registration))
+                return;
+
+            var cue = registration.FindCue(cueId);
+            if (cue == null)
+                return;
+
+            PlayOneShotCue(sheetHandle.Id, registration, cue, options);
+        }
+
         private PlaybackHandle PlayCue(uint cueSheetId, CueSheetRegistration registration, Cue cue,
             PlayOptions? options)
         {
@@ -224,6 +267,8 @@ namespace AudioConductor.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
+            if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
+            if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
 
@@ -241,7 +286,8 @@ namespace AudioConductor.Core
             return new PlaybackHandle(id);
         }
 
-        private void PlayOneShotCue(uint cueSheetId, CueSheetRegistration registration, Cue cue)
+        private void PlayOneShotCue(uint cueSheetId, CueSheetRegistration registration, Cue cue,
+            PlayOneShotOptions? options = null)
         {
             var cueState = registration.GetOrCreateCueState(cueSheetId, cue);
             var track = cueState.NextTrack();
@@ -260,6 +306,8 @@ namespace AudioConductor.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, false,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
+            if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
+            if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
             var oneShotId = _playStateCounter.Next();

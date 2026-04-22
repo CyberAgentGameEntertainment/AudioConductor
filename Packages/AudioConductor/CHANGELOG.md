@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.1 - 2026/04/22
+
+- Fix Issues
+  - Restored playback stop/end callbacks that were inadvertently removed in v2.0.0.
+- New API
+  - `PlayOptions.OnStop` / `PlayOptions.OnEnd`
+  - `PlayOneShotOptions` (new struct with `OnStop` / `OnEnd`)
+  - `Conductor.PlayOneShot(CueSheetHandle, string, PlayOneShotOptions?)` overload
+  - `Conductor.PlayOneShot(CueSheetHandle, int, PlayOneShotOptions?)` overload
+
 ## v2.0.0 - 2026/03/25
 
 - New Features

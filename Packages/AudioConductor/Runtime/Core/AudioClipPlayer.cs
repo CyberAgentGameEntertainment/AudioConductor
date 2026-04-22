@@ -13,7 +13,7 @@ using UnityEngine.Audio;
 
 namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayer : IAudioClipPlayer, IFadeable
+    internal sealed class AudioClipPlayer : IFadeable
     {
         private const int SourceNum = 2;
         private const float LoopLookaheadDuration = 1.0f;
@@ -64,6 +64,17 @@ namespace AudioConductor.Core
             get => IsPaused ? PlayerState.Paused
                 : _sources[0].IsPlaying || _sources[1].IsPlaying ? PlayerState.Playing
                 : PlayerState.Stopped;
+        }
+
+        public uint ActiveFadeId { get; set; }
+        public FadeState FadeState { get; set; }
+
+        public float VolumeFade { get; private set; } = 1f;
+
+        public void SetVolumeFade(float fade)
+        {
+            VolumeFade = fade;
+            UpdateVolume();
         }
 
         public void Setup(AudioMixerGroup? audioMixerGroup,
@@ -221,14 +232,19 @@ namespace AudioConductor.Core
             UpdatePitch();
         }
 
-        public void AddStopAction(Action onStop)
+        public void SetStopAction(Action onStop)
         {
-            _onStop += onStop;
+            _onStop = onStop;
         }
 
-        public void AddEndAction(Action onEnd)
+        public void SetEndAction(Action onEnd)
         {
-            _onEnd += onEnd;
+            _onEnd = onEnd;
+        }
+
+        internal void ClearEndAction()
+        {
+            _onEnd = null;
         }
 
         public int GetCurrentSample()
@@ -257,17 +273,6 @@ namespace AudioConductor.Core
             }
 
             RecalculateScheduledEndTime();
-        }
-
-        public uint ActiveFadeId { get; set; }
-        public FadeState FadeState { get; set; }
-
-        public float VolumeFade { get; private set; } = 1f;
-
-        public void SetVolumeFade(float fade)
-        {
-            VolumeFade = fade;
-            UpdateVolume();
         }
 
         public void SetMasterVolume(float volume)
@@ -301,7 +306,18 @@ namespace AudioConductor.Core
             }
             else
             {
-                _onEnd?.Invoke();
+                var onEnd = _onEnd;
+                _onEnd = null;
+                if (onEnd != null)
+                    try
+                    {
+                        onEnd();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+
                 Stop();
             }
         }
@@ -458,8 +474,17 @@ namespace AudioConductor.Core
 
         private void InvokeStopAction()
         {
-            _onStop?.Invoke();
+            var onStop = _onStop;
             _onStop = null;
+            if (onStop == null) return;
+            try
+            {
+                onStop();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         private IAudioSourceWrapper? GetPlayingSource()
