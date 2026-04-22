@@ -287,7 +287,7 @@ namespace AudioConductor.Core.Tests
             var handle = conductor.Play(sheet, "cue1",
                 new PlayOptions { OnStop = () => throw new InvalidOperationException("test") });
 
-            LogAssert.Expect(LogType.Exception, new Regex(".*"));
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException: test"));
             Assert.DoesNotThrow(() => conductor.Stop(handle));
         }
 
@@ -308,7 +308,7 @@ namespace AudioConductor.Core.Tests
                 OnStop = () => stopCalled = true
             });
 
-            LogAssert.Expect(LogType.Exception, new Regex(".*"));
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException: end"));
             TriggerNaturalEnd(conductor);
 
             Assert.That(stopCalled, Is.True);

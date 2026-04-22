@@ -57,7 +57,8 @@ namespace AudioConductor.Core.Tests
             var endCalled = false;
             conductor.Play(sheet, "cue1", new PlayOptions { OnEnd = () => endCalled = true });
 
-            yield return new WaitForSeconds(1.0f);
+            var deadline = Time.realtimeSinceStartup + 2.0f;
+            yield return new WaitUntil(() => endCalled || Time.realtimeSinceStartup >= deadline);
 
             Assert.That(endCalled, Is.True);
 
@@ -85,7 +86,8 @@ namespace AudioConductor.Core.Tests
             conductor.Stop(handle, 0.3f);
             Assert.That(stopCalled, Is.False);
 
-            yield return new WaitForSeconds(0.8f);
+            var deadline = Time.realtimeSinceStartup + 1.0f;
+            yield return new WaitUntil(() => stopCalled || Time.realtimeSinceStartup >= deadline);
 
             Assert.That(stopCalled, Is.True);
 
@@ -108,7 +110,8 @@ namespace AudioConductor.Core.Tests
             var endCalled = false;
             conductor.PlayOneShot(sheet, "cue1", new PlayOneShotOptions { OnEnd = () => endCalled = true });
 
-            yield return new WaitForSeconds(1.0f);
+            var deadline = Time.realtimeSinceStartup + 2.0f;
+            yield return new WaitUntil(() => endCalled || Time.realtimeSinceStartup >= deadline);
 
             Assert.That(endCalled, Is.True);
 

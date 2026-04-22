@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.0.1
+## v2.0.1 - 2026/04/22
 
 - Fix Issues
   - Restored playback stop/end callbacks that were inadvertently removed in v2.0.0.
