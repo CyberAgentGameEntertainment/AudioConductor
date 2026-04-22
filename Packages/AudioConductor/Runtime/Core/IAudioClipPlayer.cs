@@ -114,14 +114,14 @@ namespace AudioConductor.Core
         void SetPitch(float pitch);
 
         /// <summary>
-        ///     Register a callback on stop.
+        ///     Set a callback on stop.
         /// </summary>
-        void AddStopAction(Action onStop);
+        void SetStopAction(Action onStop);
 
         /// <summary>
-        ///     Register a callback on end. Not called if loop is enabled.
+        ///     Set a callback on end. Not called if loop is enabled.
         /// </summary>
-        void AddEndAction(Action onEnd);
+        void SetEndAction(Action onEnd);
 
         /// <summary>
         ///     Get the current position.

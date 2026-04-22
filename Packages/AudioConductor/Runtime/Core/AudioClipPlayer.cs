@@ -221,12 +221,12 @@ namespace AudioConductor.Core
             UpdatePitch();
         }
 
-        public void AddStopAction(Action onStop)
+        public void SetStopAction(Action onStop)
         {
             _onStop = onStop;
         }
 
-        public void AddEndAction(Action onEnd)
+        public void SetEndAction(Action onEnd)
         {
             _onEnd = onEnd;
         }

@@ -266,8 +266,8 @@ namespace AudioConductor.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
-            if (options?.OnStop is { } onStop) player.AddStopAction(onStop);
-            if (options?.OnEnd is { } onEnd) player.AddEndAction(onEnd);
+            if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
+            if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
 
@@ -305,8 +305,8 @@ namespace AudioConductor.Core
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, false,
                 track.startSample, track.loopStartSample, track.endSample);
             player.Play();
-            if (options?.OnStop is { } onStop) player.AddStopAction(onStop);
-            if (options?.OnEnd is { } onEnd) player.AddEndAction(onEnd);
+            if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
+            if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);
             player.SetMasterVolume(_masterVolume);
             player.SetCategoryVolume(GetCategoryVolume(cue.categoryId));
             var oneShotId = _playStateCounter.Next();

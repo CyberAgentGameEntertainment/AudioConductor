@@ -105,7 +105,7 @@ namespace AudioConductor.Core.Tests
         {
             SetupPlayer();
             var endCalled = false;
-            _player.AddEndAction(() => endCalled = true);
+            _player.SetEndAction(() => endCalled = true);
             _player.Play();
 
             // Poll ManualUpdate each frame until end action fires or timeout
