@@ -64,7 +64,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 if (paths is null)
                     return false;
                 foreach (var path in paths)
-                    if (path.EndsWith(".asset"))
+                    if (path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
                         return true;
                 return false;
             }
