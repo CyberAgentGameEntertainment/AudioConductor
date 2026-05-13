@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.0 - 2026/05/13
+
+- New Features
+  - CueSheet List window to browse and open CueSheetAssets
+
 ## v2.0.1 - 2026/04/22
 
 - Fix Issues
