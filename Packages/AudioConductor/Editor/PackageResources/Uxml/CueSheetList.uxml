@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <uie:Toolbar>
+        <uie:ToolbarSearchField name="SearchField" style="flex-grow: 1;" />
+    </uie:Toolbar>
+    <ui:ListView name="ListView" selection-type="Single" fixed-item-height="22" style="flex-grow: 1;" />
+    <ui:HelpBox name="EmptyHelpBox" message-type="Info" text="No CueSheetAsset found in project." style="display: none;" />
+</ui:UXML>
