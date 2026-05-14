@@ -4,6 +4,11 @@
 
 #nullable enable
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#else
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -236,8 +236,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             set
             {
                 var actionTypeId = value == null
+#if UNITY_6000_4_OR_NEWER
+                    ? $"{_tag} Unset Track {nameof(AudioClip)} {(AudioClip == null ? default : AudioClip.GetEntityId())}"
+                    : $"{_tag} Set Track {nameof(AudioClip)} {value.GetEntityId()}";
+#else
                     ? $"{_tag} Unset Track {nameof(AudioClip)} {(AudioClip == null ? 0 : AudioClip.GetInstanceID())}"
                     : $"{_tag} Set Track {nameof(AudioClip)} {value.GetInstanceID()}";
+#endif
 
                 var old = _target.Select(track => new AudioClipAndDependencyValueBackup(track)).ToArray();
                 _history.Register(actionTypeId, Redo, Undo);
