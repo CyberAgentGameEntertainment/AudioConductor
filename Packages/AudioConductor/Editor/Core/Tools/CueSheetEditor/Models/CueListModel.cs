@@ -4,6 +4,11 @@
 
 #nullable enable
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#else
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +18,6 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx;
-using UnityEditor.IMGUI.Controls;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {

@@ -7,16 +7,26 @@
 using AudioConductor.Core.Models;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
 {
     internal static class CueSheetAssetOpener
     {
+#if UNITY_6000_5_OR_NEWER
+        [OnOpenAsset(0)]
+        public static bool OnOpen(EntityId entityId, int line)
+            => OnOpenImpl(EditorUtility.EntityIdToObject(entityId));
+#else
         [OnOpenAsset(0)]
         public static bool OnOpen(int instanceID, int line)
         {
-            var asset = EditorUtility.InstanceIDToObject(instanceID);
+            return OnOpenImpl(EditorUtility.InstanceIDToObject(instanceID));
+        }
+#endif
 
+        private static bool OnOpenImpl(Object asset)
+        {
             if (asset is not CueSheetAsset data)
                 return false;
 
