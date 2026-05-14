@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.1 - 2026/05/14
+
+- Fix Issues
+  - Add Unity 6000.x API compatibility for generic TreeView types and InstanceID-to-EntityId transition
+
 ## v2.1.0 - 2026/05/13
 
 - New Features
