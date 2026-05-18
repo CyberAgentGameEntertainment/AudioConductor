@@ -12,16 +12,16 @@ namespace AudioConductor.Core
 {
     internal struct ThrottleScopeState
     {
-        internal int Count;
-        internal int Min;
-        internal Playback? Oldest;
+        internal int Count { get; private set; }
+        private int _min;
+        internal Playback? Oldest { get; private set; }
 
         internal void Accumulate(in Playback p)
         {
             Count++;
-            if (!Oldest.HasValue || p.Priority < Min || p.Priority == Min && p.Id < Oldest.Value.Id)
+            if (!Oldest.HasValue || p.Priority < _min || p.Priority == _min && p.Id < Oldest.Value.Id)
             {
-                Min = p.Priority;
+                _min = p.Priority;
                 Oldest = p;
             }
         }
@@ -37,9 +37,9 @@ namespace AudioConductor.Core
             eviction = null;
             if (limit <= 0 || Count < limit)
                 return true;
-            if (Min > incomingPriority)
+            if (_min > incomingPriority)
                 return false;
-            if (Min < incomingPriority)
+            if (_min < incomingPriority)
                 type = ThrottleType.PriorityOrder;
             switch (type)
             {
