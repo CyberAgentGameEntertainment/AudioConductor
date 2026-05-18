@@ -347,7 +347,7 @@ namespace AudioConductor.Core
                 return true;
 
             // Single pass: count playing states and track oldest per scope at once.
-            var ctx = new ThrottleContext(cueSheetId, cue, cue.categoryId);
+            var ctx = new ThrottleContext(cueSheetId, cue);
 
             foreach (var p in _managedPlaybacks.Values)
                 ctx.Accumulate(p.Core);

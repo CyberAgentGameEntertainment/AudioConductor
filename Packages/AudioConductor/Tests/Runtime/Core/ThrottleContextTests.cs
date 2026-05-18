@@ -42,7 +42,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var state = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 5);
-            var ctx = new ThrottleContext(100, cue, 10);
+            var ctx = new ThrottleContext(100, cue);
 
             ctx.Accumulate(state.Core);
 
@@ -57,7 +57,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var state = new ManagedPlayback(1, 100, cue, CreateStoppedPlayer(), 0);
-            var ctx = new ThrottleContext(100, cue, 0);
+            var ctx = new ThrottleContext(100, cue);
 
             ctx.Accumulate(state.Core);
 
@@ -69,7 +69,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var state = new ManagedPlayback(1, 200, cue, CreatePlayingPlayer(), 0);
-            var ctx = new ThrottleContext(100, cue, 10);
+            var ctx = new ThrottleContext(100, cue);
 
             ctx.Accumulate(state.Core);
 
@@ -84,7 +84,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var state = new OneShotPlayback(1, 100, cue, CreatePlayingPlayer(), 5);
-            var ctx = new ThrottleContext(100, cue, 10);
+            var ctx = new ThrottleContext(100, cue);
 
             ctx.Accumulate(state.Core);
 
@@ -99,7 +99,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue();
             var state = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
-            var ctx = new ThrottleContext(100, cue, 0);
+            var ctx = new ThrottleContext(100, cue);
             ctx.Accumulate(state.Core);
 
             ctx.AdjustAfterEviction(null);
@@ -112,7 +112,7 @@ namespace AudioConductor.Core.Tests
         {
             var cue = CreateCue(10);
             var state = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
-            var ctx = new ThrottleContext(100, cue, 10);
+            var ctx = new ThrottleContext(100, cue);
             ctx.Accumulate(state.Core);
             ctx.Accumulate(state.Core);
             ctx.Accumulate(state.Core);
@@ -131,7 +131,7 @@ namespace AudioConductor.Core.Tests
             var cue = CreateCue(10);
             var stateA = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
             var stateB = new ManagedPlayback(2, 200, cue, CreatePlayingPlayer(), 0);
-            var ctx = new ThrottleContext(100, cue, 10);
+            var ctx = new ThrottleContext(100, cue);
             ctx.Accumulate(stateA.Core);
             ctx.Accumulate(stateA.Core);
             ctx.Accumulate(stateB.Core);

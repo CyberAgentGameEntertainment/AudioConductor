@@ -26,11 +26,11 @@ namespace AudioConductor.Core
         internal int CategoryCount => _category.Count;
         internal int GlobalCount => _global.Count;
 
-        internal ThrottleContext(uint cueSheetId, Cue cue, int categoryId)
+        internal ThrottleContext(uint cueSheetId, Cue cue)
         {
             _targetCueSheetId = cueSheetId;
             _targetCue = cue;
-            _targetCategoryId = categoryId;
+            _targetCategoryId = cue.categoryId;
             _cue = default;
             _sheet = default;
             _category = default;
