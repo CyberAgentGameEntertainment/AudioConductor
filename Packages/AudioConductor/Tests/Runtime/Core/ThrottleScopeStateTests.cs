@@ -29,14 +29,6 @@ namespace AudioConductor.Core.Tests
                 NullLifecycle.Instance);
         }
 
-        private static AudioClipPlayer CreateStoppedPlayer()
-        {
-            return new AudioClipPlayer(
-                new IAudioSourceWrapper[] { new SpyAudioSourceWrapper(), new SpyAudioSourceWrapper() },
-                new StubDspClock(),
-                NullLifecycle.Instance);
-        }
-
         [Test]
         public void Resolve_LimitZero_ReturnsTrue()
         {
@@ -49,8 +41,10 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Resolve_BelowLimit_ReturnsTrue()
         {
+            var cue = CreateCue();
             var state = default(ThrottleScopeState);
-            state.Count = 2;
+            state.Accumulate(new ManagedPlayback(1, 1, cue, CreatePlayingPlayer(), 0).Core);
+            state.Accumulate(new ManagedPlayback(2, 1, cue, CreatePlayingPlayer(), 0).Core);
             var result = state.Resolve(ThrottleType.FirstComeFirstServed, 3, 0, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction.HasValue, Is.False);
@@ -59,8 +53,10 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Resolve_AtLimit_FirstComeFirstServed_ReturnsFalse()
         {
+            var cue = CreateCue();
             var state = default(ThrottleScopeState);
-            state.Count = 2;
+            state.Accumulate(new ManagedPlayback(1, 1, cue, CreatePlayingPlayer(), 0).Core);
+            state.Accumulate(new ManagedPlayback(2, 1, cue, CreatePlayingPlayer(), 0).Core);
             var result = state.Resolve(ThrottleType.FirstComeFirstServed, 2, 0, out _);
             Assert.That(result, Is.False);
         }
@@ -71,8 +67,7 @@ namespace AudioConductor.Core.Tests
             var cue = CreateCue();
             var managed = new ManagedPlayback(1, 1, cue, CreatePlayingPlayer(), 0);
             var state = default(ThrottleScopeState);
-            state.Count = 1;
-            state.Oldest = managed.Core;
+            state.Accumulate(managed.Core);
             var result = state.Resolve(ThrottleType.PriorityOrder, 1, 0, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction!.Value.Id, Is.EqualTo(1u));
@@ -81,9 +76,9 @@ namespace AudioConductor.Core.Tests
         [Test]
         public void Resolve_AtLimit_MinPriorityHigherThanTrack_ReturnsFalse()
         {
+            var cue = CreateCue();
             var state = default(ThrottleScopeState);
-            state.Count = 1;
-            state.Min = 5;
+            state.Accumulate(new ManagedPlayback(1, 1, cue, CreatePlayingPlayer(), 5).Core);
             var result = state.Resolve(ThrottleType.PriorityOrder, 1, 0, out _);
             Assert.That(result, Is.False);
         }
@@ -94,8 +89,7 @@ namespace AudioConductor.Core.Tests
             var cue = CreateCue();
             var managed = new ManagedPlayback(1, 1, cue, CreatePlayingPlayer(), 0);
             var state = default(ThrottleScopeState);
-            state.Count = 1;
-            state.Oldest = managed.Core;
+            state.Accumulate(managed.Core);
             var result = state.Resolve(ThrottleType.FirstComeFirstServed, 1, 5, out var eviction);
             Assert.That(result, Is.True);
             Assert.That(eviction!.Value.Id, Is.EqualTo(1u));
