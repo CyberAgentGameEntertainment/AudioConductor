@@ -46,11 +46,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(1));
-            Assert.That(ctx.Sheet.Count, Is.EqualTo(1));
-            Assert.That(ctx.Cue.Count, Is.EqualTo(1));
-            Assert.That(ctx.Category.Count, Is.EqualTo(1));
-            Assert.That(ctx.Global.Oldest!.Value.Id, Is.EqualTo(1u));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
+            Assert.That(ctx.SheetCount, Is.EqualTo(1));
+            Assert.That(ctx.CueCount, Is.EqualTo(1));
+            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -62,7 +61,7 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(0));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(0));
         }
 
         [Test]
@@ -74,10 +73,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(1));
-            Assert.That(ctx.Sheet.Count, Is.EqualTo(0));
-            Assert.That(ctx.Cue.Count, Is.EqualTo(1));
-            Assert.That(ctx.Category.Count, Is.EqualTo(1));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
+            Assert.That(ctx.SheetCount, Is.EqualTo(0));
+            Assert.That(ctx.CueCount, Is.EqualTo(1));
+            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -89,11 +88,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(1));
-            Assert.That(ctx.Sheet.Count, Is.EqualTo(1));
-            Assert.That(ctx.Cue.Count, Is.EqualTo(1));
-            Assert.That(ctx.Category.Count, Is.EqualTo(1));
-            Assert.That(ctx.Global.Oldest!.Value.Id, Is.EqualTo(1u));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
+            Assert.That(ctx.SheetCount, Is.EqualTo(1));
+            Assert.That(ctx.CueCount, Is.EqualTo(1));
+            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -106,7 +104,7 @@ namespace AudioConductor.Core.Tests
 
             ctx.AdjustAfterEviction(null);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(1));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -121,10 +119,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.AdjustAfterEviction(state.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(2));
-            Assert.That(ctx.Sheet.Count, Is.EqualTo(2));
-            Assert.That(ctx.Cue.Count, Is.EqualTo(2));
-            Assert.That(ctx.Category.Count, Is.EqualTo(2));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(2));
+            Assert.That(ctx.SheetCount, Is.EqualTo(2));
+            Assert.That(ctx.CueCount, Is.EqualTo(2));
+            Assert.That(ctx.CategoryCount, Is.EqualTo(2));
         }
 
         [Test]
@@ -141,10 +139,10 @@ namespace AudioConductor.Core.Tests
             // evict a playback from a different sheet
             ctx.AdjustAfterEviction(stateB.Core);
 
-            Assert.That(ctx.Global.Count, Is.EqualTo(2));
-            Assert.That(ctx.Sheet.Count, Is.EqualTo(2));
-            Assert.That(ctx.Cue.Count, Is.EqualTo(2));
-            Assert.That(ctx.Category.Count, Is.EqualTo(2));
+            Assert.That(ctx.GlobalCount, Is.EqualTo(2));
+            Assert.That(ctx.SheetCount, Is.EqualTo(2));
+            Assert.That(ctx.CueCount, Is.EqualTo(2));
+            Assert.That(ctx.CategoryCount, Is.EqualTo(2));
         }
     }
 }

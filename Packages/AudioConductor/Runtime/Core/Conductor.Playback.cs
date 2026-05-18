@@ -358,33 +358,29 @@ namespace AudioConductor.Core
 #if UNITY_EDITOR
             // Invariant: counts must not exceed their respective limits.
             // Violated only if throttle limits are mutated while players are active (unsupported).
-            Debug.Assert(cueThrottleLimit <= 0 || ctx.Cue.Count <= cueThrottleLimit,
+            Debug.Assert(cueThrottleLimit <= 0 || ctx.CueCount <= cueThrottleLimit,
                 "cue count exceeds throttle limit");
-            Debug.Assert(sheetThrottleLimit <= 0 || ctx.Sheet.Count <= sheetThrottleLimit,
+            Debug.Assert(sheetThrottleLimit <= 0 || ctx.SheetCount <= sheetThrottleLimit,
                 "sheet count exceeds throttle limit");
-            Debug.Assert(catThrottleLimit <= 0 || ctx.Category.Count <= catThrottleLimit,
+            Debug.Assert(catThrottleLimit <= 0 || ctx.CategoryCount <= catThrottleLimit,
                 "category count exceeds throttle limit");
-            Debug.Assert(globalThrottleLimit <= 0 || ctx.Global.Count <= globalThrottleLimit,
+            Debug.Assert(globalThrottleLimit <= 0 || ctx.GlobalCount <= globalThrottleLimit,
                 "global count exceeds throttle limit");
 #endif
 
             // Phase 1: Resolve eviction candidates per scope without executing.
-            // ResolveAndAdjust updates counts so subsequent scopes see the effect of prior evictions.
+            // Resolve* updates counts so subsequent scopes see the effect of prior evictions.
             // Actual stop is deferred to Phase 2 to ensure no side effects when a later scope rejects.
-            if (!ctx.ResolveAndAdjust(ref ctx.Cue, cueThrottleType, cueThrottleLimit,
-                    track.priority, out var cueEviction))
+            if (!ctx.ResolveCue(cueThrottleType, cueThrottleLimit, track.priority, out var cueEviction))
                 return false;
 
-            if (!ctx.ResolveAndAdjust(ref ctx.Sheet, sheetThrottleType, sheetThrottleLimit,
-                    track.priority, out var sheetEviction))
+            if (!ctx.ResolveSheet(sheetThrottleType, sheetThrottleLimit, track.priority, out var sheetEviction))
                 return false;
 
-            if (!ctx.ResolveAndAdjust(ref ctx.Category, catThrottleType, catThrottleLimit,
-                    track.priority, out var catEviction))
+            if (!ctx.ResolveCategory(catThrottleType, catThrottleLimit, track.priority, out var catEviction))
                 return false;
 
-            if (!ctx.Global.Resolve(globalThrottleType, globalThrottleLimit,
-                    track.priority, out var globalEviction))
+            if (!ctx.ResolveGlobal(globalThrottleType, globalThrottleLimit, track.priority, out var globalEviction))
                 return false;
 
             // Phase 2: All scopes passed — execute deferred evictions.

@@ -16,30 +16,35 @@ namespace AudioConductor.Core
         private readonly Cue _targetCue;
         private readonly int _targetCategoryId;
 
-        internal ThrottleScopeState Cue;
-        internal ThrottleScopeState Sheet;
-        internal ThrottleScopeState Category;
-        internal ThrottleScopeState Global;
+        private ThrottleScopeState _cue;
+        private ThrottleScopeState _sheet;
+        private ThrottleScopeState _category;
+        private ThrottleScopeState _global;
+
+        internal int CueCount => _cue.Count;
+        internal int SheetCount => _sheet.Count;
+        internal int CategoryCount => _category.Count;
+        internal int GlobalCount => _global.Count;
 
         internal ThrottleContext(uint cueSheetId, Cue cue, int categoryId)
         {
             _targetCueSheetId = cueSheetId;
             _targetCue = cue;
             _targetCategoryId = categoryId;
-            Cue = default;
-            Sheet = default;
-            Category = default;
-            Global = default;
+            _cue = default;
+            _sheet = default;
+            _category = default;
+            _global = default;
         }
 
         internal void Accumulate(in Playback p)
         {
             if (p.Player.State == PlayerState.Stopped)
                 return;
-            Global.Accumulate(in p);
-            if (BelongsToSheet(in p)) Sheet.Accumulate(in p);
-            if (BelongsToCue(in p)) Cue.Accumulate(in p);
-            if (BelongsToCategory(in p)) Category.Accumulate(in p);
+            _global.Accumulate(in p);
+            if (BelongsToSheet(in p)) _sheet.Accumulate(in p);
+            if (BelongsToCue(in p)) _cue.Accumulate(in p);
+            if (BelongsToCategory(in p)) _category.Accumulate(in p);
         }
 
         internal void AdjustAfterEviction(Playback? eviction)
@@ -47,19 +52,39 @@ namespace AudioConductor.Core
             if (!eviction.HasValue)
                 return;
             var e = eviction.Value;
-            Global.Decrement();
-            if (BelongsToSheet(in e)) Sheet.Decrement();
-            if (BelongsToCue(in e)) Cue.Decrement();
-            if (BelongsToCategory(in e)) Category.Decrement();
+            _global.Decrement();
+            if (BelongsToSheet(in e)) _sheet.Decrement();
+            if (BelongsToCue(in e)) _cue.Decrement();
+            if (BelongsToCategory(in e)) _category.Decrement();
         }
 
-        internal bool ResolveAndAdjust(ref ThrottleScopeState state, ThrottleType type,
-            int limit, int incomingPriority, out Playback? eviction)
+        internal bool ResolveCue(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
         {
-            if (!state.Resolve(type, limit, incomingPriority, out eviction))
+            if (!_cue.Resolve(type, limit, incomingPriority, out eviction))
                 return false;
             AdjustAfterEviction(eviction);
             return true;
+        }
+
+        internal bool ResolveSheet(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        {
+            if (!_sheet.Resolve(type, limit, incomingPriority, out eviction))
+                return false;
+            AdjustAfterEviction(eviction);
+            return true;
+        }
+
+        internal bool ResolveCategory(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        {
+            if (!_category.Resolve(type, limit, incomingPriority, out eviction))
+                return false;
+            AdjustAfterEviction(eviction);
+            return true;
+        }
+
+        internal bool ResolveGlobal(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        {
+            return _global.Resolve(type, limit, incomingPriority, out eviction);
         }
 
         private readonly bool BelongsToSheet(in Playback p)
