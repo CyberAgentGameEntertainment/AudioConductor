@@ -111,13 +111,15 @@ namespace AudioConductor.Core.Tests
         public void AdjustAfterEviction_MatchingScopes_DecrementsAll()
         {
             var cue = CreateCue(10);
-            var state = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
+            var state1 = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
+            var state2 = new ManagedPlayback(2, 100, cue, CreatePlayingPlayer(), 0);
+            var state3 = new ManagedPlayback(3, 100, cue, CreatePlayingPlayer(), 0);
             var ctx = new ThrottleContext(100, cue);
-            ctx.Accumulate(state.Core);
-            ctx.Accumulate(state.Core);
-            ctx.Accumulate(state.Core);
+            ctx.Accumulate(state1.Core);
+            ctx.Accumulate(state2.Core);
+            ctx.Accumulate(state3.Core);
 
-            ctx.AdjustAfterEviction(state.Core);
+            ctx.AdjustAfterEviction(state1.Core);
 
             Assert.That(ctx.GlobalCount, Is.EqualTo(2));
             Assert.That(ctx.SheetCount, Is.EqualTo(2));
@@ -129,11 +131,12 @@ namespace AudioConductor.Core.Tests
         public void AdjustAfterEviction_DifferentSheet_KeepsSheet()
         {
             var cue = CreateCue(10);
-            var stateA = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
-            var stateB = new ManagedPlayback(2, 200, cue, CreatePlayingPlayer(), 0);
+            var stateA1 = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
+            var stateA2 = new ManagedPlayback(2, 100, cue, CreatePlayingPlayer(), 0);
+            var stateB = new ManagedPlayback(3, 200, cue, CreatePlayingPlayer(), 0);
             var ctx = new ThrottleContext(100, cue);
-            ctx.Accumulate(stateA.Core);
-            ctx.Accumulate(stateA.Core);
+            ctx.Accumulate(stateA1.Core);
+            ctx.Accumulate(stateA2.Core);
             ctx.Accumulate(stateB.Core);
 
             // evict a playback from a different sheet

@@ -84,7 +84,10 @@ namespace AudioConductor.Core
 
         internal bool ResolveGlobal(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
         {
-            return _global.Resolve(type, limit, incomingPriority, out eviction);
+            if (!_global.Resolve(type, limit, incomingPriority, out eviction))
+                return false;
+            AdjustAfterEviction(eviction);
+            return true;
         }
 
         private readonly bool BelongsToSheet(in Playback p)

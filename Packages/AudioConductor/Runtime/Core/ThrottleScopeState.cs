@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Runtime.CompilerServices;
 using AudioConductor.Core.Enums;
 using static AudioConductor.Core.Conductor;
 
@@ -16,6 +17,7 @@ namespace AudioConductor.Core
         private int _min;
         internal Playback? Oldest { get; private set; }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Accumulate(in Playback p)
         {
             Count++;
