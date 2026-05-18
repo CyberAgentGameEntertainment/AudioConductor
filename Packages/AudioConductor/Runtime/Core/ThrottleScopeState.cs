@@ -39,20 +39,22 @@ namespace AudioConductor.Core
                 return true;
             if (_min > incomingPriority)
                 return false;
+            // Incoming priority strictly higher than playing minimum: force eviction
+            // regardless of ThrottleType. New ThrottleType members must not change this rule.
             if (_min < incomingPriority)
-                type = ThrottleType.PriorityOrder;
-            switch (type)
+                return TryEvictOldest(out eviction);
+            return type switch
             {
-                case ThrottleType.PriorityOrder:
-                    if (!Oldest.HasValue)
-                        return false;
-                    eviction = Oldest;
-                    return true;
-                case ThrottleType.FirstComeFirstServed:
-                    return false;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
-            }
+                ThrottleType.PriorityOrder => TryEvictOldest(out eviction),
+                ThrottleType.FirstComeFirstServed => false,
+                _ => throw new ArgumentOutOfRangeException(nameof(type))
+            };
+        }
+
+        private readonly bool TryEvictOldest(out Playback? eviction)
+        {
+            eviction = Oldest;
+            return Oldest.HasValue;
         }
     }
 }
