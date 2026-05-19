@@ -1,7 +1,10 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:TextField picking-mode="Ignore" label="Track Name" value="filler text" name="Name" is-delayed="true" />
     <AudioConductor.Editor.Core.Tools.Shared.ColorDefinePopupField label="Color" />
-    <uie:ObjectField label="Audio Clip" allow-scene-objects="false" type="UnityEngine.AudioClip, UnityEngine.AudioModule" name="AudioClip" />
+    <ui:VisualElement style="flex-direction: row; align-items: flex-end;">
+        <uie:ObjectField label="Audio Clip" allow-scene-objects="false" type="UnityEngine.AudioClip, UnityEngine.AudioModule" name="AudioClip" style="flex: 1;" />
+        <ui:Button name="OpenAudioClipInspector" style="width: 18px; height: 18px; padding: 0; margin-left: 2px; margin-bottom: 1px;" />
+    </ui:VisualElement>
     <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume" value="1" high-value="1" name="Volume" />
     <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Volume Range" high-value="1" name="VolumeRange" />
     <AudioConductor.Editor.Core.Tools.Shared.SliderAndFloatField label="Pitch" high-value="3" value="1" low-value="0.01" name="Pitch" />
