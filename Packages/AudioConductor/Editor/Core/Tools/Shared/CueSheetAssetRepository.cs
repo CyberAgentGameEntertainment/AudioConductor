@@ -21,7 +21,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         /// </summary>
         public CueSheetAsset[] GetAll()
         {
-            if (_all is null)
+            if (_all is null || _all.Length == 0)
                 _all = LoadAll();
             return _all;
         }

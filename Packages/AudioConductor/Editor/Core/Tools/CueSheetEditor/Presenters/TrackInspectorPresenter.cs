@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Foundation.TinyRx;
+using UnityEditor;
 using UnityEngine.Assertions;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
@@ -73,6 +74,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_bindDisposable);
             model.AudioClipObservable
                 .Subscribe(_view.SetSampleRange)
+                .DisposeWith(_bindDisposable);
+            model.AudioClipObservable
+                .Subscribe(value => _view.SetOpenAudioClipInspectorButtonEnabled(value.Value != null))
                 .DisposeWith(_bindDisposable);
             model.VolumeObservable
                 .Subscribe(_view.SetVolume)
@@ -167,6 +171,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_viewEventDisposable);
             _view.AnalyzeClickedAsObservable
                 .Subscribe(_ => model.AnalyzeWaveChunk())
+                .DisposeWith(_viewEventDisposable);
+            _view.OpenAudioClipInspectorClickedAsObservable
+                .Subscribe(_ =>
+                {
+                    var clip = model.AudioClip;
+                    if (clip is not null)
+                        EditorUtility.OpenPropertyEditor(clip);
+                })
                 .DisposeWith(_viewEventDisposable);
             _view.PlayRequestedAsObservable
                 .Subscribe(sample => { _view.SetController(model.PlayClip(sample)); })

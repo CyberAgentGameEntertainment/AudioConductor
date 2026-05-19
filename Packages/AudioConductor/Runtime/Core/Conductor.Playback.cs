@@ -347,65 +347,40 @@ namespace AudioConductor.Core
                 return true;
 
             // Single pass: count playing states and track oldest per scope at once.
-            int cueCount = 0, sheetCount = 0, catCount = 0, globalCount = 0;
-            int cueMin = int.MaxValue, sheetMin = int.MaxValue, catMin = int.MaxValue, globalMin = int.MaxValue;
-            Playback? cueOldest = null, sheetOldest = null, catOldest = null, globalOldest = null;
+            var ctx = new ThrottleContext(cueSheetId, cue);
 
             foreach (var p in _managedPlaybacks.Values)
-                ThrottleResolver.AccumulateAllScopes(p.Core, cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref cueOldest,
-                    ref sheetCount, ref sheetMin, ref sheetOldest,
-                    ref catCount, ref catMin, ref catOldest,
-                    ref globalCount, ref globalMin, ref globalOldest);
+                ctx.Accumulate(p.Core);
 
             foreach (var s in _oneShotPlaybacks)
-                ThrottleResolver.AccumulateAllScopes(s.Core, cueSheetId, cue, cue.categoryId,
-                    ref cueCount, ref cueMin, ref cueOldest,
-                    ref sheetCount, ref sheetMin, ref sheetOldest,
-                    ref catCount, ref catMin, ref catOldest,
-                    ref globalCount, ref globalMin, ref globalOldest);
+                ctx.Accumulate(s.Core);
 
 #if UNITY_EDITOR
             // Invariant: counts must not exceed their respective limits.
             // Violated only if throttle limits are mutated while players are active (unsupported).
-            Debug.Assert(cueThrottleLimit <= 0 || cueCount <= cueThrottleLimit,
+            Debug.Assert(cueThrottleLimit <= 0 || ctx.CueCount <= cueThrottleLimit,
                 "cue count exceeds throttle limit");
-            Debug.Assert(sheetThrottleLimit <= 0 || sheetCount <= sheetThrottleLimit,
+            Debug.Assert(sheetThrottleLimit <= 0 || ctx.SheetCount <= sheetThrottleLimit,
                 "sheet count exceeds throttle limit");
-            Debug.Assert(catThrottleLimit <= 0 || catCount <= catThrottleLimit,
+            Debug.Assert(catThrottleLimit <= 0 || ctx.CategoryCount <= catThrottleLimit,
                 "category count exceeds throttle limit");
-            Debug.Assert(globalThrottleLimit <= 0 || globalCount <= globalThrottleLimit,
+            Debug.Assert(globalThrottleLimit <= 0 || ctx.GlobalCount <= globalThrottleLimit,
                 "global count exceeds throttle limit");
 #endif
 
             // Phase 1: Resolve eviction candidates per scope without executing.
-            // AdjustCountsAfterEviction updates local counts so subsequent scopes
-            // see the effect of prior evictions. Actual stop is deferred to Phase 2
-            // to ensure no side effects when a later scope rejects the play.
-            if (!ThrottleResolver.ResolveThrottle(cueThrottleType, cueThrottleLimit,
-                    cueCount, cueMin, track.priority, cueOldest,
-                    out var cueEviction))
+            // Resolve* updates counts so subsequent scopes see the effect of prior evictions.
+            // Actual stop is deferred to Phase 2 to ensure no side effects when a later scope rejects.
+            if (!ctx.ResolveCue(cueThrottleType, cueThrottleLimit, track.priority, out var cueEviction))
                 return false;
-            ThrottleResolver.AdjustCountsAfterEviction(cueEviction, cueSheetId, cue, cue.categoryId,
-                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ThrottleResolver.ResolveThrottle(sheetThrottleType, sheetThrottleLimit,
-                    sheetCount, sheetMin, track.priority, sheetOldest,
-                    out var sheetEviction))
+            if (!ctx.ResolveSheet(sheetThrottleType, sheetThrottleLimit, track.priority, out var sheetEviction))
                 return false;
-            ThrottleResolver.AdjustCountsAfterEviction(sheetEviction, cueSheetId, cue, cue.categoryId,
-                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ThrottleResolver.ResolveThrottle(catThrottleType, catThrottleLimit,
-                    catCount, catMin, track.priority, catOldest,
-                    out var catEviction))
+            if (!ctx.ResolveCategory(catThrottleType, catThrottleLimit, track.priority, out var catEviction))
                 return false;
-            ThrottleResolver.AdjustCountsAfterEviction(catEviction, cueSheetId, cue, cue.categoryId,
-                ref cueCount, ref sheetCount, ref catCount, ref globalCount);
 
-            if (!ThrottleResolver.ResolveThrottle(globalThrottleType, globalThrottleLimit,
-                    globalCount, globalMin, track.priority, globalOldest,
-                    out var globalEviction))
+            if (!ctx.ResolveGlobal(globalThrottleType, globalThrottleLimit, track.priority, out var globalEviction))
                 return false;
 
             // Phase 2: All scopes passed — execute deferred evictions.
