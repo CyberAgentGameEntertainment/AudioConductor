@@ -36,6 +36,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private readonly Subject<string> _nameChangedSubject = new();
         private readonly TextField _nameField;
+        private readonly Button _openAudioClipInspectorButton;
+        private readonly Subject<Empty> _openAudioClipInspectorClickedSubject = new();
         private readonly Button _pauseButton;
         private readonly Subject<float> _pitchChangedSubject = new();
         private readonly SliderAndFloatField _pitchField;
@@ -81,6 +83,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _isLoopField = this.Q<Toggle>("Loop");
             _loopStartSampleField = this.Q<SliderAndIntegerField>("LoopStartSample");
             _analyzeButton = this.Q<Button>("Analyze");
+            _openAudioClipInspectorButton = this.Q<Button>("OpenAudioClipInspector");
+            _openAudioClipInspectorButton.style.backgroundImage =
+                new StyleBackground((Texture2D)EditorGUIUtility.IconContent("d_UnityEditor.InspectorWindow").image);
             _playButton = this.Q<Button>("Play");
             _pauseButton = this.Q<Button>("Pause");
             _pauseButton.style.backgroundImage =
@@ -118,6 +123,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal IObservable<bool> IsLoopChangedAsObservable => _isLoopChangedSubject;
         internal IObservable<int> LoopStartSampleChangedAsObservable => _loopStartSampleChangedSubject;
         internal IObservable<Empty> AnalyzeClickedAsObservable => _analyzeClickedSubject;
+        internal IObservable<Empty> OpenAudioClipInspectorClickedAsObservable => _openAudioClipInspectorClickedSubject;
         internal IObservable<int?> PlayRequestedAsObservable => _playRequestedSubject;
 
         public void Dispose()
@@ -193,6 +199,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _isLoopField.RegisterValueChangedCallback(OnIsLoopChanged);
             _loopStartSampleField.RegisterValueChangedCallback(OnLoopStartSampleChanged);
             _analyzeButton.RegisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
+            _openAudioClipInspectorButton.RegisterCallback<ClickEvent>(OnOpenAudioClipInspectorButtonClicked);
             _playButton.RegisterCallback<ClickEvent>(OnPlayButtonClicked);
             _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
             _stopButton.RegisterCallback<ClickEvent>(OnStopButtonClicked);
@@ -203,6 +210,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _stopButton.UnregisterCallback<ClickEvent>(OnStopButtonClicked);
             _pauseButton.UnregisterCallback<ClickEvent>(OnPauseButtonClicked);
             _playButton.UnregisterCallback<ClickEvent>(OnPlayButtonClicked);
+            _openAudioClipInspectorButton.UnregisterCallback<ClickEvent>(OnOpenAudioClipInspectorButtonClicked);
             _analyzeButton.UnregisterCallback<ClickEvent>(OnAnalyzeButtonClicked);
             _loopStartSampleField.UnregisterValueChangedCallback(OnLoopStartSampleChanged);
             _isLoopField.UnregisterValueChangedCallback(OnIsLoopChanged);
@@ -347,6 +355,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _loopStartSampleField.showMixedValue = value.HasMultipleDifferentValues;
         }
 
+        internal void SetOpenAudioClipInspectorButtonEnabled(bool enabled)
+        {
+            _openAudioClipInspectorButton.SetEnabled(enabled);
+        }
+
         internal void SetSampleRange(MixedValue<AudioClip?> value)
         {
             var audioClip = value.Value;
@@ -451,6 +464,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private void OnAnalyzeButtonClicked(ClickEvent _)
         {
             _analyzeClickedSubject.OnNext(Empty.Default);
+        }
+
+        private void OnOpenAudioClipInspectorButtonClicked(ClickEvent _)
+        {
+            _openAudioClipInspectorClickedSubject.OnNext(Empty.Default);
         }
 
         private void OnPlayButtonClicked(ClickEvent _)

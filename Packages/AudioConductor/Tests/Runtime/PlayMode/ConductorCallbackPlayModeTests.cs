@@ -102,7 +102,7 @@ namespace AudioConductor.Core.Tests
         [UnityTest]
         public IEnumerator PlayOneShot_WithOnEnd_InvokesAtRealEnd()
         {
-            var clip = CreatePlayableClip(); // 0.1s clip
+            var clip = CreatePlayableClip(44100); // 1s clip
             var track = new Track { name = "track", audioClip = clip, endSample = clip.samples };
             var cue = new Cue { name = "cue1" };
             cue.trackList.Add(track);
@@ -113,6 +113,8 @@ namespace AudioConductor.Core.Tests
 
             var endCalled = false;
             conductor.PlayOneShot(sheet, "cue1", new PlayOneShotOptions { OnEnd = () => endCalled = true });
+
+            yield return new WaitForSeconds(0.2f);
 
             var deadline = Time.realtimeSinceStartup + 2.0f;
             yield return new WaitUntil(() => endCalled || Time.realtimeSinceStartup >= deadline);

@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.0 - 2026/05/19
+
+- New Features
+  - Open AudioClip property inspector from TrackInspector
+
+- Fix Issues
+  - Fix CueSheet assets not found when asset cache was initialized as empty
+
 ## v2.1.1 - 2026/05/14
 
 - Fix Issues
