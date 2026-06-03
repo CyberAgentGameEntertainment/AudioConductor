@@ -11,8 +11,10 @@ using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
+using AudioConductor.Editor.Core.Tools.Validation;
 using AudioConductor.Editor.Foundation.TinyRx;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,7 +24,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
     {
         private const KeyCode UndoKey = KeyCode.Z;
         private const KeyCode RedoKey = KeyCode.Y;
-        private const string SelectedSettingsGuidPrefKey = "AudioConductor.SelectedSettingsGuid";
 
         private static MethodInfo? _addTabMethod;
         private static bool _addTabMethodResolved;
@@ -33,7 +34,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         private readonly CompositeDisposable _disposable = new();
 
         private CueSheetEditorPresenter _cueSheetEditorPresenter = null!;
+        private string? _pendingFocusCueEditorId;
         private DropdownField? _settingsDropdown;
+        private ToolbarButton? _validateButton;
 
         private void OnEnable()
         {
@@ -49,13 +52,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         {
             var e = Event.current;
 
-            if (GetEventAction(e) && e.type == EventType.KeyDown && e.keyCode == UndoKey)
+            if (EventExtensions.GetEventAction(e) && e.type == EventType.KeyDown && e.keyCode == UndoKey)
             {
                 _target.Undo();
                 e.Use();
             }
 
-            if (GetEventAction(e) && e.type == EventType.KeyDown && e.keyCode == RedoKey)
+            if (EventExtensions.GetEventAction(e) && e.type == EventType.KeyDown && e.keyCode == RedoKey)
             {
                 _target.Redo();
                 e.Use();
@@ -87,7 +90,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             _settingsDropdown = rootVisualElement.Q<DropdownField>("SettingsDropdown");
             _settingsDropdown.RegisterValueChangedCallback(_ => ApplySelectedSettings());
 
+            _validateButton = rootVisualElement.Q<ToolbarButton>("ValidateButton");
+            if (_validateButton is not null)
+                _validateButton.clicked += OnValidateClicked;
+
             RefreshSettingsDropdown();
+
+            if (_pendingFocusCueEditorId is not null)
+            {
+                _cueSheetEditorPresenter.FocusCue(_pendingFocusCueEditorId);
+                _pendingFocusCueEditorId = null;
+            }
         }
 
         private void OnFocus()
@@ -104,18 +117,32 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
 
         public static void Open(CueSheetAsset cueSheetAsset)
         {
+            OpenOrCreate(cueSheetAsset, null);
+        }
+
+        internal static void OpenWithFocus(CueSheetAsset cueSheetAsset, string? cueEditorId)
+        {
+            OpenOrCreate(cueSheetAsset, cueEditorId);
+        }
+
+        private static void OpenOrCreate(CueSheetAsset cueSheetAsset, string? cueEditorId)
+        {
             var openedWindows = Resources.FindObjectsOfTypeAll<CueSheetAssetEditorWindow>();
             var sameCueSheetWindow =
                 openedWindows.FirstOrDefault(window => window._target.CueSheetId == cueSheetAsset.cueSheet.Id);
             if (sameCueSheetWindow != null)
             {
                 sameCueSheetWindow.Focus();
+                if (cueEditorId is not null)
+                    sameCueSheetWindow._cueSheetEditorPresenter.FocusCue(cueEditorId);
                 return;
             }
 
             var window = CreateInstance<CueSheetAssetEditorWindow>();
             window._target = new CueSheetAssetEditorWindowModel(cueSheetAsset);
             window.minSize = new Vector2(1340, 700);
+            if (cueEditorId is not null)
+                window._pendingFocusCueEditorId = cueEditorId;
 
             var existingWindow = openedWindows.FirstOrDefault();
             if (existingWindow != null && TryAddTab(existingWindow, window))
@@ -155,9 +182,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         {
             rootVisualElement.UnregisterCallback<KeyDownEvent>(HandleKeyDownEvent);
 
+            if (_validateButton is not null)
+                _validateButton.clicked -= OnValidateClicked;
+
             _disposable.Clear();
 
-            _cueSheetEditorPresenter?.Dispose();
+            _cueSheetEditorPresenter.Dispose();
+        }
+
+        private void OnValidateClicked()
+        {
+            CueSheetValidationWindow.Open(new[] { _target.Asset }, ValidationScope.Selected);
         }
 
         private void RefreshSettingsDropdown()
@@ -165,20 +200,22 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             _settingsDropdown ??= rootVisualElement?.Q<DropdownField>("SettingsDropdown");
 
             var allSettings = AudioConductorSettingsRepository.instance.AllSettings;
-            if (allSettings == null || allSettings.Length == 0)
+            switch (allSettings.Length)
             {
-                if (_settingsDropdown != null)
-                    _settingsDropdown.style.display = DisplayStyle.None;
-                return;
-            }
-
-            if (allSettings.Length == 1)
-            {
-                if (_settingsDropdown != null)
-                    _settingsDropdown.style.display = DisplayStyle.None;
-                _selectedSettingsGuid =
-                    AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(allSettings[0]));
-                return;
+                case 0:
+                {
+                    if (_settingsDropdown != null)
+                        _settingsDropdown.style.display = DisplayStyle.None;
+                    return;
+                }
+                case 1:
+                {
+                    if (_settingsDropdown != null)
+                        _settingsDropdown.style.display = DisplayStyle.None;
+                    _selectedSettingsGuid =
+                        AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(allSettings[0]));
+                    return;
+                }
             }
 
             var choices = allSettings.Select(s => s != null ? s.name : "(Missing)").ToList();
@@ -187,7 +224,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
             var index = FindSettingsIndex(allSettings, _selectedSettingsGuid);
             if (index < 0)
                 index = FindSettingsIndex(allSettings,
-                    EditorPrefs.GetString(SelectedSettingsGuidPrefKey, string.Empty));
+                    EditorPrefs.GetString(EditorPrefsKeys.SelectedSettingsGuid, string.Empty));
             if (index < 0)
                 index = 0;
 
@@ -217,7 +254,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
         private void ApplySelectedSettings()
         {
             var allSettings = AudioConductorSettingsRepository.instance.AllSettings;
-            if (_settingsDropdown == null || allSettings == null)
+            if (_settingsDropdown == null)
                 return;
 
             var index = _settingsDropdown.index;
@@ -232,43 +269,25 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor
                 var assetPath = AssetDatabase.GetAssetPath(selected);
                 var guid = AssetDatabase.AssetPathToGUID(assetPath);
                 _selectedSettingsGuid = guid;
-                EditorPrefs.SetString(SelectedSettingsGuidPrefKey, guid);
+                EditorPrefs.SetString(EditorPrefsKeys.SelectedSettingsGuid, guid);
             }
 
             CategoryListRepository.instance.Refresh(selected);
         }
 
-        private static bool GetEventAction(Event e)
-        {
-#if UNITY_EDITOR_WIN
-            return e.control;
-#else
-            return e.command;
-#endif
-        }
-
         private void HandleKeyDownEvent(KeyDownEvent e)
         {
-            if (GetEventAction(e) && e.keyCode == UndoKey)
+            if (EventExtensions.GetEventAction(e) && e.keyCode == UndoKey)
             {
                 _target.Undo();
                 e.StopPropagation();
             }
 
-            if (GetEventAction(e) && e.keyCode == RedoKey)
+            if (EventExtensions.GetEventAction(e) && e.keyCode == RedoKey)
             {
                 _target.Redo();
                 e.StopPropagation();
             }
-        }
-
-        private static bool GetEventAction(IKeyboardEvent e)
-        {
-#if UNITY_EDITOR_WIN
-            return e.ctrlKey;
-#else
-            return e.commandKey;
-#endif
         }
     }
 }

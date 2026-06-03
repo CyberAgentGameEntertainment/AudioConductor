@@ -22,9 +22,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
         {
             var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
             var view = new FakeView();
-            var parameter = new FakePanePresenter();
-            var cueList = new FakePanePresenter();
-            var other = new FakePanePresenter();
+            var parameter = new FakeCueSheetEditorPanePresenter();
+            var cueList = new FakeCueListEditorPanePresenter();
+            var other = new FakeCueSheetEditorPanePresenter();
 
             using var presenter = new CueSheetEditorPresenter(model, view, parameter, cueList, other);
             presenter.Setup();
@@ -44,9 +44,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
         {
             var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
             var view = new FakeView();
-            var parameter = new FakePanePresenter();
-            var cueList = new FakePanePresenter();
-            var other = new FakePanePresenter();
+            var parameter = new FakeCueSheetEditorPanePresenter();
+            var cueList = new FakeCueListEditorPanePresenter();
+            var other = new FakeCueSheetEditorPanePresenter();
 
             using var presenter = new CueSheetEditorPresenter(model, view, parameter, cueList, other);
             presenter.Setup();
@@ -60,6 +60,26 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
         }
 
         [Test]
+        public void ObservablePaneState_WhenChangedToCueSheetParameter_OpensParameterPaneAndClosesOthers()
+        {
+            var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
+            var view = new FakeView();
+            var parameter = new FakeCueSheetEditorPanePresenter();
+            var cueList = new FakeCueListEditorPanePresenter();
+            var other = new FakeCueSheetEditorPanePresenter();
+
+            using var presenter = new CueSheetEditorPresenter(model, view, parameter, cueList, other);
+            presenter.Setup();
+
+            model.ObservablePaneState.Value = CueSheetEditorPresenter.Pane.CueSheetParameter;
+
+            Assert.That(view.SelectedTabs[^1], Is.EqualTo((int)CueSheetEditorPresenter.Pane.CueSheetParameter));
+            Assert.That(parameter.OpenCount, Is.EqualTo(1));
+            Assert.That(cueList.CloseCount, Is.EqualTo(1));
+            Assert.That(other.CloseCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public void TabSelectedByView_UpdatesObservablePaneState()
         {
             var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
@@ -68,14 +88,48 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             using var presenter = new CueSheetEditorPresenter(
                 model,
                 view,
-                new FakePanePresenter(),
-                new FakePanePresenter(),
-                new FakePanePresenter());
+                new FakeCueSheetEditorPanePresenter(),
+                new FakeCueListEditorPanePresenter(),
+                new FakeCueSheetEditorPanePresenter());
             presenter.Setup();
 
             view.EmitTabSelected((int)CueSheetEditorPresenter.Pane.CueSheetParameter);
 
             Assert.That(model.ObservablePaneState.Value, Is.EqualTo(CueSheetEditorPresenter.Pane.CueSheetParameter));
+        }
+
+        [Test]
+        public void FocusCue_SetsPaneStateToCueList()
+        {
+            var model = new FakeModel(CueSheetEditorPresenter.Pane.CueSheetParameter);
+            var view = new FakeView();
+            var cueList = new FakeCueListEditorPanePresenter();
+
+            using var presenter = new CueSheetEditorPresenter(model, view, new FakeCueSheetEditorPanePresenter(),
+                cueList,
+                new FakeCueSheetEditorPanePresenter());
+            presenter.Setup();
+
+            presenter.FocusCue("test-id");
+
+            Assert.That(model.ObservablePaneState.Value, Is.EqualTo(CueSheetEditorPresenter.Pane.CueList));
+        }
+
+        [Test]
+        public void FocusCue_DelegatesToCueListEditorPanePresenter()
+        {
+            var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
+            var view = new FakeView();
+            var cueList = new FakeCueListEditorPanePresenter();
+
+            using var presenter = new CueSheetEditorPresenter(model, view, new FakeCueSheetEditorPanePresenter(),
+                cueList,
+                new FakeCueSheetEditorPanePresenter());
+            presenter.Setup();
+
+            presenter.FocusCue("test-id");
+
+            Assert.That(cueList.FocusCueArgs, Is.EqualTo(new[] { "test-id" }));
         }
 
         [Test]
@@ -86,9 +140,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             var presenter = new CueSheetEditorPresenter(
                 model,
                 view,
-                new FakePanePresenter(),
-                new FakePanePresenter(),
-                new FakePanePresenter());
+                new FakeCueSheetEditorPanePresenter(),
+                new FakeCueListEditorPanePresenter(),
+                new FakeCueSheetEditorPanePresenter());
             presenter.Setup();
             presenter.Dispose();
 
@@ -96,6 +150,24 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
 
             Assert.That(model.ObservablePaneState.Value, Is.EqualTo(CueSheetEditorPresenter.Pane.CueList));
             Assert.That(view.DisposeCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Dispose_DisposesAllPanePresenters()
+        {
+            var model = new FakeModel(CueSheetEditorPresenter.Pane.CueList);
+            var view = new FakeView();
+            var parameter = new FakeCueSheetEditorPanePresenter();
+            var cueList = new FakeCueListEditorPanePresenter();
+            var other = new FakeCueSheetEditorPanePresenter();
+            var presenter = new CueSheetEditorPresenter(model, view, parameter, cueList, other);
+            presenter.Setup();
+
+            presenter.Dispose();
+
+            Assert.That(parameter.DisposeCount, Is.EqualTo(1));
+            Assert.That(cueList.DisposeCount, Is.EqualTo(1));
+            Assert.That(other.DisposeCount, Is.EqualTo(1));
         }
 
         private sealed class FakeModel : ICueSheetEditorModel
@@ -142,7 +214,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             }
         }
 
-        private sealed class FakePanePresenter : ICueSheetEditorPanePresenter
+        private sealed class FakeCueSheetEditorPanePresenter : ICueSheetEditorPanePresenter
         {
             internal int CloseCount { get; private set; }
             internal int DisposeCount { get; private set; }
@@ -167,6 +239,40 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             public void Close()
             {
                 CloseCount++;
+            }
+        }
+
+        private sealed class FakeCueListEditorPanePresenter : ICueListEditorPanePresenter
+        {
+            internal int CloseCount { get; private set; }
+            internal int DisposeCount { get; private set; }
+            internal int OpenCount { get; private set; }
+            internal int SetupCount { get; private set; }
+            internal List<string> FocusCueArgs { get; } = new();
+
+            public void Dispose()
+            {
+                DisposeCount++;
+            }
+
+            public void Setup()
+            {
+                SetupCount++;
+            }
+
+            public void Open()
+            {
+                OpenCount++;
+            }
+
+            public void Close()
+            {
+                CloseCount++;
+            }
+
+            public void FocusCue(string cueEditorId)
+            {
+                FocusCueArgs.Add(cueEditorId);
             }
         }
     }

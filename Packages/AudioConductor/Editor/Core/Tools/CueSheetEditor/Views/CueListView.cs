@@ -95,7 +95,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             var treeViewRect =
                 GUILayoutUtility.GetRect(rect.width, rect.height, GUILayout.ExpandWidth(true),
                     GUILayout.ExpandHeight(true));
-            _treeView?.OnGUI(treeViewRect);
+            _treeView.OnGUI(treeViewRect);
         }
 
         internal void SetSelection(IList<int> selectedIDs)
@@ -115,6 +115,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal void Search(string searchString)
         {
             _treeView.searchString = searchString;
+        }
+
+        internal void FrameItem(int id)
+        {
+            _treeView.FrameItem(id);
         }
 
         internal void OnItemAdded(CueListItem item)

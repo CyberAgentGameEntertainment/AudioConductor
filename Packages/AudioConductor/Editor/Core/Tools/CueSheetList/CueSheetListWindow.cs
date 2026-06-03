@@ -9,6 +9,7 @@ using AudioConductor.Editor.Core.Tools.CueSheetList.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetList.Presenters;
 using AudioConductor.Editor.Core.Tools.CueSheetList.Views;
 using AudioConductor.Editor.Core.Tools.Shared;
+using AudioConductor.Editor.Core.Tools.Validation;
 using AudioConductor.Editor.Foundation.TinyRx;
 using UnityEditor;
 using UnityEngine;
@@ -54,15 +55,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList
             model.OpenRequested
                 .Subscribe(asset => CueSheetAssetEditorWindow.Open(asset))
                 .DisposeWith(_disposable);
+
+            model.ValidateAllRequested
+                .Subscribe(assets => CueSheetValidationWindow.Open(assets, ValidationScope.All))
+                .DisposeWith(_disposable);
         }
 
         [MenuItem("Tools/Audio Conductor/CueSheet List")]
         private static void Open()
         {
-            var window = GetWindow<CueSheetListWindow>();
-            window.titleContent = new GUIContent("CueSheet List");
-            window.minSize = new Vector2(320, 240);
-            window.Show();
+            GetWindow<CueSheetListWindow>().Show();
         }
     }
 }

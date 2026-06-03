@@ -13,7 +13,7 @@ using AudioConductor.Editor.Foundation.TinyRx;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class CueListPresenter : IDisposable
+    internal sealed class CueListPresenter : ICueListPresenter
     {
         private readonly CompositeDisposable _bindEventDisposable = new();
         private readonly ICueListModel _model;
@@ -45,29 +45,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             RestoreSelection(_model.CueListTreeViewState.selectedIDs);
         }
 
-        private void Bind()
+        public void FocusItemById(int itemId)
         {
-            _model.MoveAsObservable
-                .Subscribe(_ => _view.Refresh())
-                .DisposeWith(_bindEventDisposable);
-
-            _model.AddAsObservable
-                .Subscribe(_view.OnItemAdded)
-                .DisposeWith(_bindEventDisposable);
-
-            _model.RemoveAsObservable
-                .Subscribe(_view.OnItemRemoved)
-                .DisposeWith(_bindEventDisposable);
-        }
-
-        private void Unbind()
-        {
-            _bindEventDisposable.Clear();
-        }
-
-        public void RestoreSelection(IList<int> selectedIDs)
-        {
-            _view.SetSelection(selectedIDs);
+            _view.SetSelection(new[] { itemId });
+            _view.FrameItem(itemId);
         }
 
         public void OnVolumeToggleChanged(bool active)
@@ -93,6 +74,31 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         public void OnSearchFieldChanged(string text)
         {
             _view.Search(text);
+        }
+
+        private void Bind()
+        {
+            _model.MoveAsObservable
+                .Subscribe(_ => _view.Refresh())
+                .DisposeWith(_bindEventDisposable);
+
+            _model.AddAsObservable
+                .Subscribe(_view.OnItemAdded)
+                .DisposeWith(_bindEventDisposable);
+
+            _model.RemoveAsObservable
+                .Subscribe(_view.OnItemRemoved)
+                .DisposeWith(_bindEventDisposable);
+        }
+
+        private void Unbind()
+        {
+            _bindEventDisposable.Clear();
+        }
+
+        private void RestoreSelection(IList<int> selectedIDs)
+        {
+            _view.SetSelection(selectedIDs);
         }
 
         private void SetupViewEventHandlers()
@@ -131,7 +137,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void OnListItemSelected(SelectionChangedEvent evt)
         {
             var inspectorModel = _model.CreateInspectorModel(evt.items);
-            OnSelectionItemChanged?.Invoke(inspectorModel);
+            OnSelectionItemChanged(inspectorModel);
         }
     }
 }

@@ -19,10 +19,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Models
         private readonly CompositeDisposable _disposable = new();
         private readonly ObservableProperty<CueSheetListItem[]> _items = new(Array.Empty<CueSheetListItem>());
         private readonly Subject<CueSheetAsset> _openRequested = new();
-        private readonly CueSheetAssetRepository _repository;
+        private readonly ICueSheetAssetRepository _repository;
         private readonly StringObservableProperty _searchFilter = new(string.Empty);
+        private readonly Subject<IReadOnlyList<CueSheetAsset>> _validateAllRequested = new();
 
-        public CueSheetListModel(CueSheetAssetRepository repository)
+        public CueSheetListModel(ICueSheetAssetRepository repository)
         {
             _repository = repository;
             _repository.Changed += OnRepositoryChanged;
@@ -32,10 +33,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Models
         public IReadOnlyObservableProperty<CueSheetListItem[]> Items => _items;
         public IObservableProperty<string> SearchFilter => _searchFilter;
         public IObservable<CueSheetAsset> OpenRequested => _openRequested;
+        public IObservable<IReadOnlyList<CueSheetAsset>> ValidateAllRequested => _validateAllRequested;
 
         public void RequestOpen(CueSheetAsset asset)
         {
             _openRequested.OnNext(asset);
+        }
+
+        public void RequestValidateAll()
+        {
+            _validateAllRequested.OnNext(_repository.GetAll());
         }
 
         public void Dispose()
@@ -45,6 +52,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Models
             _items.Dispose();
             _searchFilter.Dispose();
             _openRequested.Dispose();
+            _validateAllRequested.Dispose();
         }
 
         private void OnRepositoryChanged()
@@ -64,7 +72,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Models
             var result = new List<CueSheetListItem>(all.Length);
             foreach (var asset in all)
             {
-                if (asset is null)
+                if (asset == null)
                     continue;
                 if (!string.IsNullOrEmpty(filter) &&
                     asset.name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)

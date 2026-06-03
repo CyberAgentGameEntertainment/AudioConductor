@@ -65,6 +65,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Presenters
             _view.OpenRequestedAsObservable
                 .Subscribe(asset => _model.RequestOpen(asset))
                 .DisposeWith(_viewEventDisposable);
+
+            _view.ValidateAllClickedAsObservable
+                .Subscribe(_ => _model.RequestValidateAll())
+                .DisposeWith(_viewEventDisposable);
         }
 
         private void CleanupViewEventHandlers()

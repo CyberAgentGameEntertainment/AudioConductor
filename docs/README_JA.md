@@ -60,6 +60,7 @@ Unity のオーディオ機能 (AudioClip/AudioSource) をより便利に扱う�
   - [デフォルト設定](#デフォルト設定)
   - [生成の実行 / バッチ生成](#生成の実行--バッチ生成)
   - [生成コード例](#生成コード例)
+- [キューシートのバリデーション](#キューシートのバリデーション)
 - [エディタの多言語対応](#エディタの多言語対応)
 - [サンプル](#サンプル)
   - [サンプルのインポート](#サンプルのインポート)
@@ -659,6 +660,52 @@ namespace AudioConductor.Generated
     }
 }
 ```
+
+## キューシートのバリデーション
+
+バリデーション機能を使用すると、キューシートアセットの設定ミスをランタイム前に検出できます。
+
+### ウィンドウを開く
+
+バリデーションウィンドウを開く方法は 4 つあります。
+
+1. **メニューバー**: **Tools > Audio Conductor > Validate** — 全 CueSheetAsset をバリデートし、結果をウィンドウで表示します。
+2. **Project ウィンドウのコンテキストメニュー**: CueSheetAsset を右クリック → **Audio Conductor > Validate CueSheet** — 選択したアセットをバリデートします。
+3. **CueSheet List ウィンドウ**: ツールバーの **Validate All** ボタンをクリック — プロジェクト内のすべての CueSheetAsset をバリデートします。
+4. **CueSheet Editor ウィンドウ**: ツールバーの **Validate** ボタンをクリック — 現在開いている CueSheetAsset をバリデートします。
+
+### バリデーション結果
+
+**Validate** ボタンを押すとチェックが実行されます。結果はアセット > キュー > トラックの階層リストで、エラーや警告のアイコンとともに表示されます。
+
+<p align="center">
+  <img width="70%" src="./Images/validation_01.png" alt="CueSheet Validation Window">
+</p>
+
+結果行をクリックすると CueSheet Editor ウィンドウが開き、該当するキューにフォーカスが当たります。
+
+### チェック項目
+
+**エラー**:
+- トラック: `AudioClip` が設定されていない。
+- トラック: `AudioClip` が設定されているにもかかわらず `End sample` が 0（再生が即座に終了する）。
+- トラック: `Start sample` ≥ `End sample`（どちらも非 0 のとき）。
+- トラック: `Loop start sample` ≥ `End sample`（ループ開始位置が再生範囲外）。
+- トラック: `Random weight` が負の値になっている（有効範囲: 0 以上）。
+- トラック: `Volume` が有効範囲 [0, 1] 外の値になっている。
+- トラック: `Pitch` が有効範囲 [0.01, 3] 外の値になっている。
+- トラック: `Fade time` が負の値になっている（有効範囲: 0 以上）。
+- トラック: `Start sample` が負の値、または AudioClip のサンプル数以上になっている。
+- トラック: `End sample` が負の値、または AudioClip のサンプル数を超えている。
+- トラック: `Loop start sample` が負の値、または AudioClip のサンプル数以上になっている（ループ有効なトラックのみ）。
+- キュー: トラックリストが空。
+- キューシート: 重複または未割り当ての cueId が含まれている。アセットを再インポートして修正してください。
+
+**警告**:
+- キューシート: キューリストが空。
+- キュー: `Throttle limit` が親キューシートの `Throttle limit` を超えている（両方が非 0 のとき）。
+- キュー: `Category ID` が選択した AudioConductorSettings に存在しない。
+- トラック: 再生タイプが Random の中に `Random weight` が 0 のトラックが存在する（そのトラックは選ばれない）。
 
 ## エディタの多言語対応
 

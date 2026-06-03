@@ -42,6 +42,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         }
 
         public string CueSheetId => _target.cueSheet.Id;
+        public CueSheetAsset Asset => _target;
 
         public ICueSheetEditorModel CueSheetEditorModel { get; private set; } = null!;
 

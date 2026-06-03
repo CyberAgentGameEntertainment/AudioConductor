@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Editor.Core.Tools.Shared;
 using AudioConductor.Editor.Foundation.TinyRx;
 using UnityEditor.UIElements;
@@ -14,7 +15,7 @@ using TwoPaneSplitView = AudioConductor.Editor.Core.Tools.Shared.TwoPaneSplitVie
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
-    internal sealed class CueListEditorPaneView : VisualElement, IDisposable
+    internal sealed class CueListEditorPaneView : VisualElement, ICueListEditorPaneView
     {
         private readonly ToolbarToggle _inspectorToggle;
 
@@ -47,12 +48,12 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             ApplyTooltips();
         }
 
-        internal IObservable<bool> InspectorToggleChangedAsObservable => _inspectorToggleChangedSubject;
-        internal IObservable<bool> VolumeToggleChangedAsObservable => _volumeToggleChangedSubject;
-        internal IObservable<bool> PlayInfoToggleChangedAsObservable => _playInfoToggleChangedSubject;
-        internal IObservable<bool> ThrottleToggleChangedAsObservable => _throttleInfoToggleChangedSubject;
-        internal IObservable<bool> MemoToggleChangedAsObservable => _memoToggleChangedSubject;
-        internal IObservable<string> SearchFieldChangedAsObservable => _searchFieldChangedSubject;
+        private IObservable<bool> InspectorToggleChangedAsObservable => _inspectorToggleChangedSubject;
+        private IObservable<bool> VolumeToggleChangedAsObservable => _volumeToggleChangedSubject;
+        private IObservable<bool> PlayInfoToggleChangedAsObservable => _playInfoToggleChangedSubject;
+        private IObservable<bool> ThrottleToggleChangedAsObservable => _throttleInfoToggleChangedSubject;
+        private IObservable<bool> MemoToggleChangedAsObservable => _memoToggleChangedSubject;
+        private IObservable<string> SearchFieldChangedAsObservable => _searchFieldChangedSubject;
 
         public void Dispose()
         {
@@ -60,14 +61,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             Localization.Localization.LanguageChanged -= OnLanguageChanged;
         }
 
-        internal void Setup()
+        private void Setup()
         {
             SetupEventHandlers();
             Localization.Localization.LanguageChanged += OnLanguageChanged;
         }
 
-        internal void SetButtonState(IReadOnlyCollection<int> visibleColumns)
+        private void SetButtonState(IReadOnlyCollection<int> visibleColumns)
         {
+            var visibleColumnsSet = new HashSet<int>(visibleColumns);
+
             SetToggleValue(_volumeToggle, CueListTreeView.VolumeColumnGroup);
             SetToggleValue(_playInfoToggle, CueListTreeView.PlayInfoColumnGroup);
             SetToggleValue(_throttleToggle, CueListTreeView.ThrottleColumnGroup);
@@ -77,27 +80,28 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             void SetToggleValue(ToolbarToggle toggle, IReadOnlyCollection<int> columns)
             {
-                var stateSet = new HashSet<int>(visibleColumns);
-                var columnsSet = new HashSet<int>(columns);
-
-                stateSet.IntersectWith(columnsSet);
-                toggle.SetValueWithoutNotify(stateSet.Count == columns.Count);
+                toggle.SetValueWithoutNotify(columns.All(c => visibleColumnsSet.Contains(c)));
             }
 
             #endregion
         }
 
-        internal void SetSearchString(string searchString)
+        private void SetSearchString(string searchString)
         {
             _searchField.SetValueWithoutNotify(searchString);
         }
 
-        internal void Open()
+        private void ClearSearch()
+        {
+            _searchField.value = string.Empty;
+        }
+
+        private void Open()
         {
             this.SetDisplay(true);
         }
 
-        internal void Close()
+        private void Close()
         {
             this.SetDisplay(false);
         }
@@ -131,7 +135,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _inspectorToggle.UnregisterValueChangedCallback(OnInspectorToggle);
         }
 
-        internal void SetInspector(bool unCollapsed)
+        private void SetInspector(bool unCollapsed)
         {
             _inspectorToggle.SetValueWithoutNotify(unCollapsed);
 
@@ -140,6 +144,54 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             else
                 _twoPaneSplitView.CollapseChild(1);
         }
+
+        #region ICueListEditorPaneView
+
+        IObservable<bool> ICueListEditorPaneView.InspectorToggleChangedAsObservable =>
+            InspectorToggleChangedAsObservable;
+
+        IObservable<bool> ICueListEditorPaneView.VolumeToggleChangedAsObservable => VolumeToggleChangedAsObservable;
+        IObservable<bool> ICueListEditorPaneView.PlayInfoToggleChangedAsObservable => PlayInfoToggleChangedAsObservable;
+        IObservable<bool> ICueListEditorPaneView.ThrottleToggleChangedAsObservable => ThrottleToggleChangedAsObservable;
+        IObservable<bool> ICueListEditorPaneView.MemoToggleChangedAsObservable => MemoToggleChangedAsObservable;
+        IObservable<string> ICueListEditorPaneView.SearchFieldChangedAsObservable => SearchFieldChangedAsObservable;
+
+        void ICueListEditorPaneView.Setup()
+        {
+            Setup();
+        }
+
+        void ICueListEditorPaneView.Open()
+        {
+            Open();
+        }
+
+        void ICueListEditorPaneView.Close()
+        {
+            Close();
+        }
+
+        void ICueListEditorPaneView.SetButtonState(IReadOnlyCollection<int> visibleColumns)
+        {
+            SetButtonState(visibleColumns);
+        }
+
+        void ICueListEditorPaneView.SetSearchString(string searchString)
+        {
+            SetSearchString(searchString);
+        }
+
+        void ICueListEditorPaneView.ClearSearch()
+        {
+            ClearSearch();
+        }
+
+        void ICueListEditorPaneView.SetInspector(bool unCollapsed)
+        {
+            SetInspector(unCollapsed);
+        }
+
+        #endregion
 
         #region Methods - EventHandlers
 

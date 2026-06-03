@@ -60,6 +60,7 @@ It uses an instance-based design with the `Conductor` class, allowing you to cre
   - [Default settings](#default-settings)
   - [Generate / Batch generation](#generate--batch-generation)
   - [Generated code example](#generated-code-example)
+- [CueSheet Validation](#cuesheet-validation)
 - [Editor Localization](#editor-localization)
 - [Samples](#samples)
   - [Import sample resources](#import-sample-resources)
@@ -653,6 +654,52 @@ namespace AudioConductor.Generated
     }
 }
 ```
+
+## CueSheet Validation
+
+The CueSheet Validation feature lets you check CueSheetAssets for configuration errors and warnings before runtime.
+
+### How to open
+
+There are four ways to open the validation window:
+
+1. **Menu bar**: **Tools > Audio Conductor > Validate** — validates all CueSheetAssets in the project and displays the results in a window.
+2. **Project window context menu**: Right-click a CueSheetAsset → **Audio Conductor > Validate CueSheet** — validates the selected assets.
+3. **CueSheet List window**: Click the **Validate All** button in the toolbar — validates all CueSheetAssets in the project.
+4. **CueSheet Editor window**: Click the **Validate** button in the toolbar — validates the currently open CueSheetAsset.
+
+### Validation results
+
+Press the **Validate** button to run the check. Results are shown in a hierarchical list (Asset > Cue > Track) with error and warning icons.
+
+<p align="center">
+  <img width="70%" src="./Images/validation_01.png" alt="CueSheet Validation Window">
+</p>
+
+Clicking a result row opens the CueSheet Editor window and focuses the relevant cue.
+
+### Checked conditions
+
+**Errors**:
+- Track: `AudioClip` is not assigned.
+- Track: `End sample` is 0 while `AudioClip` is assigned (the track would end immediately).
+- Track: `Start sample` ≥ `End sample` (when both are non-zero).
+- Track: `Loop start sample` ≥ `End sample` (loop start is outside the playable range).
+- Track: `Random weight` is negative (valid range: 0 or greater).
+- Track: `Volume` is outside the valid range [0, 1].
+- Track: `Pitch` is outside the valid range [0.01, 3].
+- Track: `Fade time` is negative (valid range: 0 or greater).
+- Track: `Start sample` is negative, or is ≥ the `AudioClip`'s sample count.
+- Track: `End sample` is negative, or exceeds the `AudioClip`'s sample count.
+- Track: `Loop start sample` is negative, or is ≥ the `AudioClip`'s sample count (loop-enabled tracks only).
+- Cue: Track list is empty.
+- CueSheet: Contains duplicate or unassigned cue IDs. Re-import the asset to fix.
+
+**Warnings**:
+- CueSheet: Cue list is empty.
+- Cue: `Throttle limit` exceeds the parent CueSheet's throttle limit (when both are non-zero).
+- Cue: `Category ID` is not found in the selected AudioConductorSettings.
+- Track: Play type is Random but some tracks have `Random weight` = 0 (those tracks will never be selected).
 
 ## Editor Localization
 

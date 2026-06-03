@@ -22,11 +22,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Views
         private readonly Subject<CueSheetAsset> _openRequested = new();
         private readonly VisualElement _root;
         private readonly Subject<string> _searchTextChanged = new();
+        private readonly Subject<Empty> _validateAllClicked = new();
 
         private List<CueSheetListItem> _currentItems = new();
         private VisualElement? _emptyHelpBox;
         private ListView? _listView;
         private ToolbarSearchField? _searchField;
+        private ToolbarButton? _validateAllButton;
 
         public CueSheetListView(VisualElement root)
         {
@@ -41,17 +43,20 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Views
 
         public IObservable<string> SearchTextChangedAsObservable => _searchTextChanged;
         public IObservable<CueSheetAsset> OpenRequestedAsObservable => _openRequested;
+        public IObservable<Empty> ValidateAllClickedAsObservable => _validateAllClicked;
 
         public void Dispose()
         {
             CleanupEventHandlers();
             _searchTextChanged.Dispose();
             _openRequested.Dispose();
+            _validateAllClicked.Dispose();
         }
 
         public void Setup()
         {
             _searchField = _root.Q<ToolbarSearchField>("SearchField");
+            _validateAllButton = _root.Q<ToolbarButton>("ValidateAllButton");
             _listView = _root.Q<ListView>("ListView");
             _emptyHelpBox = _root.Q<VisualElement>("EmptyHelpBox");
 
@@ -120,6 +125,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Views
                 _searchField.RegisterValueChangedCallback(OnSearchTextChanged);
             if (_listView is not null)
                 _listView.itemsChosen += OnItemsChosen;
+            if (_validateAllButton is not null)
+                _validateAllButton.clicked += OnValidateAllClicked;
         }
 
         private void CleanupEventHandlers()
@@ -128,6 +135,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Views
                 _searchField.UnregisterValueChangedCallback(OnSearchTextChanged);
             if (_listView is not null)
                 _listView.itemsChosen -= OnItemsChosen;
+            if (_validateAllButton is not null)
+                _validateAllButton.clicked -= OnValidateAllClicked;
+        }
+
+        private void OnValidateAllClicked()
+        {
+            _validateAllClicked.OnNext(Empty.Default);
         }
 
         private void OnSearchTextChanged(ChangeEvent<string> e)

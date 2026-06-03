@@ -23,7 +23,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         }
 
         private readonly CompositeDisposable _bindDisposable = new();
-        private readonly ICueSheetEditorPanePresenter _cueListEditorPanePresenter;
+        private readonly ICueListEditorPanePresenter _cueListEditorPanePresenter;
 
         private readonly ICueSheetEditorPanePresenter _cueSheetParameterPanePresenter;
 
@@ -34,23 +34,22 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private readonly CompositeDisposable _viewEventDisposable = new();
 
         public CueSheetEditorPresenter(ICueSheetEditorModel model, CueSheetEditorView view)
-            : this(
-                model,
-                view,
-                new CueSheetParameterPanePresenter(model.CueSheetParameterPaneModel,
-                    view.Q<CueSheetParameterPaneView>()),
-                new CueListEditorPanePresenter(model.CueListEditorPaneModel,
-                    view.Q<CueListEditorPaneView>()),
-                new OtherOperationPanePresenter(model.OtherOperationPaneModel,
-                    view.Q<OtherOperationPaneView>()))
         {
+            _model = model;
+            _view = view;
+            _cueSheetParameterPanePresenter = new CueSheetParameterPanePresenter(model.CueSheetParameterPaneModel,
+                view.Q<CueSheetParameterPaneView>());
+            _cueListEditorPanePresenter = new CueListEditorPanePresenter(model.CueListEditorPaneModel,
+                view.Q<CueListEditorPaneView>());
+            _otherOperationPanePresenter = new OtherOperationPanePresenter(model.OtherOperationPaneModel,
+                view.Q<OtherOperationPaneView>());
         }
 
         internal CueSheetEditorPresenter(
             ICueSheetEditorModel model,
             ICueSheetEditorView view,
             ICueSheetEditorPanePresenter cueSheetParameterPanePresenter,
-            ICueSheetEditorPanePresenter cueListEditorPanePresenter,
+            ICueListEditorPanePresenter cueListEditorPanePresenter,
             ICueSheetEditorPanePresenter otherOperationPanePresenter)
         {
             _model = model;
@@ -62,13 +61,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         public void Dispose()
         {
-            _otherOperationPanePresenter?.Dispose();
-            _cueListEditorPanePresenter?.Dispose();
-            _cueSheetParameterPanePresenter?.Dispose();
+            _otherOperationPanePresenter.Dispose();
+            _cueListEditorPanePresenter.Dispose();
+            _cueSheetParameterPanePresenter.Dispose();
 
             Unbind();
             CleanupViewEventHandlers();
-            _view?.Dispose();
+            _view.Dispose();
+        }
+
+        public void FocusCue(string cueEditorId)
+        {
+            _model.ObservablePaneState.Value = Pane.CueList;
+            _cueListEditorPanePresenter.FocusCue(cueEditorId);
         }
 
         public void Setup()

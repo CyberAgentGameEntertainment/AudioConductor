@@ -5,14 +5,16 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
-    internal sealed class AudioConductorSettingsRepository : ScriptableSingleton<AudioConductorSettingsRepository>
+    internal sealed class AudioConductorSettingsRepository : ScriptableSingleton<AudioConductorSettingsRepository>,
+        IAudioConductorSettingsProvider
     {
-        private AudioConductorSettings[]? _allSettings; // null = cache invalidated
+        [NonSerialized] private AudioConductorSettings[]? _allSettings; // null = cache not yet loaded
 
         /// <summary>
         ///     Returns all <see cref="AudioConductorSettings" /> assets found in the Assets folder.
@@ -21,13 +23,19 @@ namespace AudioConductor.Editor.Core.Tools.Shared
         {
             get
             {
-                // Unity serialization converts null arrays to empty arrays on domain reload.
-                // Check both to ensure re-querying when the cache was invalidated.
-                if (_allSettings == null || _allSettings.Length == 0)
+                if (_allSettings is null)
                     _allSettings = LoadAllSettings();
 
                 return _allSettings;
             }
+        }
+
+        /// <summary>
+        ///     Returns the GUID of the given <see cref="AudioConductorSettings" /> asset.
+        /// </summary>
+        public string GetGuid(AudioConductorSettings settings)
+        {
+            return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(settings));
         }
 
         /// <summary>
@@ -51,11 +59,16 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             if (guids == null || guids.Length == 0)
                 return Array.Empty<AudioConductorSettings>();
 
-            var result = new AudioConductorSettings[guids.Length];
-            for (var i = 0; i < guids.Length; i++)
-                result[i] =
-                    AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(AssetDatabase.GUIDToAssetPath(guids[i]));
-            return result;
+            var result = new List<AudioConductorSettings>(guids.Length);
+            foreach (var guid in guids)
+            {
+                var settings =
+                    AssetDatabase.LoadAssetAtPath<AudioConductorSettings>(AssetDatabase.GUIDToAssetPath(guid));
+                if (settings != null)
+                    result.Add(settings);
+            }
+
+            return result.ToArray();
         }
 
         internal sealed class AssetPostProcessor : AssetPostprocessor

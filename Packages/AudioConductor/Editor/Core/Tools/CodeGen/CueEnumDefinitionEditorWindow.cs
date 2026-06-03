@@ -46,8 +46,8 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         // UI elements
         private ObjectField? _definitionField;
         private VisualElement? _emptyInspectorHelpBox;
-        private TextField? _excludePathRuleField;
         private VisualElement? _excludedInspector;
+        private TextField? _excludePathRuleField;
         private VisualElement? _fileEntryInspector;
         private TextField? _fileNameField;
         private Button? _generateButton;
@@ -305,7 +305,7 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             _treeView.OnGUI(rect);
 
             var e = Event.current;
-            if (GetEventAction(e) && e.type == EventType.KeyDown)
+            if (EventExtensions.GetEventAction(e) && e.type == EventType.KeyDown)
             {
                 if (e.keyCode == UndoKey)
                 {
@@ -621,10 +621,10 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             var showExcluded = _selectedItem is ExcludedHeaderTreeItem;
             var showAsset = _selectedItem is CueSheetAssetTreeItem;
 
-            SetDisplay(_emptyInspectorHelpBox, showEmpty);
-            SetDisplay(_fileEntryInspector, showFileEntry);
-            SetDisplay(_excludedInspector, showExcluded);
-            SetDisplay(_assetInspector, showAsset);
+            _emptyInspectorHelpBox.SetDisplay(showEmpty);
+            _fileEntryInspector.SetDisplay(showFileEntry);
+            _excludedInspector.SetDisplay(showExcluded);
+            _assetInspector.SetDisplay(showAsset);
 
             _removeButton?.SetEnabled(_selectedItem is not (null or ExcludedHeaderTreeItem));
 
@@ -826,12 +826,6 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
             AssetDatabase.SaveAssets();
         }
 
-        private static void SetDisplay(VisualElement? element, bool visible)
-        {
-            if (element != null)
-                element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-        }
-
         private void ApplyTooltips()
         {
             // Default Settings
@@ -879,13 +873,13 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
 
         private void HandleKeyDownEvent(KeyDownEvent e)
         {
-            if (GetEventAction(e) && e.keyCode == UndoKey)
+            if (EventExtensions.GetEventAction(e) && e.keyCode == UndoKey)
             {
                 PerformUndo();
                 e.StopPropagation();
             }
 
-            if (GetEventAction(e) && e.keyCode == RedoKey)
+            if (EventExtensions.GetEventAction(e) && e.keyCode == RedoKey)
             {
                 PerformRedo();
                 e.StopPropagation();
@@ -900,24 +894,6 @@ namespace AudioConductor.Editor.Core.Tools.CodeGen
         private void PerformRedo()
         {
             _history.Redo();
-        }
-
-        private static bool GetEventAction(Event e)
-        {
-#if UNITY_EDITOR_WIN
-            return e.control;
-#else
-            return e.command;
-#endif
-        }
-
-        private static bool GetEventAction(IKeyboardEvent e)
-        {
-#if UNITY_EDITOR_WIN
-            return e.ctrlKey;
-#else
-            return e.commandKey;
-#endif
         }
 
         private void OnLanguageChanged()
