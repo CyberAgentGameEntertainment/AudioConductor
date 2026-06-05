@@ -5,6 +5,7 @@
 #nullable enable
 
 using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.Validation.Rules
 {
@@ -12,9 +13,9 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Rules
     {
         public void Validate(Track track, Cue cue, ICueSheetValidationContext context)
         {
-            if (track.startSample < 0)
+            if (track.startSample < ValueRangeConst.StartSample.Min)
                 context.AddError("Track.StartSampleOutOfRange",
-                    $"Track '{track.name}' in Cue '{cue.name}' has startSample ({track.startSample}) out of valid range [0, ...].");
+                    $"Track '{track.name}' in Cue '{cue.name}' has startSample ({track.startSample}) out of valid range [{ValueRangeConst.StartSample.Min}, ...].");
 
             if (track.audioClip == null)
                 return;

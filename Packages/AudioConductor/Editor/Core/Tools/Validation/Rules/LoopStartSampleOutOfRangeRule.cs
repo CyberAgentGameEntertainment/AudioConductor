@@ -5,6 +5,7 @@
 #nullable enable
 
 using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.Validation.Rules
 {
@@ -15,9 +16,9 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Rules
             if (!track.isLoop)
                 return;
 
-            if (track.loopStartSample < 0)
+            if (track.loopStartSample < ValueRangeConst.LoopStartSample.Min)
                 context.AddError("Track.LoopStartSampleOutOfRange",
-                    $"Track '{track.name}' in Cue '{cue.name}' has loopStartSample ({track.loopStartSample}) out of valid range [0, ...].");
+                    $"Track '{track.name}' in Cue '{cue.name}' has loopStartSample ({track.loopStartSample}) out of valid range [{ValueRangeConst.LoopStartSample.Min}, ...].");
 
             if (track.audioClip == null)
                 return;

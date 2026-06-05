@@ -6,6 +6,7 @@
 
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
+using AudioConductor.Core.Shared;
 
 namespace AudioConductor.Editor.Core.Tools.Validation.Rules
 {
@@ -16,9 +17,9 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Rules
             if (cue.playType != CuePlayType.Random)
                 return;
 
-            if (track.randomWeight < 0)
+            if (track.randomWeight < ValueRangeConst.RandomWeight.Min)
                 context.AddError("Track.RandomWeightOutOfRange",
-                    $"Track '{track.name}' in Cue '{cue.name}' has randomWeight ({track.randomWeight}) out of valid range [0, ...].");
+                    $"Track '{track.name}' in Cue '{cue.name}' has randomWeight ({track.randomWeight}) out of valid range [{ValueRangeConst.RandomWeight.Min}, ...].");
         }
     }
 }
