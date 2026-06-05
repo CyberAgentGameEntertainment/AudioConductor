@@ -6,161 +6,94 @@
 
 #if AUDIOCONDUCTOR_ADDRESSABLES
 using System;
-using System.Collections;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
-using UnityEditor;
-using UnityEditor.AddressableAssets.Build;
-using UnityEditor.AddressableAssets.Build.DataBuilders;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.TestTools;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Providers.Tests
 {
-    public class AddressableCueSheetProviderTests
+    internal class AddressableCueSheetProviderTests
     {
-        private const string TestAddress = "TestCueSheetAddress";
-        private const string RootFolder = GlobalSetUpFixture.GenFolder + "/" + nameof(AddressableCueSheetProviderTests);
-        private const string ConfigName = "AddressableAssetSettings.Tests";
+        private CueSheetAsset _asset = null!;
 
+        private FakeAPIWrapper _fake = null!;
         private AddressableCueSheetProvider _provider = null!;
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
-
-            CreateFolderRecursively(RootFolder);
-
-            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
-            var assetPath = RootFolder + "/TestCueSheet.asset";
-            AssetDatabase.CreateAsset(asset, assetPath);
-
-            var settings = AddressableAssetSettings.Create(
-                RootFolder + "/Settings",
-                ConfigName,
-                true, true);
-
-            var guid = AssetDatabase.AssetPathToGUID(assetPath);
-            var entry = settings.CreateOrMoveEntry(guid, settings.DefaultGroup, false, false);
-            entry.address = TestAddress;
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-
-            var buildContext = new AddressablesDataBuilderInput(settings);
-            foreach (var db in settings.DataBuilders)
-                if (db is BuildScriptFastMode builder)
-                {
-                    builder.BuildData<AddressableAssetBuildResult>(buildContext);
-                    PlayerPrefs.Save();
-                    break;
-                }
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            PlayerPrefs.DeleteKey(Addressables.kAddressablesRuntimeDataPath);
-            PlayerPrefs.Save();
-
-            EditorBuildSettings.RemoveConfigObject(ConfigName);
-
-            if (AssetDatabase.IsValidFolder(RootFolder))
-                AssetDatabase.DeleteAsset(RootFolder);
-
-            if (AssetDatabase.IsValidFolder(GlobalSetUpFixture.GenFolder))
-                AssetDatabase.DeleteAsset(GlobalSetUpFixture.GenFolder);
-
-            AssetDatabase.Refresh();
-        }
 
         [SetUp]
         public void SetUp()
         {
-            _provider = new AddressableCueSheetProvider();
+            _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            _fake = new FakeAPIWrapper(_asset);
+            _provider = new AddressableCueSheetProvider(_fake);
         }
 
         [TearDown]
         public void TearDown()
         {
             _provider.Dispose();
-        }
-
-        private static IEnumerator WaitForTask(Task task)
-        {
-            while (!task.IsCompleted)
-            {
-                EditorApplication.QueuePlayerLoopUpdate();
-                yield return null;
-            }
-        }
-
-        private static void CreateFolderRecursively(string path)
-        {
-            if (!path.StartsWith("Assets/"))
-                return;
-
-            var dirs = path.Split('/');
-            var combinePath = dirs[0];
-            foreach (var dir in dirs.Skip(1))
-            {
-                if (!AssetDatabase.IsValidFolder(combinePath + '/' + dir))
-                    AssetDatabase.CreateFolder(combinePath, dir);
-                combinePath += '/' + dir;
-            }
+            _provider = null!;
+            Object.DestroyImmediate(_asset);
+            _asset = null!;
         }
 
         [Test]
         public void Load_ThrowsNotSupportedException()
         {
-            Assert.That(() => _provider.Load(TestAddress), Throws.TypeOf<NotSupportedException>());
+            Assert.That(() => _provider.Load("key"), Throws.TypeOf<NotSupportedException>());
         }
 
-        [UnityTest]
-        public IEnumerator LoadAsync_ValidKey_ReturnsLoadInfo()
+        [Test]
+        public async Task LoadAsync_ValidKey_ReturnsLoadInfo()
         {
-            var task = _provider.LoadAsync(TestAddress);
-            yield return WaitForTask(task);
+            var result = await _provider.LoadAsync("key");
 
-            Assert.That(task.Result, Is.Not.Null);
-            Assert.That(task.Result!.Value.Asset, Is.Not.Null);
-            Assert.That(task.Result.Value.LoadId, Is.GreaterThan(0u));
-
-            _provider.Release(task.Result.Value.LoadId);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Value.Asset, Is.SameAs(_asset));
+            Assert.That(result.Value.LoadId, Is.GreaterThan(0u));
         }
 
-        [UnityTest]
-        public IEnumerator Release_AfterLoadAsync_DoesNotThrow()
+        [Test]
+        public async Task LoadAsync_InvalidKey_ReturnsNull()
         {
-            var task = _provider.LoadAsync(TestAddress);
-            yield return WaitForTask(task);
+            using var provider = new AddressableCueSheetProvider(new FakeAPIWrapper());
 
-            Assert.That(() => _provider.Release(task.Result!.Value.LoadId), Throws.Nothing);
+            var result = await provider.LoadAsync("key");
+
+            Assert.That(result, Is.Null);
         }
 
-        [UnityTest]
-        public IEnumerator LoadAsync_MultipleTimes_EachReleaseWorks()
+        [Test]
+        public async Task LoadAsync_SameKey_ReturnsDifferentLoadIds()
         {
-            var task1 = _provider.LoadAsync(TestAddress);
-            yield return WaitForTask(task1);
+            var r1 = await _provider.LoadAsync("key");
+            var r2 = await _provider.LoadAsync("key");
 
-            var task2 = _provider.LoadAsync(TestAddress);
-            yield return WaitForTask(task2);
+            Assert.That(r1!.Value.LoadId, Is.Not.EqualTo(r2!.Value.LoadId));
+        }
 
-            Assert.That(task1.Result, Is.Not.Null);
-            Assert.That(task2.Result, Is.Not.Null);
+        [Test]
+        public async Task Release_AfterLoadAsync_CallsRelease()
+        {
+            var result = await _provider.LoadAsync("key");
+            _provider.Release(result!.Value.LoadId);
 
-            _provider.Release(task1.Result!.Value.LoadId);
-            _provider.Release(task2.Result!.Value.LoadId);
+            Assert.That(_fake.ReleaseCount, Is.EqualTo(1));
+        }
 
-            Assert.Pass();
+        [Test]
+        public async Task Release_MultipleTimes_CallsReleaseForEach()
+        {
+            var r1 = await _provider.LoadAsync("key");
+            var r2 = await _provider.LoadAsync("key");
+
+            _provider.Release(r1!.Value.LoadId);
+            _provider.Release(r2!.Value.LoadId);
+
+            Assert.That(_fake.ReleaseCount, Is.EqualTo(2));
         }
 
         [Test]
@@ -175,27 +108,50 @@ namespace AudioConductor.Core.Providers.Tests
             Assert.That(() => _provider.Release(999), Throws.Nothing);
         }
 
-        [UnityTest]
-        public IEnumerator Release_MoreTimesThanLoaded_DoesNotThrow()
+        [Test]
+        public async Task Release_SameLoadIdTwice_DoesNotThrow()
         {
-            var task = _provider.LoadAsync(TestAddress);
-            yield return WaitForTask(task);
+            var result = await _provider.LoadAsync("key");
+            _provider.Release(result!.Value.LoadId);
 
-            _provider.Release(task.Result!.Value.LoadId);
-
-            // Second release with same loadId should be ignored
-            Assert.That(() => _provider.Release(task.Result.Value.LoadId), Throws.Nothing);
+            Assert.That(() => _provider.Release(result.Value.LoadId), Throws.Nothing);
         }
 
-        [UnityTest]
-        public IEnumerator LoadAsync_WithInvalidKey_ReturnsNull()
+        [Test]
+        public async Task Dispose_CallsReleaseForAllRemainingLoads()
         {
-            LogAssert.Expect(LogType.Error, new Regex("InvalidKeyException"));
+            await _provider.LoadAsync("key");
+            await _provider.LoadAsync("key");
 
-            var task = _provider.LoadAsync("invalid_key_that_does_not_exist");
-            yield return WaitForTask(task);
+            _provider.Dispose();
 
-            Assert.That(task.Result, Is.Null);
+            Assert.That(_fake.ReleaseCount, Is.EqualTo(2));
+        }
+
+        private sealed class FakeAPIWrapper : AddressableCueSheetProvider.IAPIWrapper
+        {
+            private readonly CueSheetAsset? _asset;
+
+            internal FakeAPIWrapper(CueSheetAsset? asset = null)
+            {
+                _asset = asset;
+            }
+
+            internal int ReleaseCount { get; private set; }
+
+            public AsyncOperationHandle<T> LoadAssetAsync<T>(string key)
+            {
+                if (_asset is T typedAsset)
+                    return Addressables.ResourceManager.CreateCompletedOperation(typedAsset, string.Empty);
+                return Addressables.ResourceManager.CreateCompletedOperationWithException<T>(
+                    default!, new InvalidKeyException(key));
+            }
+
+            public void Release<T>(AsyncOperationHandle<T> handle)
+            {
+                Addressables.Release(handle);
+                ReleaseCount++;
+            }
         }
     }
 }
