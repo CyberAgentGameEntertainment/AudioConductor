@@ -11,15 +11,15 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 {
-    internal sealed class CueListEditorPanePresenter : ICueSheetEditorPanePresenter
+    internal sealed class CueListEditorPanePresenter : ICueListEditorPanePresenter
     {
         private readonly CompositeDisposable _bindDisposable = new();
 
-        private readonly CueListPresenter _cueListPresenter;
-        private readonly InspectorPresenter _inspectorPresenter;
+        private readonly ICueListPresenter _cueListPresenter;
+        private readonly InspectorPresenter? _inspectorPresenter;
         private readonly ICueListEditorPaneModel _model;
 
-        private readonly CueListEditorPaneView _view;
+        private readonly ICueListEditorPaneView _view;
         private readonly CompositeDisposable _viewEventDisposable = new();
 
         public CueListEditorPanePresenter(ICueListEditorPaneModel model, CueListEditorPaneView view)
@@ -27,13 +27,22 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _model = model;
             _view = view;
 
-            _inspectorPresenter = new InspectorPresenter(_view.Q<InspectorView>());
-            _cueListPresenter = new CueListPresenter(model.CueListModel, _view.Q<CueListView>());
+            _inspectorPresenter = new InspectorPresenter(view.Q<InspectorView>());
+            _cueListPresenter = new CueListPresenter(model.CueListModel, view.Q<CueListView>());
+        }
+
+        internal CueListEditorPanePresenter(ICueListEditorPaneModel model, ICueListEditorPaneView view,
+            ICueListPresenter cueListPresenter)
+        {
+            _model = model;
+            _view = view;
+            _inspectorPresenter = null;
+            _cueListPresenter = cueListPresenter;
         }
 
         public void Dispose()
         {
-            _cueListPresenter?.Dispose();
+            _cueListPresenter.Dispose();
             _inspectorPresenter?.Dispose();
 
             Unbind();
@@ -51,7 +60,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.SetButtonState(_model.VisibleColumns);
             _view.SetSearchString(_model.SearchString);
 
-            _inspectorPresenter.Setup();
+            _inspectorPresenter?.Setup();
             _cueListPresenter.Setup();
         }
 
@@ -63,6 +72,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         public void Close()
         {
             _view.Close();
+        }
+
+        public void FocusCue(string cueEditorId)
+        {
+            var itemId = _model.FindItemIdByCueEditorId(cueEditorId);
+            if (itemId < 0)
+                return;
+            _view.ClearSearch();
+            _cueListPresenter.FocusItemById(itemId);
         }
 
         private void Bind()
@@ -106,12 +124,14 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
 
         private void SetupEventHandlers()
         {
-            _cueListPresenter.OnSelectionItemChanged += _inspectorPresenter.SetModel;
+            if (_inspectorPresenter is not null)
+                _cueListPresenter.OnSelectionItemChanged += _inspectorPresenter.SetModel;
         }
 
         private void CleanupEventHandlers()
         {
-            _cueListPresenter.OnSelectionItemChanged -= _inspectorPresenter.SetModel;
+            if (_inspectorPresenter is not null)
+                _cueListPresenter.OnSelectionItemChanged -= _inspectorPresenter.SetModel;
         }
     }
 }

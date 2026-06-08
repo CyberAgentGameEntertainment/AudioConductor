@@ -5,12 +5,14 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using UnityEditor;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
-    internal sealed class CueSheetAssetRepository : ScriptableSingleton<CueSheetAssetRepository>
+    internal sealed class CueSheetAssetRepository : ScriptableSingleton<CueSheetAssetRepository>,
+        ICueSheetAssetRepository
     {
         private CueSheetAsset[]? _all;
 
@@ -32,11 +34,15 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             if (guids is null || guids.Length == 0)
                 return Array.Empty<CueSheetAsset>();
 
-            var result = new CueSheetAsset[guids.Length];
-            for (var i = 0; i < guids.Length; i++)
-                result[i] =
-                    AssetDatabase.LoadAssetAtPath<CueSheetAsset>(AssetDatabase.GUIDToAssetPath(guids[i]));
-            return result;
+            var result = new List<CueSheetAsset>(guids.Length);
+            foreach (var guid in guids)
+            {
+                var asset = AssetDatabase.LoadAssetAtPath<CueSheetAsset>(AssetDatabase.GUIDToAssetPath(guid));
+                if (asset != null)
+                    result.Add(asset);
+            }
+
+            return result.ToArray();
         }
 
         internal sealed class AssetPostProcessor : AssetPostprocessor

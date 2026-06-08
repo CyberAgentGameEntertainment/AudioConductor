@@ -4,7 +4,7 @@
 
 using AudioConductor.Core;
 
-namespace AudioConductor.Core.Tests.Fakes
+namespace AudioConductor.Editor.Core.Tests.Fakes
 {
     internal sealed class StubDspClock : IDspClock
     {

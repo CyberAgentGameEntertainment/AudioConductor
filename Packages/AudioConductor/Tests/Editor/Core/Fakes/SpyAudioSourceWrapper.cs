@@ -4,10 +4,11 @@
 
 #nullable enable
 
+using AudioConductor.Core;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace AudioConductor.Core.Tests.Fakes
+namespace AudioConductor.Editor.Core.Tests.Fakes
 {
     internal sealed class SpyAudioSourceWrapper : IAudioSourceWrapper
     {

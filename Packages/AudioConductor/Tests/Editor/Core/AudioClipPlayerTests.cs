@@ -4,13 +4,14 @@
 
 #nullable enable
 
+using AudioConductor.Core;
 using AudioConductor.Core.Enums;
-using AudioConductor.Core.Tests.Fakes;
+using AudioConductor.Editor.Core.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AudioConductor.Core.Tests
+namespace AudioConductor.Editor.Core.Tests
 {
     [TestFixture]
     internal sealed class AudioClipPlayerTests

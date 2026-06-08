@@ -34,6 +34,8 @@ It uses an instance-based design with the `Conductor` class, allowing you to cre
 - [Setup](#setup)
   - [Requirements](#requirements)
   - [Install](#install)
+- [Considerations](#considerations)
+  - [Sample-based parameters and AudioClip import settings](#sample-based-parameters-and-audioclip-import-settings)
 - [Create setting assets](#create-setting-assets)
   - [Create runtime settings asset](#create-runtime-settings-asset)
   - [Create editor settings asset](#create-editor-settings-asset)
@@ -60,6 +62,7 @@ It uses an instance-based design with the `Conductor` class, allowing you to cre
   - [Default settings](#default-settings)
   - [Generate / Batch generation](#generate--batch-generation)
   - [Generated code example](#generated-code-example)
+- [CueSheet Validation](#cuesheet-validation)
 - [Editor Localization](#editor-localization)
 - [Samples](#samples)
   - [Import sample resources](#import-sample-resources)
@@ -246,6 +249,12 @@ If you don't want to specify a version, you can also update the version by editi
     }
 }
 ```
+
+## Considerations
+
+### Sample-based parameters and AudioClip import settings
+
+Start sample, End sample, and Loop start sample are interpreted based on `AudioClip.frequency`. If Audio Import Settings convert the sample rate, the configured sample values will no longer match the intended playback positions. Ensure that the sample rate is consistent across all AudioClips and all build targets.
 
 ## Create setting assets
 
@@ -653,6 +662,55 @@ namespace AudioConductor.Generated
     }
 }
 ```
+
+## CueSheet Validation
+
+The CueSheet Validation feature lets you check CueSheetAssets for configuration errors and warnings in the editor.
+
+### How to validate
+
+To validate the entire project or selected assets, use any of the following:
+
+- **Menu bar**: **Tools > Audio Conductor > Validate** — validates all CueSheetAssets in the project.
+- **Project window context menu**: Right-click a CueSheetAsset → **Audio Conductor > Validate CueSheet** — validates the selected assets.
+- **CueSheet List window**: Click the **Validate All** button in the toolbar — validates all CueSheetAssets in the project.
+
+Results are displayed in the validation window.
+
+To validate the asset you are currently editing, click the **Validate** button in the CueSheet Editor toolbar.
+
+### Validation results
+
+Press the **Validate** button to run the check. Results are shown in a hierarchical list (Asset > Cue > Track) with error and warning icons.
+
+<p align="center">
+  <img width="70%" src="./Images/validation_01.png" alt="CueSheet Validation Window">
+</p>
+
+Clicking a result row opens the CueSheet Editor window and focuses the relevant cue.
+
+### Checked conditions
+
+**Errors**:
+- Track: `AudioClip` is not assigned.
+- Track: `End sample` is 0 while `AudioClip` is assigned (the track would end immediately).
+- Track: `Start sample` ≥ `End sample` (when both are non-zero).
+- Track: `Loop start sample` ≥ `End sample` (loop start is outside the playable range).
+- Track: `Random weight` is negative (valid range: 0 or greater).
+- Track: `Volume` is outside the valid range [0, 1].
+- Track: `Pitch` is outside the valid range [0.01, 3].
+- Track: `Fade time` is negative (valid range: 0 or greater).
+- Track: `Start sample` is negative, or is ≥ the `AudioClip`'s sample count.
+- Track: `End sample` is negative, or exceeds the `AudioClip`'s sample count.
+- Track: `Loop start sample` is negative, or is ≥ the `AudioClip`'s sample count (loop-enabled tracks only).
+- Cue: Track list is empty.
+- CueSheet: Contains duplicate or unassigned cue IDs. Re-import the asset to fix.
+
+**Warnings**:
+- CueSheet: Cue list is empty.
+- Cue: `Throttle limit` exceeds the parent CueSheet's throttle limit (when both are non-zero).
+- Cue: `Category ID` is not found in the selected AudioConductorSettings.
+- Track: Play type is Random but some tracks have `Random weight` = 0 (those tracks will never be selected).
 
 ## Editor Localization
 

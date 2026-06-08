@@ -23,6 +23,16 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
         }
 
         [Test]
+        public void Asset_ReturnsSameCueSheetAsset()
+        {
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+
+            var model = new CueSheetAssetEditorWindowModel(asset);
+
+            Assert.That(model.Asset, Is.SameAs(asset));
+        }
+
+        [Test]
         public void Setup()
         {
             var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
@@ -38,6 +48,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             Assert.IsNotNull(model.CueSheetEditorModel.CueListEditorPaneModel);
             Assert.IsNotNull(model.CueSheetEditorModel.OtherOperationPaneModel);
             Assert.IsNotNull(model.CueSheetEditorModel.ObservablePaneState);
+        }
+
+        [Test]
+        public void Setup_WithSettingsProvider_CreatesEditorModel()
+        {
+            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+
+            var model = new CueSheetAssetEditorWindowModel(asset);
+
+            model.Setup(() => null);
+
+            Assert.That(model.CueSheetEditorModel, Is.Not.Null);
         }
     }
 }

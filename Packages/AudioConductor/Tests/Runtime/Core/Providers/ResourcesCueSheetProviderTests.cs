@@ -4,32 +4,28 @@
 
 #nullable enable
 
-using System.Collections;
+using System;
 using System.Threading.Tasks;
 using AudioConductor.Core.Models;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Core.Providers.Tests
 {
-    public class ResourcesCueSheetProviderTests
+    internal class ResourcesCueSheetProviderTests
     {
-        private const string ResourcesPath = "Assets/AudioConductorTestResources/Resources";
-        private const string AssetFileName = "TestCueSheet.asset";
+        private CueSheetAsset _asset = null!;
 
+        private FakeAPIWrapper _fake = null!;
         private ResourcesCueSheetProvider _provider = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _provider = new ResourcesCueSheetProvider();
-
-            if (!AssetDatabase.IsValidFolder("Assets/AudioConductorTestResources"))
-                AssetDatabase.CreateFolder("Assets", "AudioConductorTestResources");
-            if (!AssetDatabase.IsValidFolder(ResourcesPath))
-                AssetDatabase.CreateFolder("Assets/AudioConductorTestResources", "Resources");
+            _asset = ScriptableObject.CreateInstance<CueSheetAsset>();
+            _fake = new FakeAPIWrapper(_asset);
+            _provider = new ResourcesCueSheetProvider(_fake);
         }
 
         [TearDown]
@@ -37,114 +33,126 @@ namespace AudioConductor.Core.Providers.Tests
         {
             _provider.Dispose();
             _provider = null!;
-
-            if (AssetDatabase.IsValidFolder("Assets/AudioConductorTestResources"))
-            {
-                AssetDatabase.DeleteAsset("Assets/AudioConductorTestResources");
-                AssetDatabase.Refresh();
-            }
-        }
-
-        private static IEnumerator WaitForTask(Task task)
-        {
-            while (!task.IsCompleted)
-            {
-                EditorApplication.QueuePlayerLoopUpdate();
-                yield return null;
-            }
-        }
-
-        private string CreateTestAsset(string fileName = AssetFileName)
-        {
-            var asset = ScriptableObject.CreateInstance<CueSheetAsset>();
-            var assetPath = $"{ResourcesPath}/{fileName}";
-            AssetDatabase.CreateAsset(asset, assetPath);
-            AssetDatabase.Refresh();
-            return assetPath;
+            Object.DestroyImmediate(_asset);
+            _asset = null!;
         }
 
         [Test]
         public void Load_ValidKey_ReturnsLoadInfo()
         {
-            CreateTestAsset();
-
-            var result = _provider.Load("TestCueSheet");
+            var result = _provider.Load("key");
 
             Assert.That(result, Is.Not.Null);
-            Assert.That(result!.Value.Asset, Is.Not.Null);
+            Assert.That(result!.Value.Asset, Is.SameAs(_asset));
             Assert.That(result.Value.LoadId, Is.GreaterThan(0u));
+        }
+
+        [Test]
+        public void Load_InvalidKey_ReturnsNull()
+        {
+            using var provider = new ResourcesCueSheetProvider(new FakeAPIWrapper());
+
+            var result = provider.Load("key");
+
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        public void Load_SameKey_CallsApiOnce()
+        {
+            _provider.Load("key");
+            _provider.Load("key");
+
+            Assert.That(_fake.LoadCount, Is.EqualTo(1));
         }
 
         [Test]
         public void Load_SameKey_ReturnsSameAsset()
         {
-            CreateTestAsset();
+            var r1 = _provider.Load("key");
+            var r2 = _provider.Load("key");
 
-            var result1 = _provider.Load("TestCueSheet");
-            var result2 = _provider.Load("TestCueSheet");
-
-            Assert.That(result1!.Value.Asset, Is.SameAs(result2!.Value.Asset));
+            Assert.That(r1!.Value.Asset, Is.SameAs(r2!.Value.Asset));
         }
 
         [Test]
         public void Load_SameKey_ReturnsDifferentLoadIds()
         {
-            CreateTestAsset();
+            var r1 = _provider.Load("key");
+            var r2 = _provider.Load("key");
 
-            var result1 = _provider.Load("TestCueSheet");
-            var result2 = _provider.Load("TestCueSheet");
-
-            Assert.That(result1!.Value.LoadId, Is.Not.EqualTo(result2!.Value.LoadId));
+            Assert.That(r1!.Value.LoadId, Is.Not.EqualTo(r2!.Value.LoadId));
         }
 
         [Test]
-        public void Release_AfterSingleLoad_DoesNotThrow()
+        public async Task LoadAsync_ValidKey_ReturnsLoadInfo()
         {
-            CreateTestAsset();
+            var result = await _provider.LoadAsync("key");
 
-            var result = _provider.Load("TestCueSheet");
-            _provider.Release(result!.Value.LoadId);
-
-            Assert.Pass();
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Value.Asset, Is.SameAs(_asset));
+            Assert.That(result.Value.LoadId, Is.GreaterThan(0u));
         }
 
         [Test]
-        public void Release_MultipleLoads_DoesNotThrow()
+        public async Task LoadAsync_InvalidKey_ReturnsNull()
         {
-            CreateTestAsset();
+            using var provider = new ResourcesCueSheetProvider(new FakeAPIWrapper());
 
-            var result1 = _provider.Load("TestCueSheet");
-            var result2 = _provider.Load("TestCueSheet");
+            var result = await provider.LoadAsync("key");
 
-            _provider.Release(result1!.Value.LoadId);
-
-            Assert.That(result2!.Value.Asset, Is.Not.Null);
-
-            _provider.Release(result2.Value.LoadId);
-
-            Assert.Pass();
+            Assert.That(result, Is.Null);
         }
 
-        [UnityTest]
-        public IEnumerator LoadAsync_ReturnsLoadInfo()
+        [Test]
+        public async Task LoadAsync_SameKey_CallsApiOnce()
         {
-            CreateTestAsset();
+            await _provider.LoadAsync("key");
+            await _provider.LoadAsync("key");
 
-            var task = _provider.LoadAsync("TestCueSheet");
-            yield return WaitForTask(task);
-
-            Assert.That(task.Result, Is.Not.Null);
-            Assert.That(task.Result!.Value.Asset, Is.Not.Null);
-            Assert.That(task.Result.Value.LoadId, Is.GreaterThan(0u));
+            Assert.That(_fake.LoadAsyncCount, Is.EqualTo(1));
         }
 
-        [UnityTest]
-        public IEnumerator LoadAsync_InvalidKey_ReturnsNull()
+        [Test]
+        public async Task LoadAsync_SameKey_ReturnsSameAsset()
         {
-            var task = _provider.LoadAsync("NonExistentKey");
-            yield return WaitForTask(task);
+            var r1 = await _provider.LoadAsync("key");
+            var r2 = await _provider.LoadAsync("key");
 
-            Assert.That(task.Result, Is.Null);
+            Assert.That(r1!.Value.Asset, Is.SameAs(r2!.Value.Asset));
+        }
+
+        [Test]
+        public async Task LoadAsync_SameKey_ReturnsDifferentLoadIds()
+        {
+            var r1 = await _provider.LoadAsync("key");
+            var r2 = await _provider.LoadAsync("key");
+
+            Assert.That(r1!.Value.LoadId, Is.Not.EqualTo(r2!.Value.LoadId));
+        }
+
+        [Test]
+        public void Release_AfterLastReference_CallsUnloadAsset()
+        {
+            var r = _provider.Load("key");
+            _provider.Release(r!.Value.LoadId);
+
+            Assert.That(_fake.UnloadCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Release_WithRemainingReferences_DoesNotCallUnloadAsset()
+        {
+            var r1 = _provider.Load("key");
+            var r2 = _provider.Load("key");
+
+            _provider.Release(r1!.Value.LoadId);
+
+            Assert.That(_fake.UnloadCount, Is.EqualTo(0));
+
+            _provider.Release(r2!.Value.LoadId);
+
+            Assert.That(_fake.UnloadCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -160,34 +168,70 @@ namespace AudioConductor.Core.Providers.Tests
         }
 
         [Test]
-        public void Load_InvalidKey_ReturnsNull()
+        public void Release_SameLoadIdTwice_DoesNotThrow()
         {
-            var result = _provider.Load("NonExistentKey");
+            var r = _provider.Load("key");
+            _provider.Release(r!.Value.LoadId);
 
-            Assert.That(result, Is.Null);
-        }
-
-        [UnityTest]
-        public IEnumerator LoadAsync_ThenRelease_DoesNotThrow()
-        {
-            CreateTestAsset();
-
-            var task = _provider.LoadAsync("TestCueSheet");
-            yield return WaitForTask(task);
-
-            Assert.That(() => _provider.Release(task.Result!.Value.LoadId), Throws.Nothing);
+            Assert.That(() => _provider.Release(r.Value.LoadId), Throws.Nothing);
         }
 
         [Test]
-        public void Release_MoreTimesThanLoaded_DoesNotThrow()
+        public void Dispose_CallsUnloadForAllRemainingLoads()
         {
-            CreateTestAsset();
+            _provider.Load("key");
+            _provider.Load("key");
 
-            var result = _provider.Load("TestCueSheet");
-            _provider.Release(result!.Value.LoadId);
+            _provider.Dispose();
 
-            // Second release with same loadId is already removed, should be safe
-            Assert.That(() => _provider.Release(result.Value.LoadId), Throws.Nothing);
+            Assert.That(_fake.UnloadCount, Is.EqualTo(1));
+        }
+
+        private sealed class FakeAPIWrapper : ResourcesCueSheetProvider.IAPIWrapper
+        {
+            private readonly CueSheetAsset? _asset;
+
+            internal FakeAPIWrapper(CueSheetAsset? asset = null)
+            {
+                _asset = asset;
+            }
+
+            internal int LoadCount { get; private set; }
+            internal int LoadAsyncCount { get; private set; }
+            internal int UnloadCount { get; private set; }
+
+            public ResourcesCueSheetProvider.IResourceRequest LoadAsync<T>(string key) where T : Object
+            {
+                LoadAsyncCount++;
+                return new FakeResourceRequest(_asset);
+            }
+
+            public T? Load<T>(string key) where T : Object
+            {
+                LoadCount++;
+                return _asset as T;
+            }
+
+            public void UnloadAsset(Object asset)
+            {
+                UnloadCount++;
+            }
+
+            private sealed class FakeResourceRequest : ResourcesCueSheetProvider.IResourceRequest
+            {
+                internal FakeResourceRequest(Object? asset)
+                {
+                    this.asset = asset;
+                }
+
+                public Object? asset { get; }
+
+                public event Action<ResourcesCueSheetProvider.IResourceRequest> completed
+                {
+                    add => value(this);
+                    remove { }
+                }
+            }
         }
     }
 }

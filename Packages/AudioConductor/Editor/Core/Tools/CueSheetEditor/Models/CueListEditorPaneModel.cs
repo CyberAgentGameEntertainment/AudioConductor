@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
@@ -18,9 +17,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
 {
     internal sealed class CueListEditorPaneModel : ICueListEditorPaneModel
     {
-        public CueListEditorPaneModel([NotNull] CueSheet cueSheet,
-            [NotNull] AutoIncrementHistory history,
-            [NotNull] IAssetSaveService assetSaveService,
+        public CueListEditorPaneModel(CueSheet cueSheet,
+            AutoIncrementHistory history,
+            IAssetSaveService assetSaveService,
             IObservableProperty<bool> inspectorUnCollapsed,
             CueListTreeView.State cueListTreeViewState,
             Func<AudioConductorSettings?>? settingsProvider = null)
@@ -39,5 +38,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         public IReadOnlyCollection<int> VisibleColumns { get; }
 
         public string SearchString { get; }
+
+        public int FindItemIdByCueEditorId(string cueEditorId)
+        {
+            var root = CueListModel.Root;
+            if (root.children is null)
+                return -1;
+
+            foreach (var child in root.children)
+                if (child is CueListItem item && item.TargetId == cueEditorId)
+                    return item.id;
+
+            return -1;
+        }
     }
 }

@@ -101,7 +101,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         internal void ApplyHeaderContent()
         {
             foreach (var column in multiColumnHeader.state.columns)
-                if (column.userData is int columnIndex)
+                if (column.userData is var columnIndex)
                     column.headerContent = ((ColumnType)columnIndex).CreateHeaderContent();
         }
 
@@ -123,7 +123,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             var value = DrawCellGUI();
 
             if (changeCheckScope.changed && value != null)
-                OnColumnValueChanged?.Invoke(new ColumnValueChangedEvent((ColumnType)columnIndex, value, args.item.id));
+                OnColumnValueChanged(new ColumnValueChangedEvent((ColumnType)columnIndex, value, args.item.id));
 
             #region LocalMethods
 
@@ -207,7 +207,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (!args.acceptedRename)
                 return;
 
-            OnColumnValueChanged?.Invoke(new ColumnValueChangedEvent(ColumnType.Name, args.newName, args.itemID));
+            OnColumnValueChanged(new ColumnValueChangedEvent(ColumnType.Name, args.newName, args.itemID));
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)
@@ -222,9 +222,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private CueListItem[] FindItemsInVisibleRows(IEnumerable<int> itemIds)
         {
-            if (itemIds == null)
-                return Array.Empty<CueListItem>();
-
             var itemIdSet = new HashSet<int>(itemIds);
             if (itemIdSet.Count <= 0)
                 return Array.Empty<CueListItem>();
@@ -242,7 +239,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             CanEdit = selectedItems.All(item => item.Type == selectedItems[0].Type);
 
-            OnSelectionChanged?.Invoke(new SelectionChangedEvent(selectedItems));
+            OnSelectionChanged(new SelectionChangedEvent(selectedItems));
         }
 
         protected override void KeyEvent()
@@ -253,7 +250,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (e.type != EventType.KeyDown)
                 return;
 
-            if (GetEventAction(e))
+            if (EventExtensions.GetEventAction(e))
                 switch (e.keyCode)
                 {
                     case KeyCode.D:
@@ -267,15 +264,6 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
                         OnRemoveOperationChosen();
                         break;
                 }
-        }
-
-        private static bool GetEventAction(Event e)
-        {
-#if UNITY_EDITOR_WIN
-            return e.control;
-#else
-            return e.command;
-#endif
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args)
@@ -307,9 +295,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
-            var visualMode = DragAndDropVisualMode.None;
-
-            visualMode = DragAndDrop.paths is { Length: > 0 }
+            var visualMode = DragAndDrop.paths is { Length: > 0 }
                 ? HandleDragAndDropPaths(args)
                 : HandleDragAndDropItems(args);
 
@@ -448,7 +434,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         private void OnCueAddOperationChosen()
         {
-            OnCueAddOperationRequested?.Invoke(new CueAddOperationRequestedEvent());
+            OnCueAddOperationRequested(new CueAddOperationRequestedEvent());
         }
 
         private void OnTrackAddOperationChosen()
@@ -457,7 +443,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (items.Length != 1 || items[0].Type != ItemType.Cue)
                 return;
 
-            OnTrackAddOperationRequested?.Invoke(new TrackAddOperationRequestedEvent((ItemCue)items[0]));
+            OnTrackAddOperationRequested(new TrackAddOperationRequestedEvent((ItemCue)items[0]));
         }
 
         private void OnRemoveOperationChosen()
@@ -476,7 +462,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             if (items.Length <= 0)
                 return;
 
-            if (!items.All(item => item.Type == items[0].Type))
+            if (items.Any(item => item.Type != items[0].Type))
                 return;
 
             foreach (var item in items)

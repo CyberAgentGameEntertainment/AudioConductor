@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.0 - 2026/06/05
+
+- New Features
+  - CueSheet validation window for detecting asset configuration issues
+
 ## v2.2.0 - 2026/05/19
 
 - New Features

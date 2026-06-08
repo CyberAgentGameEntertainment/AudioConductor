@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <uie:Toolbar>
+        <ui:DropdownField name="SettingsDropdown" style="flex-grow: 1;" />
+        <uie:ToolbarButton name="ValidateButton" text="Validate" />
+    </uie:Toolbar>
+    <ui:ListView name="ResultListView" selection-type="Single" fixed-item-height="22" style="flex-grow: 1; display: none;" />
+    <ui:HelpBox name="EmptyHelpBox" message-type="Info"
+                text="Select CueSheet assets in the Project window, or use 'Validate All' to scan the entire project."
+                style="display: none;" />
+    <ui:HelpBox name="NoResultHelpBox" message-type="Info" text="No issues found." style="display: none;" />
+</ui:UXML>

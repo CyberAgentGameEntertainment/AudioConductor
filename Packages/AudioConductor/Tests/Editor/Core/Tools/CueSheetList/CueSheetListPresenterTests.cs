@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using AudioConductor.Core.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetList.Models;
 using AudioConductor.Editor.Core.Tools.CueSheetList.Models.Interfaces;
@@ -103,6 +104,34 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Tests
         }
 
         [Test]
+        public void ViewValidateAll_CallsModelRequestValidateAll()
+        {
+            var model = new FakeModel();
+            var view = new FakeView();
+
+            using var presenter = new CueSheetListPresenter(model, view);
+            presenter.Setup();
+
+            view.EmitValidateAllClicked();
+
+            Assert.That(model.ValidateAllRequestedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Dispose_UnsubscribesValidateAllEvent()
+        {
+            var model = new FakeModel();
+            var view = new FakeView();
+            var presenter = new CueSheetListPresenter(model, view);
+            presenter.Setup();
+            presenter.Dispose();
+
+            view.EmitValidateAllClicked();
+
+            Assert.That(model.ValidateAllRequestedCount, Is.EqualTo(0));
+        }
+
+        [Test]
         public void Dispose_UnsubscribesModelBinding()
         {
             var model = new FakeModel();
@@ -127,17 +156,26 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Tests
 
             private readonly Subject<CueSheetAsset> _openRequested = new();
             private readonly StringObservableProperty _searchFilter = new(string.Empty);
+            private readonly Subject<IReadOnlyList<CueSheetAsset>> _validateAllRequested = new();
 
             internal CueSheetAsset? LastOpened { get; private set; }
+            internal int ValidateAllRequestedCount { get; private set; }
 
             public IReadOnlyObservableProperty<CueSheetListItem[]> Items => _items;
             public IObservableProperty<string> SearchFilter => _searchFilter;
             public IObservable<CueSheetAsset> OpenRequested => _openRequested;
+            public IObservable<IReadOnlyList<CueSheetAsset>> ValidateAllRequested => _validateAllRequested;
 
             public void RequestOpen(CueSheetAsset asset)
             {
                 LastOpened = asset;
                 _openRequested.OnNext(asset);
+            }
+
+            public void RequestValidateAll()
+            {
+                ValidateAllRequestedCount++;
+                _validateAllRequested.OnNext(new List<CueSheetAsset>());
             }
 
             internal void SetItems(CueSheetListItem[] items)
@@ -150,6 +188,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Tests
         {
             private readonly Subject<CueSheetAsset> _openRequested = new();
             private readonly Subject<string> _searchTextChanged = new();
+            private readonly Subject<Empty> _validateAllClicked = new();
 
             internal int DisposeCount { get; private set; }
             internal CueSheetListItem[]? LastRenderedItems { get; private set; }
@@ -157,6 +196,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Tests
 
             public IObservable<string> SearchTextChangedAsObservable => _searchTextChanged;
             public IObservable<CueSheetAsset> OpenRequestedAsObservable => _openRequested;
+            public IObservable<Empty> ValidateAllClickedAsObservable => _validateAllClicked;
 
             public void Dispose()
             {
@@ -185,6 +225,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetList.Tests
             internal void EmitOpenRequest(CueSheetAsset asset)
             {
                 _openRequested.OnNext(asset);
+            }
+
+            internal void EmitValidateAllClicked()
+            {
+                _validateAllClicked.OnNext(Empty.Default);
             }
         }
     }

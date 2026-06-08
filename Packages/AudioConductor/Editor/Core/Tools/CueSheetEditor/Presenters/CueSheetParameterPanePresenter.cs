@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Foundation.TinyRx;

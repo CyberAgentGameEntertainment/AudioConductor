@@ -18,5 +18,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
         IReadOnlyCollection<int> VisibleColumns { get; }
 
         string SearchString { get; }
+
+        int FindItemIdByCueEditorId(string cueEditorId);
     }
 }

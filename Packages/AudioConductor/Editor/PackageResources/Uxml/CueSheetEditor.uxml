@@ -2,7 +2,10 @@
          xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
          editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
          editor-extension-mode="True">
-    <ui:DropdownField name="SettingsDropdown" label="Settings" style="display: none;" />
+    <uie:Toolbar>
+        <ui:DropdownField name="SettingsDropdown" label="Settings" style="flex-grow: 1; display: none;" />
+        <uie:ToolbarButton name="ValidateButton" text="Validate" />
+    </uie:Toolbar>
     <ui:GroupBox name="HorizontalGroup"
                  style="flex-direction: row; flex-grow: 1; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;">
         <ui:GroupBox name="TabContainer" class="border border-top border-bottom"
