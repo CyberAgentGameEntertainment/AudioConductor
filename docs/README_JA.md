@@ -663,16 +663,19 @@ namespace AudioConductor.Generated
 
 ## キューシートのバリデーション
 
-バリデーション機能を使用すると、キューシートアセットの設定ミスをランタイム前に検出できます。
+バリデーション機能を使用すると、キューシートアセットの設定ミスや警告をエディタ上で検出できます。
 
-### ウィンドウを開く
+### バリデーションの実行
 
-バリデーションウィンドウを開く方法は 4 つあります。
+プロジェクト全体または選択したアセットをバリデーションするには、以下のいずれかから実行します。
 
-1. **メニューバー**: **Tools > Audio Conductor > Validate** — 全 CueSheetAsset をバリデートし、結果をウィンドウで表示します。
-2. **Project ウィンドウのコンテキストメニュー**: CueSheetAsset を右クリック → **Audio Conductor > Validate CueSheet** — 選択したアセットをバリデートします。
-3. **CueSheet List ウィンドウ**: ツールバーの **Validate All** ボタンをクリック — プロジェクト内のすべての CueSheetAsset をバリデートします。
-4. **CueSheet Editor ウィンドウ**: ツールバーの **Validate** ボタンをクリック — 現在開いている CueSheetAsset をバリデートします。
+- **メニューバー**: **Tools > Audio Conductor > Validate** — 全 CueSheetAsset をバリデートします。
+- **Project ウィンドウのコンテキストメニュー**: CueSheetAsset を右クリック → **Audio Conductor > Validate CueSheet** — 選択したアセットをバリデートします。
+- **CueSheet List ウィンドウ**: ツールバーの **Validate All** ボタン — 全 CueSheetAsset をバリデートします。
+
+結果はバリデーションウィンドウに表示されます。
+
+CueSheet Editor でキューシートを編集中にその場でチェックする場合は、ツールバーの **Validate** ボタンをクリックします。
 
 ### バリデーション結果
 

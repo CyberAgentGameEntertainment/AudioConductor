@@ -657,16 +657,19 @@ namespace AudioConductor.Generated
 
 ## CueSheet Validation
 
-The CueSheet Validation feature lets you check CueSheetAssets for configuration errors and warnings before runtime.
+The CueSheet Validation feature lets you check CueSheetAssets for configuration errors and warnings in the editor.
 
-### How to open
+### How to validate
 
-There are four ways to open the validation window:
+To validate the entire project or selected assets, use any of the following:
 
-1. **Menu bar**: **Tools > Audio Conductor > Validate** — validates all CueSheetAssets in the project and displays the results in a window.
-2. **Project window context menu**: Right-click a CueSheetAsset → **Audio Conductor > Validate CueSheet** — validates the selected assets.
-3. **CueSheet List window**: Click the **Validate All** button in the toolbar — validates all CueSheetAssets in the project.
-4. **CueSheet Editor window**: Click the **Validate** button in the toolbar — validates the currently open CueSheetAsset.
+- **Menu bar**: **Tools > Audio Conductor > Validate** — validates all CueSheetAssets in the project.
+- **Project window context menu**: Right-click a CueSheetAsset → **Audio Conductor > Validate CueSheet** — validates the selected assets.
+- **CueSheet List window**: Click the **Validate All** button in the toolbar — validates all CueSheetAssets in the project.
+
+Results are displayed in the validation window.
+
+To validate the asset you are currently editing, click the **Validate** button in the CueSheet Editor toolbar.
 
 ### Validation results
 
