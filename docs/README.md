@@ -34,6 +34,8 @@ It uses an instance-based design with the `Conductor` class, allowing you to cre
 - [Setup](#setup)
   - [Requirements](#requirements)
   - [Install](#install)
+- [Considerations](#considerations)
+  - [Sample-based parameters and AudioClip import settings](#sample-based-parameters-and-audioclip-import-settings)
 - [Create setting assets](#create-setting-assets)
   - [Create runtime settings asset](#create-runtime-settings-asset)
   - [Create editor settings asset](#create-editor-settings-asset)
@@ -247,6 +249,12 @@ If you don't want to specify a version, you can also update the version by editi
     }
 }
 ```
+
+## Considerations
+
+### Sample-based parameters and AudioClip import settings
+
+Start sample, End sample, and Loop start sample are interpreted based on `AudioClip.frequency`. If Audio Import Settings convert the sample rate, the configured sample values will no longer match the intended playback positions. Ensure that the sample rate is consistent across all AudioClips and all build targets.
 
 ## Create setting assets
 
