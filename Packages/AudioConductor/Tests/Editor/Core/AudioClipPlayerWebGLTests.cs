@@ -108,6 +108,21 @@ namespace AudioConductor.Editor.Core.Tests
             Assert.That(_source1.StopCount, Is.GreaterThanOrEqualTo(1));
         }
 
+        [Test]
+        public void PauseBySystem_Loop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay(true);
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+
+            _player.PauseBySystem();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_source1.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
         // --- ResumeBySystem ---
 
         [Test]
@@ -192,6 +207,78 @@ namespace AudioConductor.Editor.Core.Tests
             _player.ResumeBySystem();
 
             Assert.That(_source1.LastScheduledEndTime, Is.EqualTo(scheduledEndTime + 2.0).Within(0.0001));
+        }
+
+        [Test]
+        public void ResumeBySystem_Loop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay(true);
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+            _player.PauseBySystem();
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
+            Assert.That(_source1.IsPlaying, Is.False);
+        }
+
+        [Test]
+        public void ResumeBySystem_Loop_WasStoppedBeforePlay_WhenUserAlsoPaused_DoesNotReschedule()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay(true);
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+            _player.PauseBySystem();
+            _player.Pause();
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
+        [Test]
+        public void PauseBySystem_NonLoop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+
+            _player.PauseBySystem();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
+        [Test]
+        public void ResumeBySystem_NonLoop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _player.PauseBySystem();
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
+        }
+
+        [Test]
+        public void ResumeBySystem_NonLoop_WasStoppedBeforePlay_WhenUserAlsoPaused_DoesNotReschedule()
+        {
+            _clock.DspTime = 0.0;
+            SetupAndPlay();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _player.PauseBySystem();
+            _player.Pause();
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
         }
 
         // --- ManualUpdate interaction ---

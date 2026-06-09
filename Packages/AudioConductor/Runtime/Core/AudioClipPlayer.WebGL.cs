@@ -36,17 +36,51 @@ namespace AudioConductor.Core
                     _sources[1].Pause();
                     _pausedIndex = 1;
                 }
+                else
+                {
+                    // Neither source is playing yet (within PlayScheduleDelay window).
+                    // AudioSource.Pause() on a scheduled-but-not-yet-playing source has undefined
+                    // behavior per Unity docs, so stop both and reschedule fresh on ResumeBySystem.
+                    _sources[0].Stop();
+                    _sources[1].Stop();
+                    _wasStoppedBeforePlay = true;
+                }
 
                 return;
             }
 
-            _sources[0].Pause();
+            if (_sources[0].IsPlaying)
+            {
+                _sources[0].Pause();
+            }
+            else
+            {
+                _sources[0].Stop();
+                _wasStoppedBeforePlay = true;
+            }
         }
 
         internal void ResumeBySystem()
         {
             if (!_isSystemPaused)
                 return;
+
+            if (_wasStoppedBeforePlay)
+            {
+                _isSystemPaused = false;
+                if (_isPlaybackActive && !IsPaused)
+                {
+                    _wasStoppedBeforePlay = false;
+                    _nextPlayAudioSourceIndex = 0;
+                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+                }
+                else if (!_isPlaybackActive)
+                {
+                    _wasStoppedBeforePlay = false;
+                }
+
+                return;
+            }
 
             var pausedDuration = _dspClock.DspTime - _pauseStartTime;
             ShiftScheduleByPauseDuration(pausedDuration);

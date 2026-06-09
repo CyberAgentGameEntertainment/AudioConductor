@@ -430,6 +430,22 @@ namespace AudioConductor.Editor.Core.Tests
         }
 
         [Test]
+        public void Pause_Loop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: true, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+
+            _player.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_source1.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
+        [Test]
         public void Pause_NonLoop_PausesSource0()
         {
             _clock.DspTime = 0.0;
@@ -439,6 +455,20 @@ namespace AudioConductor.Editor.Core.Tests
             _player.Pause();
 
             Assert.That(_source0.PauseCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Pause_NonLoop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+
+            _player.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
         }
 
         // --- Resume (loop branch) ---
@@ -476,6 +506,23 @@ namespace AudioConductor.Editor.Core.Tests
         }
 
         [Test]
+        public void Resume_Loop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: true, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
+            Assert.That(_source1.IsPlaying, Is.False);
+        }
+
+        [Test]
         public void Resume_NonLoop_UnPausesSource0()
         {
             _clock.DspTime = 0.0;
@@ -486,6 +533,21 @@ namespace AudioConductor.Editor.Core.Tests
             _player.Resume();
 
             Assert.That(_source0.UnPauseCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Resume_NonLoop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
         }
 
         // --- SetEndAction / _onEnd fire ---

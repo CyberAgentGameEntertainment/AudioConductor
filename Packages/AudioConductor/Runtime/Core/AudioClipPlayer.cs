@@ -17,7 +17,11 @@ namespace AudioConductor.Core
     internal sealed partial class AudioClipPlayer : IFadeable
     {
         private const int SourceNum = 2;
+
         private const float LoopLookaheadDuration = 1.0f;
+
+        // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
+        private const float PlayScheduleDelay = 0.1f;
         private const int VolumeScale = 10000;
         private readonly IDspClock _dspClock;
         private readonly IAudioPlayerLifecycle _lifecycle;
@@ -43,6 +47,7 @@ namespace AudioConductor.Core
         private float _volumeCategory = 1f;
         private float _volumeMaster = 1f;
         private float _volumeRuntime;
+        private bool _wasStoppedBeforePlay;
 
         internal AudioClipPlayer(IAudioSourceWrapper[] sources, IDspClock dspClock,
             IAudioPlayerLifecycle lifecycle)
@@ -64,7 +69,7 @@ namespace AudioConductor.Core
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get =>
 #if UNITY_WEBGL
-                (IsPaused || _isSystemPaused) ? PlayerState.Paused
+                IsPaused || _isSystemPaused ? PlayerState.Paused
 #else
                 IsPaused ? PlayerState.Paused
 #endif
@@ -129,13 +134,11 @@ namespace AudioConductor.Core
             _sources[0].Stop();
             _sources[1].Stop();
 
+            _wasStoppedBeforePlay = false;
             _isPlaybackActive = true;
             _sources[1].Enabled = _isLoop;
 
-            // for smooth switching of AudioSource
-            // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
-            const float delay = 0.1f;
-            SchedulePlayback(_dspClock.DspTime + delay, _startSample);
+            SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
         }
 
         public void Restart()
@@ -164,12 +167,30 @@ namespace AudioConductor.Core
                     _sources[1].Pause();
                     _pausedIndex = 1;
                 }
+                else
+                {
+                    // Neither source is playing yet (within PlayScheduleDelay window).
+                    // AudioSource.Pause() on a scheduled-but-not-yet-playing source has undefined
+                    // behavior per Unity docs, so stop both and reschedule fresh on Resume.
+                    _sources[0].Stop();
+                    _sources[1].Stop();
+                    _wasStoppedBeforePlay = true;
+                }
 
                 IsPaused = true;
                 return;
             }
 
-            _sources[0].Pause();
+            if (_sources[0].IsPlaying)
+            {
+                _sources[0].Pause();
+            }
+            else
+            {
+                _sources[0].Stop();
+                _wasStoppedBeforePlay = true;
+            }
+
             IsPaused = true;
         }
 
@@ -177,6 +198,27 @@ namespace AudioConductor.Core
         {
             if (!IsPaused)
                 return;
+
+            if (_wasStoppedBeforePlay)
+            {
+                IsPaused = false;
+                if (_isPlaybackActive
+#if UNITY_WEBGL
+                    && !_isSystemPaused
+#endif
+                   )
+                {
+                    _wasStoppedBeforePlay = false;
+                    _nextPlayAudioSourceIndex = 0;
+                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+                }
+                else if (!_isPlaybackActive)
+                {
+                    _wasStoppedBeforePlay = false;
+                }
+
+                return;
+            }
 
             _pauseEndTime = _dspClock.DspTime;
             var pausedDuration = _pauseEndTime - _pauseStartTime;
@@ -201,6 +243,7 @@ namespace AudioConductor.Core
                 _sources[1].Stop();
 
             _isPlaybackActive = false;
+            _wasStoppedBeforePlay = false;
             InvokeStopAction();
             IsPaused = false;
         }
@@ -369,6 +412,7 @@ namespace AudioConductor.Core
             _pitchExternal = 1f;
             _nextPlayAudioSourceIndex = 0;
             IsPaused = false;
+            _wasStoppedBeforePlay = false;
 #if UNITY_WEBGL
             _isSystemPaused = false;
 #endif
