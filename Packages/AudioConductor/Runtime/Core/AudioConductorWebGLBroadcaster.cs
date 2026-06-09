@@ -23,12 +23,14 @@ namespace AudioConductor.Core
 
         private delegate void VisibilityChangeCallback(int isHidden);
 
+        // Keep a rooted reference to prevent GC collection of the delegate in IL2CPP/WebGL.
+        private static readonly VisibilityChangeCallback _visibilityChangeCallback = OnVisibilityChangedNative;
         private static readonly List<ConductorBehaviour> _instances = new();
 
         internal static void Register(ConductorBehaviour instance)
         {
             if (_instances.Count == 0)
-                AudioConductor_RegisterVisibilityChange(OnVisibilityChangedNative);
+                AudioConductor_RegisterVisibilityChange(_visibilityChangeCallback);
             _instances.Add(instance);
         }
 
