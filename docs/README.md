@@ -133,6 +133,7 @@ It has the following parameters:
 - Volume
 - Pitch
 - Pitch invert
+- Reference sample rate
 - Cue list
 
 ### Runtime settings
@@ -254,7 +255,15 @@ If you don't want to specify a version, you can also update the version by editi
 
 ### Sample-based parameters and AudioClip import settings
 
-Start sample, End sample, and Loop start sample are interpreted based on `AudioClip.frequency`. If Audio Import Settings convert the sample rate, the configured sample values will no longer match the intended playback positions. Ensure that the sample rate is consistent across all AudioClips and all build targets.
+Start sample, End sample, and Loop start sample are stored as integer sample indices relative to `AudioClip.frequency`. If the audio is decoded at a different frequency — because Audio Import Settings do not use **Preserve Sample Rate**, or because a platform resamples audio at runtime — the same sample index corresponds to a different point in time, shifting the playback position away from what was intended.
+
+`referenceSampleRate` records the sample rate at which the CueSheet's sample positions were authored. At runtime, AudioConductor scales each sample index to match the clip's actual decoding frequency. The value is stored per CueSheet rather than per track to keep asset data compact. All AudioClips in a project must share a single sample rate — if clip frequencies are inconsistent within a CueSheet, no single reference value can be recorded for it.
+
+When you open a project with CueSheets that have `referenceSampleRate` unset, a migration dialog appears and offers to apply the current clip frequencies automatically. You can also apply the value at any time using the **Apply** button in the **Reference Sample Rate** section of the CueSheet parameter pane.
+
+<p align="center">
+  <img width="30%" src="./Images/migration_dialog_01.png" alt="Migration Dialog">
+</p>
 
 ## Create setting assets
 
@@ -310,7 +319,9 @@ At the top of the window, there is a **Settings** dropdown where you select the 
 
 ### Edit cue-sheet parameters
 
-In this pane, you edit the cue-sheet name, concurrent play control, volume, pitch, etc.  
+In this pane, you edit the cue-sheet name, concurrent play control, volume, pitch, etc.
+
+The **Reference Sample Rate** field is shown as read-only. When it is unset (0), a warning is displayed. If all AudioClips in the CueSheet share the same sample rate, the **Apply** button becomes enabled and sets the value from the clip frequency.  
 
 <p align="center">
   <img width="70%" src="./Images/edit_cuesheet_02.png" alt="Edit CueSheet Parameters">
@@ -708,6 +719,7 @@ Clicking a result row opens the CueSheet Editor window and focuses the relevant 
 
 **Warnings**:
 - CueSheet: Cue list is empty.
+- CueSheet: `referenceSampleRate` is not set and the CueSheet has AudioClips assigned. Sample positions may drift if Audio Import Settings resample the audio or if a platform decodes at a different rate.
 - Cue: `Throttle limit` exceeds the parent CueSheet's throttle limit (when both are non-zero).
 - Cue: `Category ID` is not found in the selected AudioConductorSettings.
 - Track: Play type is Random but some tracks have `Random weight` = 0 (those tracks will never be selected).
