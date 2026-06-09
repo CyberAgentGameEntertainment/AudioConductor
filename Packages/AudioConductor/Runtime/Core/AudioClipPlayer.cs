@@ -13,7 +13,8 @@ using UnityEngine.Audio;
 
 namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayer : IFadeable
+    // ReSharper disable once PartialTypeWithSinglePart
+    internal sealed partial class AudioClipPlayer : IFadeable
     {
         private const int SourceNum = 2;
         private const float LoopLookaheadDuration = 1.0f;
@@ -61,7 +62,12 @@ namespace AudioConductor.Core
         public PlayerState State
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => IsPaused ? PlayerState.Paused
+            get =>
+#if UNITY_WEBGL
+                (IsPaused || _isSystemPaused) ? PlayerState.Paused
+#else
+                IsPaused ? PlayerState.Paused
+#endif
                 : _sources[0].IsPlaying || _sources[1].IsPlaying ? PlayerState.Playing
                 : PlayerState.Stopped;
         }
@@ -294,7 +300,11 @@ namespace AudioConductor.Core
 
             UpdateVolume();
 
-            if (IsPaused)
+            if (IsPaused
+#if UNITY_WEBGL
+                || _isSystemPaused
+#endif
+               )
                 return;
 
             if (_dspClock.DspTime < _nextEventTime)
@@ -359,6 +369,9 @@ namespace AudioConductor.Core
             _pitchExternal = 1f;
             _nextPlayAudioSourceIndex = 0;
             IsPaused = false;
+#if UNITY_WEBGL
+            _isSystemPaused = false;
+#endif
             _nextEventTime = 0;
             _pausedIndex = 0;
             _pauseStartTime = 0;

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace AudioConductor.Core
 {
-    internal sealed class ConductorBehaviour : MonoBehaviour
+    internal sealed partial class ConductorBehaviour : MonoBehaviour
     {
         internal Conductor? Conductor { get; set; }
 
