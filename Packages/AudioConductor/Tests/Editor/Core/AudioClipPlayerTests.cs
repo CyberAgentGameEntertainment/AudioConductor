@@ -569,6 +569,48 @@ namespace AudioConductor.Editor.Core.Tests
             Assert.That(called, Is.True);
         }
 
+        // --- Setup with referenceSampleRate ---
+
+        [Test]
+        public void Setup_ReferenceSampleRateZero_EndSampleNotScaled()
+        {
+            // referenceSampleRate=0 means unset; no conversion applied
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 0);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayScheduleDelay(0.1) + 22050/44100 = 0.6
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_ReferenceSampleRateMatchesClipFrequency_EndSampleNotScaled()
+        {
+            // referenceSampleRate == clipFrequency → no conversion
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 44100);
+
+            _player.Play();
+
+            // same as referenceSampleRate=0 case: 0.1 + 22050/44100 = 0.6
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_ReferenceSampleRateDiffersFromClipFrequency_EndSampleScaled()
+        {
+            // referenceSampleRate=22050, clipFrequency=44100 → endSample scaled by 44100/22050 = 2
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 22050);
+
+            _player.Play();
+
+            // convertedEnd = RoundToInt(22050 * 44100 / 22050) = 44100
+            // scheduledEndTime = 0.1 + 44100/44100 = 1.1
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.1).Within(0.001));
+        }
+
         // --- GetCurrentSample / SetCurrentSample ---
 
         [Test]
