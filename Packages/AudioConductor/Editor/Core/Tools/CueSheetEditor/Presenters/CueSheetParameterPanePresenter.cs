@@ -68,6 +68,13 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _model.PitchInvertObservable
                 .Subscribe(_view.SetPitchInvert)
                 .DisposeWith(_bindDisposable);
+            _model.ReferenceSampleRateObservable
+                .Subscribe(value =>
+                {
+                    _view.SetReferenceSampleRate(value);
+                    _view.SetApplyButtonEnabled(_model.CanApplyReferenceSampleRate);
+                })
+                .DisposeWith(_bindDisposable);
         }
 
         private void Unbind()
@@ -94,6 +101,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_viewEventDisposable);
             _view.PitchInvertChangedAsObservable
                 .Subscribe(value => _model.PitchInvert = value)
+                .DisposeWith(_viewEventDisposable);
+            _view.ApplyReferenceSampleRateAsObservable
+                .Subscribe(_ => _model.ApplyReferenceSampleRate())
                 .DisposeWith(_viewEventDisposable);
         }
 

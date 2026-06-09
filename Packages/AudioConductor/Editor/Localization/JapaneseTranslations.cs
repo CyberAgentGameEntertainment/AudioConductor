@@ -81,6 +81,15 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.volume", "CueSheet のデフォルト音量スケール (0.0 〜 1.0)" },
             { "cue_sheet_parameter.pitch", "CueSheet のデフォルトピッチスケール (0.01 〜 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転" },
+            {
+                "cue_sheet_parameter.reference_sample_rate",
+                "この CueSheet のサンプル位置が作成された基準サンプルレート。読み取り専用。起動時のマイグレーションダイアログで設定します。"
+            },
+            {
+                "cue_sheet_parameter.reference_sample_rate_warning",
+                "referenceSampleRate が未設定です。WebGL 等、オーディオデコード周波数が異なるプラットフォームでサンプル位置がずれる可能性があります。プロジェクトを再起動してマイグレーションを実行してください。"
+            },
+            { "cue_sheet_parameter.apply_reference_sample_rate", "クリップ周波数を基準サンプルレートとして適用" },
             { "other_operation.export_csv", "CueSheet データを CSV としてエクスポート" },
             { "other_operation.import_csv", "CSV から CueSheet データをインポート" },
             { "cue_enum_definition.default_output_path", "生成する enum ファイルのデフォルト出力先ディレクトリ" },

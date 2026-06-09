@@ -81,6 +81,15 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.volume", "Default CueSheet volume scale. (0.0 to 1.0)" },
             { "cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
+            {
+                "cue_sheet_parameter.reference_sample_rate",
+                "The sample rate at which sample positions in this CueSheet were authored. Read-only; set via migration dialog on startup."
+            },
+            {
+                "cue_sheet_parameter.reference_sample_rate_warning",
+                "referenceSampleRate is not set. Sample positions may drift on platforms with different audio decoding frequencies (e.g. WebGL). Re-open the project or run the migration via AudioConductor settings to apply."
+            },
+            { "cue_sheet_parameter.apply_reference_sample_rate", "Apply clip frequency as reference sample rate" },
             { "other_operation.export_csv", "Export CueSheet data to CSV." },
             { "other_operation.import_csv", "Import CueSheet data from CSV." },
             { "cue_enum_definition.default_output_path", "Default output directory for generated enum files." },

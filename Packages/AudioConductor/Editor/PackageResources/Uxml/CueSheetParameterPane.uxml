@@ -18,5 +18,10 @@
         <ui:VisualElement name="Row" style="flex-direction: row;">
             <ui:Toggle label="Pitch Invert" name="PitchInvert" style="flex-basis: 33.333%; padding-top: 2px;" />
         </ui:VisualElement>
+        <ui:VisualElement name="Row" style="flex-direction: row;">
+            <uie:IntegerField label="Reference Sample Rate" name="ReferenceSampleRate" style="flex-basis: 33.333%;" />
+        </ui:VisualElement>
+        <ui:HelpBox name="ReferenceSampleRateWarning" message-type="Warning" text="placeholder" />
+        <ui:Button name="ApplyReferenceSampleRateButton" text="placeholder" />
     </ui:VisualElement>
 </ui:UXML>
