@@ -96,7 +96,8 @@ namespace AudioConductor.Core
             bool isLoop,
             int startSample,
             int loopStartSample,
-            int endSample)
+            int endSample,
+            int referenceSampleRate = 0)
         {
             if (clip == null)
                 return;
@@ -109,7 +110,6 @@ namespace AudioConductor.Core
             _sources[0].Clip = clip;
             _sources[0].PlayOnAwake = false;
             _sources[0].Loop = false;
-            _sources[0].TimeSamples = startSample;
             _sources[1].OutputAudioMixerGroup = audioMixerGroup;
             _sources[1].Clip = clip;
             _sources[1].PlayOnAwake = false;
@@ -119,14 +119,20 @@ namespace AudioConductor.Core
             ClipSamples = clip.samples;
             CategoryId = categoryId;
 
+            var convertedStart = ConvertSample(startSample, referenceSampleRate, _frequency);
+            var convertedLoopStart = ConvertSample(loopStartSample, referenceSampleRate, _frequency);
+            var convertedEnd = ConvertSample(endSample, referenceSampleRate, _frequency);
+
+            _sources[0].TimeSamples = convertedStart;
+
             _volumeRuntime = 1f;
             SetPitchInternal(pitch);
             VolumeAsset = volume;
             UpdateVolume();
 
-            _startSample = ValueRangeConst.StartSample.Clamp(startSample, ClipSamples);
-            _loopStartSample = ValueRangeConst.LoopStartSample.Clamp(loopStartSample, ClipSamples);
-            _endSample = ValueRangeConst.EndSample.Clamp(endSample, ClipSamples);
+            _startSample = ValueRangeConst.StartSample.Clamp(convertedStart, ClipSamples);
+            _loopStartSample = ValueRangeConst.LoopStartSample.Clamp(convertedLoopStart, ClipSamples);
+            _endSample = ValueRangeConst.EndSample.Clamp(convertedEnd, ClipSamples);
         }
 
         public void Play()
@@ -557,6 +563,15 @@ namespace AudioConductor.Core
                 return _sources[0].TimeSamples > _sources[1].TimeSamples ? _sources[0] : _sources[1];
 
             return playing0 ? _sources[0] : playing1 ? _sources[1] : null;
+        }
+
+        // Converts a sample position from referenceSampleRate to clipFrequency.
+        // When referenceFrequency is 0 (unset)or already matches clipFrequency, no conversion is applied.
+        private static int ConvertSample(int sample, int referenceFrequency, int clipFrequency)
+        {
+            if (referenceFrequency == 0 || referenceFrequency == clipFrequency)
+                return sample;
+            return Mathf.RoundToInt((float)sample * clipFrequency / referenceFrequency);
         }
     }
 }
