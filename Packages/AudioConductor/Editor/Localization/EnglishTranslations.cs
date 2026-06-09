@@ -16,7 +16,10 @@ namespace AudioConductor.Editor.Localization
             { "settings.throttle_limit", "Limit of concurrent play." },
             { "settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction." },
             { "settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction." },
-            { "settings.deactivate_pooled_objects", "When enabled, pooled AudioClipPlayer GameObjects are deactivated while idle. Reduces active GameObject overhead at the cost of SetActive calls on rent/return." },
+            {
+                "settings.deactivate_pooled_objects",
+                "When enabled, pooled AudioClipPlayer GameObjects are deactivated while idle. Reduces active GameObject overhead at the cost of SetActive calls on rent/return."
+            },
             { "category.name", "Category name." },
             { "category.throttle_type", "Concurrent play control type." },
             { "category.throttle_limit", "Limit of concurrent play." },
@@ -115,7 +118,22 @@ namespace AudioConductor.Editor.Localization
             { "cue_enum_definition.asset.asset", "The CueSheetAsset reference." },
             { "cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet." },
             { "cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet." },
-            { "cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets." }
+            { "cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets." },
+            {
+                "migration.reference_sample_rate.dialog_title",
+                "AudioConductor Migration"
+            },
+            {
+                "migration.reference_sample_rate.dialog_message",
+                "The following CueSheets have no referenceSampleRate set.\nApply the current clip frequencies?"
+            },
+            { "migration.reference_sample_rate.apply", "Apply" },
+            { "migration.reference_sample_rate.skip", "Skip" },
+            { "migration.reference_sample_rate.dont_show_again", "Don't show again" },
+            {
+                "migration.reference_sample_rate.inconsistent_warning",
+                "[AudioConductor] CueSheet '{0}' has mixed AudioClip sample rates. Set referenceSampleRate manually."
+            }
         };
     }
 }
