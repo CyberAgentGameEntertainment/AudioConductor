@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.4.0 - 2026/06/09
+
+- Fix Issues
+  - Auto-pause and resume audio when the WebGL app loses focus
+  - Fix pause/resume not working correctly when Pause is called immediately after Play
+
 ## v2.3.0 - 2026/06/05
 
 - New Features
