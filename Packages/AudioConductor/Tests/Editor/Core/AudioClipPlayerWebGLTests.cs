@@ -197,9 +197,11 @@ namespace AudioConductor.Editor.Core.Tests
         {
             _clock.DspTime = 0.0;
             SetupAndPlay(true);
+            _clock.DspTime = 0.5;
+            _player.ManualUpdate(0f);
             _source0.IsPlaying = false;
             _source1.IsPlaying = true;
-            var scheduledEndTime = _source0.LastScheduledEndTime;
+            var scheduledEndTime = _source1.LastScheduledEndTime;
 
             _clock.DspTime = 1.0;
             _player.PauseBySystem();

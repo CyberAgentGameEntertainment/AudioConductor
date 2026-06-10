@@ -566,7 +566,7 @@ namespace AudioConductor.Core
         }
 
         // Converts a sample position from referenceSampleRate to clipFrequency.
-        // When referenceFrequency is 0 (unset)or already matches clipFrequency, no conversion is applied.
+        // When referenceFrequency is unset (0) or already matches clipFrequency, no conversion is applied.
         private static int ConvertSample(int sample, int referenceFrequency, int clipFrequency)
         {
             if (referenceFrequency == 0 || referenceFrequency == clipFrequency)
