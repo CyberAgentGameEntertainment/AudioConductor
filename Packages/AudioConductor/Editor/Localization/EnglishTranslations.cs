@@ -83,7 +83,7 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
             {
                 "cue_sheet_parameter.reference_sample_rate",
-                "The sample rate at which sample positions in this CueSheet were authored. Read-only; set via migration dialog on startup."
+                "The sample rate at which sample positions in this CueSheet were authored. Read-only; set via the startup migration dialog or the Apply button."
             },
             {
                 "cue_sheet_parameter.reference_sample_rate_warning",

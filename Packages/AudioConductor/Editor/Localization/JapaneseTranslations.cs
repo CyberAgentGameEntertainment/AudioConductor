@@ -83,7 +83,7 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転" },
             {
                 "cue_sheet_parameter.reference_sample_rate",
-                "この CueSheet のサンプル位置が作成された基準サンプルレート。読み取り専用。起動時のマイグレーションダイアログで設定します。"
+                "この CueSheet のサンプル位置が作成された基準サンプルレート。読み取り専用。起動時のマイグレーションダイアログまたは Apply ボタンで設定します。"
             },
             {
                 "cue_sheet_parameter.reference_sample_rate_warning",
