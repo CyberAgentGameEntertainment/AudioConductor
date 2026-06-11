@@ -207,6 +207,12 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             var message =
                 $"{Localization.Localization.Tr("migration.reference_sample_rate.dialog_message")}\n\n{names}";
 
+            if (Application.isBatchMode)
+            {
+                Debug.LogWarning($"[AudioConductor] {message}");
+                return;
+            }
+
             // 2: Don't show again
             var result = EditorUtility.DisplayDialogComplex(
                 Localization.Localization.Tr("migration.reference_sample_rate.dialog_title"),
