@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.1 - 2026/06/11
+
+- Fix Issues
+  - Fix loop sample range not being applied during track preview playback (regression in v2.0.0)
+
 ## v2.3.0 - 2026/06/05
 
 - New Features
