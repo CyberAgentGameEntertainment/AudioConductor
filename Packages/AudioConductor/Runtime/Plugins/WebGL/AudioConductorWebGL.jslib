@@ -1,21 +1,23 @@
-var _audioConductorListener = null;
-
 mergeInto(LibraryManager.library, {
+    $audioConductorListener: null,
+
+    AudioConductor_RegisterVisibilityChange__deps: ['$audioConductorListener'],
     AudioConductor_RegisterVisibilityChange: function (callbackPtr) {
-        if (_audioConductorListener) {
-            document.removeEventListener("visibilitychange", _audioConductorListener);
-            _audioConductorListener = null;
+        if (audioConductorListener) {
+            document.removeEventListener("visibilitychange", audioConductorListener);
+            audioConductorListener = null;
         }
-        _audioConductorListener = function () {
+        audioConductorListener = function () {
             {{{ makeDynCall('vi', 'callbackPtr') }}}(document.hidden ? 1 : 0);
         };
-        document.addEventListener("visibilitychange", _audioConductorListener);
+        document.addEventListener("visibilitychange", audioConductorListener);
     },
 
+    AudioConductor_UnregisterVisibilityChange__deps: ['$audioConductorListener'],
     AudioConductor_UnregisterVisibilityChange: function () {
-        if (_audioConductorListener) {
-            document.removeEventListener("visibilitychange", _audioConductorListener);
-            _audioConductorListener = null;
+        if (audioConductorListener) {
+            document.removeEventListener("visibilitychange", audioConductorListener);
+            audioConductorListener = null;
         }
     },
 
