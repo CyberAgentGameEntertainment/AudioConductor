@@ -87,7 +87,7 @@ namespace AudioConductor.Editor.Localization
             },
             {
                 "cue_sheet_parameter.reference_sample_rate_warning",
-                "referenceSampleRate が未設定です。WebGL 等、オーディオデコード周波数が異なるプラットフォームでサンプル位置がずれる可能性があります。プロジェクトを再起動してマイグレーションを実行してください。"
+                "referenceSampleRate が未設定です。WebGL 等、オーディオデコード周波数が異なるプラットフォームでサンプル位置がずれる可能性があります。プロジェクトを再起動してマイグレーションダイアログを実行するか、下の Apply ボタンを使用してください。"
             },
             { "cue_sheet_parameter.apply_reference_sample_rate", "クリップ周波数を基準サンプルレートとして適用" },
             { "other_operation.export_csv", "CueSheet データを CSV としてエクスポート" },

@@ -87,7 +87,7 @@ namespace AudioConductor.Editor.Localization
             },
             {
                 "cue_sheet_parameter.reference_sample_rate_warning",
-                "referenceSampleRate is not set. Sample positions may drift on platforms with different audio decoding frequencies (e.g. WebGL). Re-open the project or run the migration via AudioConductor settings to apply."
+                "referenceSampleRate is not set. Sample positions may drift on platforms with different audio decoding frequencies (e.g. WebGL). Re-open the project to run the migration dialog, or use the Apply button below."
             },
             { "cue_sheet_parameter.apply_reference_sample_rate", "Apply clip frequency as reference sample rate" },
             { "other_operation.export_csv", "Export CueSheet data to CSV." },
