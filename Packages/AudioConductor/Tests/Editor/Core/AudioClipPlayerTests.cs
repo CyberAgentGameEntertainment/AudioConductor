@@ -39,9 +39,10 @@ namespace AudioConductor.Editor.Core.Tests
         private AudioClipPlayer _player = null!;
         private AudioClip _clip = null!;
 
-        private void SetupPlayer(float volume = 1f, float pitch = 1f, bool isLoop = false, int endSample = 0)
+        private void SetupPlayer(float volume = 1f, float pitch = 1f, bool isLoop = false,
+            int loopStartSample = 0, int endSample = 0)
         {
-            _player.Setup(null, _clip, 0, volume, pitch, isLoop, 0, 0, endSample);
+            _player.Setup(null, _clip, 0, volume, pitch, isLoop, 0, loopStartSample, endSample);
         }
 
         // --- Volume (5-factor multiplication) ---
@@ -379,6 +380,20 @@ namespace AudioConductor.Editor.Core.Tests
             _clock.DspTime = 0.15;
             _player.ManualUpdate(0.1f);
             Assert.That(_source1.IsPlaying, Is.True);
+        }
+
+        [Test]
+        public void ManualUpdate_Loop_WithNonZeroLoopStartSample_StartsNextLoopAtLoopStartSample()
+        {
+            const int loopStartSample = 1000;
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: true, loopStartSample: loopStartSample, endSample: _clip.samples);
+            _player.Play();
+
+            _clock.DspTime = 0.15;
+            _player.ManualUpdate(0.1f);
+
+            Assert.That(_source1.TimeSamples, Is.EqualTo(loopStartSample));
         }
 
         // --- Restart ---
