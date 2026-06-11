@@ -25,84 +25,107 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             Object.DestroyImmediate(_clip);
         }
 
-        [Test]
-        public void IsPlaying_InitialState_ReturnsFalse()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void IsPlaying_InitialState_ReturnsFalse(bool isLoop, int startSample, int loopStartSample,
+            int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.That(controller.IsPlaying, Is.False);
         }
 
-        [Test]
-        public void IsPlaying_AfterDispose_ReturnsFalse()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void IsPlaying_AfterDispose_ReturnsFalse(bool isLoop, int startSample, int loopStartSample,
+            int endSample)
         {
-            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             controller.Dispose();
             Assert.That(controller.IsPlaying, Is.False);
         }
 
-        [Test]
-        public void GetCurrentSample_BeforePlay_ReturnsZero()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void GetCurrentSample_BeforePlay_ReturnsZero(bool isLoop, int startSample, int loopStartSample,
+            int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.That(controller.GetCurrentSample(), Is.EqualTo(0));
         }
 
-        [Test]
-        public void Dispose_CalledTwice_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Dispose_CalledTwice_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             controller.Dispose();
             Assert.DoesNotThrow(() => controller.Dispose());
         }
 
-        [Test]
-        public void Play_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Play_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.DoesNotThrow(() => controller.Play());
         }
 
-        [Test]
-        public void Stop_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Stop_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.DoesNotThrow(() => controller.Stop());
         }
 
-        [Test]
-        public void Pause_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Pause_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.DoesNotThrow(() => controller.Pause());
         }
 
-        [Test]
-        public void UnPause_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void UnPause_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             Assert.DoesNotThrow(() => controller.UnPause());
         }
 
         [Test]
         public void SetCurrentSample_ThenGetCurrentSample_ReturnsSetValue()
         {
-            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            using var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0, 0, 0);
             controller.SetCurrentSample(100);
             Assert.That(controller.GetCurrentSample(), Is.EqualTo(100));
         }
 
-        [Test]
-        public void Play_AfterDispose_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Play_AfterDispose_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             controller.Dispose();
             Assert.DoesNotThrow(() => controller.Play());
         }
 
-        [Test]
-        public void Stop_AfterDispose_DoesNotThrow()
+        [TestCase(false, 0, 0, 0)]
+        [TestCase(true, 0, 1000, 40000)]
+        public void Stop_AfterDispose_DoesNotThrow(bool isLoop, int startSample, int loopStartSample, int endSample)
         {
-            var controller = new TrackPreviewController(_clip, -1, 1f, 1f, false, 0);
+            var controller =
+                new TrackPreviewController(_clip, -1, 1f, 1f, isLoop, startSample, loopStartSample, endSample);
             controller.Dispose();
             Assert.DoesNotThrow(() => controller.Stop());
         }

@@ -38,7 +38,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             var startSample = _track.startSample;
 
             var controller = new TrackPreviewController(clip, _cue.categoryId, volume, pitch, isLoop,
-                sample ?? startSample);
+                sample ?? startSample, _track.loopStartSample, _track.endSample);
             controller.Play();
             return controller;
         }
