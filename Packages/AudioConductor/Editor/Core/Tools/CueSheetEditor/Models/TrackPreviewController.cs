@@ -55,8 +55,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             {
                 Object.DestroyImmediate(_gameObject);
                 _gameObject = null;
-                _player = null;
             }
+
+            _player = null;
         }
 
         public void Play()
