@@ -123,8 +123,6 @@ namespace AudioConductor.Core
             var convertedLoopStart = ConvertSample(loopStartSample, referenceSampleRate, _frequency);
             var convertedEnd = ConvertSample(endSample, referenceSampleRate, _frequency);
 
-            _sources[0].TimeSamples = convertedStart;
-
             _volumeRuntime = 1f;
             SetPitchInternal(pitch);
             VolumeAsset = volume;
@@ -133,6 +131,8 @@ namespace AudioConductor.Core
             _startSample = ValueRangeConst.StartSample.Clamp(convertedStart, ClipSamples);
             _loopStartSample = ValueRangeConst.LoopStartSample.Clamp(convertedLoopStart, ClipSamples);
             _endSample = ValueRangeConst.EndSample.Clamp(convertedEnd, ClipSamples);
+
+            _sources[0].TimeSamples = _startSample;
         }
 
         public void Play()
