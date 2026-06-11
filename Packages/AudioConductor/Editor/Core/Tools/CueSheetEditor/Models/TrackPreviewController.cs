@@ -5,7 +5,10 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core;
+using AudioConductor.Core.Enums;
 using AudioConductor.Editor.Core.Tools.Shared;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -16,76 +19,80 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     /// </summary>
     internal sealed class TrackPreviewController : IDisposable
     {
-        private AudioSource? _audioSource;
         private GameObject? _gameObject;
+        private AudioClipPlayer? _player;
 
         public TrackPreviewController(AudioClip clip,
             int categoryId,
             float volume,
             float pitch,
             bool isLoop,
-            int startSample)
+            int startSample,
+            int loopStartSample,
+            int endSample)
         {
-            _gameObject = new GameObject("AudioConductor_TrackPreview");
-            _gameObject.hideFlags = HideFlags.HideAndDontSave;
+            _gameObject = new GameObject("AudioConductor_TrackPreview")
+            {
+                hideFlags = HideFlags.HideAndDontSave
+            };
 
-            _audioSource = _gameObject.AddComponent<AudioSource>();
+            _player = AudioClipPlayer.Create(_gameObject.transform, HideFlags.HideAndDontSave);
 
             var category = CategoryListRepository.instance.Find(categoryId);
-            _audioSource.outputAudioMixerGroup = category.audioMixerGroup;
-            _audioSource.clip = clip;
-            _audioSource.volume = volume;
-            _audioSource.pitch = pitch;
-            _audioSource.loop = isLoop;
-            _audioSource.timeSamples = startSample;
-            _audioSource.playOnAwake = false;
+            _player.Setup(category.audioMixerGroup, clip, categoryId, volume, pitch, isLoop,
+                startSample, loopStartSample, endSample);
+
+            EditorApplication.update += OnEditorUpdate;
         }
 
-        public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
+        public bool IsPlaying => _player is { State: PlayerState.Playing };
 
         public void Dispose()
         {
+            EditorApplication.update -= OnEditorUpdate;
+
             if (_gameObject != null)
             {
                 Object.DestroyImmediate(_gameObject);
                 _gameObject = null;
-                _audioSource = null;
             }
+
+            _player = null;
         }
 
         public void Play()
         {
-            if (_audioSource != null)
-                _audioSource.Play();
+            _player?.Play();
         }
 
         public void Stop()
         {
-            if (_audioSource != null)
-                _audioSource.Stop();
+            _player?.Stop();
         }
 
         public void Pause()
         {
-            if (_audioSource != null)
-                _audioSource.Pause();
+            _player?.Pause();
         }
 
         public void UnPause()
         {
-            if (_audioSource != null)
-                _audioSource.UnPause();
+            _player?.Resume();
         }
 
         public void SetCurrentSample(int sample)
         {
-            if (_audioSource != null)
-                _audioSource.timeSamples = sample;
+            _player?.SetCurrentSample(sample);
         }
 
         public int GetCurrentSample()
         {
-            return _audioSource != null ? _audioSource.timeSamples : 0;
+            return _player?.GetCurrentSample() ?? 0;
+        }
+
+        private void OnEditorUpdate()
+        {
+            _player?.ManualUpdate(0f);
         }
     }
 }

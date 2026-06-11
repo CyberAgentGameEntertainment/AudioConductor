@@ -381,10 +381,11 @@ namespace AudioConductor.Core
             }
         }
 
-        internal static AudioClipPlayer Create(Transform parent)
+        internal static AudioClipPlayer Create(Transform parent, HideFlags hideFlags = HideFlags.None)
         {
             var root = new GameObject(nameof(AudioClipPlayer));
             root.transform.SetParent(parent);
+            root.hideFlags = hideFlags;
             var sources = new IAudioSourceWrapper[SourceNum];
             for (var i = 0; i < SourceNum; i++)
                 sources[i] = new AudioSourceWrapper(root.AddComponent<AudioSource>());

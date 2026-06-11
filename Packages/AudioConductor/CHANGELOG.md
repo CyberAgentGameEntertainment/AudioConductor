@@ -1,12 +1,17 @@
 # Changelog
 
-## v2.4.0 - 2026/06/09
+## v2.4.0 - 2026/06/11
 
 - New Features
   - Add `referenceSampleRate` to CueSheet: sample positions are automatically scaled at runtime when the clip's actual decoding frequency differs from the authored rate, preventing playback drift on platforms that resample audio (e.g. when Audio Import Settings do not use Preserve Sample Rate)
 - Fix Issues
   - Auto-pause and resume audio when the WebGL app loses focus
   - Fix pause/resume not working correctly when Pause is called immediately after Play
+
+## v2.3.1 - 2026/06/11
+
+- Fix Issues
+  - Fix loop sample range not being applied during track preview playback (regression in v2.0.0)
 
 ## v2.3.0 - 2026/06/05
 
