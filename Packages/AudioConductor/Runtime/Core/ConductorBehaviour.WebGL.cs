@@ -39,6 +39,7 @@ namespace AudioConductor.Core
 
         internal void NotifySystemPause(bool pause)
         {
+            return; // temporary: disabled for debugging
             if (_isSystemPaused == pause)
                 return;
             _isSystemPaused = pause;
