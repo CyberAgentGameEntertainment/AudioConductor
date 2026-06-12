@@ -356,6 +356,16 @@ namespace AudioConductor.Core
                )
                 return;
 
+#if UNITY_WEBGL
+            TryRearmSchedule();
+
+            // While the arm made during suspension is still pending, the queued sound has
+            // produced no audio yet; advancing loop scheduling here would stack further
+            // suspended arms whose scheduled stops are all discarded by the engine.
+            if (_armedWhileContextSuspended)
+                return;
+#endif
+
             if (_dspClock.DspTime < _nextEventTime)
                 return;
 
@@ -422,6 +432,9 @@ namespace AudioConductor.Core
             _wasStoppedBeforePlay = false;
 #if UNITY_WEBGL
             _isSystemPaused = false;
+            _armedWhileContextSuspended = false;
+            _lastScheduledSourceIndex = 0;
+            _lastScheduledPlayStartTime = 0;
 #endif
             _nextEventTime = 0;
             _pausedIndex = 0;
@@ -455,10 +468,13 @@ namespace AudioConductor.Core
 
             _sources[_nextPlayAudioSourceIndex].TimeSamples = startSample;
             _sources[_nextPlayAudioSourceIndex].PlayScheduled(playStartTime);
+#if UNITY_WEBGL
+            _lastScheduledPlayStartTime = playStartTime;
+            ArmScheduledEnd(_nextPlayAudioSourceIndex, _scheduledEndTime);
+#else
             _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
-
+#endif
             UpdateNextEventTime();
-
             FlipNextPlayAudioSourceIndex();
         }
 
@@ -475,14 +491,22 @@ namespace AudioConductor.Core
             var nowSample = source.TimeSamples;
             _scheduledEndTime = CalculateScheduledEndTime(_dspClock.DspTime, nowSample, pitch);
 
+#if UNITY_WEBGL
+            ArmScheduledEnd(ReferenceEquals(source, _sources[0]) ? 0 : 1, _scheduledEndTime);
+#else
             source.SetScheduledEndTime(_scheduledEndTime);
+#endif
             UpdateNextEventTime();
         }
 
         private void ShiftScheduleByPauseDuration(double pausedDuration)
         {
             _scheduledEndTime += pausedDuration;
+#if UNITY_WEBGL
+            ArmScheduledEnd(_pausedIndex, _scheduledEndTime);
+#else
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
+#endif
             _nextEventTime += pausedDuration;
         }
 

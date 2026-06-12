@@ -16,6 +16,8 @@ namespace AudioConductor.Editor.Core.Tests.Fakes
         public int StopCount { get; private set; }
         public int PauseCount { get; private set; }
         public int UnPauseCount { get; private set; }
+        public int PlayScheduledCount { get; private set; }
+        public int SetScheduledEndTimeCount { get; private set; }
         public double LastPlayScheduledTime { get; private set; }
         public double LastScheduledEndTime { get; private set; }
         public bool IsPlaying { get; set; }
@@ -52,11 +54,13 @@ namespace AudioConductor.Editor.Core.Tests.Fakes
         public void PlayScheduled(double time)
         {
             IsPlaying = true;
+            PlayScheduledCount++;
             LastPlayScheduledTime = time;
         }
 
         public void SetScheduledEndTime(double time)
         {
+            SetScheduledEndTimeCount++;
             LastScheduledEndTime = time;
         }
     }

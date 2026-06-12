@@ -26,12 +26,14 @@ namespace AudioConductor.Editor.Core.Tests
             _player = new AudioClipPlayer(new IAudioSourceWrapper[] { _source0, _source1 }, _clock,
                 NullLifecycle.Instance);
             _clip = AudioClip.Create("test", 44100, 1, 44100, false);
+            _longClip = AudioClip.Create("long", 441000, 1, 44100, false);
         }
 
         [TearDown]
         public void TearDown()
         {
             Object.DestroyImmediate(_clip);
+            Object.DestroyImmediate(_longClip);
         }
 
         private SpyAudioSourceWrapper _source0 = null!;
@@ -39,6 +41,7 @@ namespace AudioConductor.Editor.Core.Tests
         private StubDspClock _clock = null!;
         private AudioClipPlayer _player = null!;
         private AudioClip _clip = null!;
+        private AudioClip _longClip = null!;
 
         private void SetupAndPlay(bool isLoop = false)
         {
@@ -313,6 +316,190 @@ namespace AudioConductor.Editor.Core.Tests
             _player.ResetState();
 
             Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
+        }
+
+        // --- Scheduled-stop re-arm after AudioContext resume ---
+        // A SetScheduledEndTime issued while the browser AudioContext is suspended is
+        // silently discarded by the engine's JS layer and never re-armed, so the player
+        // must re-arm it once the context starts running.
+
+        [Test]
+        public void ManualUpdate_ArmedWhileContextSuspended_RearmsScheduledEndAfterResume()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+
+            running = true;
+            _clock.DspTime = 15.0;
+            _source0.TimeSamples = 220500; // engine catch-up resumed mid-content (5s)
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(2));
+            // 15.0 + (441000 - 220500) / 44100 = 20.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(20.0).Within(1e-3));
+            Assert.That(_source1.PlayScheduledCount, Is.Zero);
+        }
+
+        [Test]
+        public void ManualUpdate_ContextRunningAtSchedule_DoesNotRearm()
+        {
+            _player.IsAudioContextRunningOverride = () => true;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+
+            _clock.DspTime = 0.5;
+            _source0.TimeSamples = 22050;
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ManualUpdate_ContextStillSuspended_DefersLoopSchedulingUntilResume()
+        {
+            _player.IsAudioContextRunningOverride = () => false;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+
+            _clock.DspTime = 15.0; // past _nextEventTime while still suspended
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(1));
+            Assert.That(_source1.PlayScheduledCount, Is.Zero);
+        }
+
+        [Test]
+        public void ManualUpdate_CatchUpOvershotEndSample_Loop_ForcesImmediateLoopBoundary()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 44100, 220500);
+            _player.Play();
+
+            running = true;
+            _clock.DspTime = 15.0;
+            _source0.TimeSamples = 308700; // catch-up landed past the end sample (7s > 5s)
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(15.0).Within(1e-3));
+            Assert.That(_source1.PlayScheduledCount, Is.EqualTo(1));
+            Assert.That(_source1.LastPlayScheduledTime, Is.EqualTo(15.0).Within(1e-3));
+            Assert.That(_source1.TimeSamples, Is.EqualTo(44100));
+            // 15.0 + (220500 - 44100) / 44100 = 19.0
+            Assert.That(_source1.LastScheduledEndTime, Is.EqualTo(19.0).Within(1e-3));
+        }
+
+        [Test]
+        public void ManualUpdate_CatchUpOvershotEndSample_NonLoop_FiresEndAction()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, false, 0, 0, 220500);
+            _player.Play();
+            var ended = false;
+            _player.SetEndAction(() => ended = true);
+
+            running = true;
+            _clock.DspTime = 15.0;
+            _source0.TimeSamples = 240000;
+            _player.ManualUpdate(0f);
+
+            Assert.That(ended, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
+        }
+
+        [Test]
+        public void ManualUpdate_ArmedWhileContextSuspended_InPlayScheduleDelayWindow_RearmsScheduledEnd()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, false, 0, 0, _longClip.samples);
+            _player.Play();
+            var originalEndTime = _source0.LastScheduledEndTime;
+
+            running = true;
+            _clock.DspTime = 0.05; // within PlayScheduleDelay window (< 0.1)
+            _source0.IsPlaying = false; // source queued but not yet audible
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(2));
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(originalEndTime).Within(1e-3));
+        }
+
+        [Test]
+        public void ResumeBySystem_ContextStillSuspended_ArmsForRearmOnContextResume()
+        {
+            var running = true;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, false, 0, 0, _longClip.samples);
+            _player.Play();
+            _source0.IsPlaying = true;
+
+            _clock.DspTime = 1.0;
+            _player.PauseBySystem();
+
+            running = false;
+            _clock.DspTime = 3.0;
+            _player.ResumeBySystem();
+            var countAfterResume = _source0.SetScheduledEndTimeCount;
+
+            running = true;
+            _clock.DspTime = 3.5;
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.GreaterThan(countAfterResume));
+        }
+
+        [Test]
+        public void Resume_ContextStillSuspended_ArmsForRearmOnContextResume()
+        {
+            var running = true;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, false, 0, 0, _longClip.samples);
+            _player.Play();
+            _source0.IsPlaying = true;
+
+            _clock.DspTime = 1.0;
+            _player.Pause();
+
+            running = false;
+            _clock.DspTime = 3.0;
+            _player.Resume();
+            var countAfterResume = _source0.SetScheduledEndTimeCount;
+
+            running = true;
+            _clock.DspTime = 3.5;
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.GreaterThan(countAfterResume));
+        }
+
+        [Test]
+        public void ManualUpdate_CatchUpOvershotClipEnd_ResumesLoopScheduling()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+
+            running = true;
+            _clock.DspTime = 15.0;
+            _source0.IsPlaying = false; // the queued sound died instantly (offset beyond clip end)
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(1)); // nothing to re-arm
+            Assert.That(_source1.PlayScheduledCount, Is.EqualTo(1)); // loop scheduling resumed
         }
     }
 }

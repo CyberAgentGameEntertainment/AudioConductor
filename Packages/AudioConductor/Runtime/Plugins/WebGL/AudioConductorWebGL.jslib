@@ -23,5 +23,13 @@ mergeInto(LibraryManager.library, {
 
     AudioConductor_IsDocumentHidden: function () {
         return document.hidden ? 1 : 0;
+    },
+
+    AudioConductor_IsAudioContextRunning: function () {
+        // WEBAudio is the state object of Unity's built-in audio library, merged into
+        // the same emscripten module scope as this plugin.
+        if (typeof WEBAudio === 'undefined' || !WEBAudio.audioContext)
+            return 1; // fail-open: behave as before this guard existed
+        return WEBAudio.audioContext.state === 'running' ? 1 : 0;
     }
 });
