@@ -20,6 +20,9 @@ namespace AudioConductor.Editor.Core.Tests
         [SetUp]
         public void SetUp()
         {
+            // These tests cover the FakeMod dsp-clock scheduling path; force it on so EditMode does
+            // not fall through to the stock AudioSource.SetScheduledEndTime path.
+            AudioClipPlayer.UsesAudioConductorSchedulingOverride = true;
             _source0 = new SpyAudioSourceWrapper();
             _source1 = new SpyAudioSourceWrapper();
             _clock = new StubDspClock();
@@ -32,6 +35,7 @@ namespace AudioConductor.Editor.Core.Tests
         [TearDown]
         public void TearDown()
         {
+            AudioClipPlayer.UsesAudioConductorSchedulingOverride = null;
             Object.DestroyImmediate(_clip);
             Object.DestroyImmediate(_longClip);
         }
@@ -83,7 +87,6 @@ namespace AudioConductor.Editor.Core.Tests
 
             _player.PauseBySystem();
 
-            // Only the user Pause() call should have called Pause on the source
             Assert.That(_source0.PauseCount, Is.EqualTo(1));
         }
 
@@ -482,6 +485,139 @@ namespace AudioConductor.Editor.Core.Tests
             _player.ManualUpdate(0f);
 
             Assert.That(_source0.SetScheduledEndTimeCount, Is.GreaterThan(countAfterResume));
+        }
+
+        // --- Backend-detect-pending deferral on SetPitch/SetCurrentSample ---
+        // While the playback backend is still unknown (CompressedInMemory/Streaming loop), arming a
+        // scheduled stop is irreversible on a buffer source (WebAudio stop() cannot be cancelled).
+        // SetPitch/SetCurrentSample must defer arming until ResolvePendingBackend commits the strategy.
+
+        [Test]
+        public void SetPitch_WhileBackendDetectPending_DoesNotArmScheduledStop()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+            _source0.IsPlaying = true; // audible, but backend not yet resolved
+            var armCountBefore = _source0.SetScheduledEndTimeCount;
+
+            _player.SetPitch(1.5f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(armCountBefore));
+        }
+
+        [Test]
+        public void SetCurrentSample_WhileBackendDetectPending_DoesNotArmScheduledStop()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+            _source0.IsPlaying = true;
+            var armCountBefore = _source0.SetScheduledEndTimeCount;
+
+            _player.SetCurrentSample(44100);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(armCountBefore));
+        }
+
+        [Test]
+        public void SetPitch_AfterBackendResolved_ArmsScheduledStop()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+            _source0.IsPlaying = true;
+            _player.ManualUpdate(0f); // ResolvePendingBackend clears _backendDetectPending
+            var armCountBefore = _source0.SetScheduledEndTimeCount;
+
+            _player.SetPitch(1.5f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.GreaterThan(armCountBefore));
+        }
+
+        // While the backend is still unknown, PauseBySystem must not Pause() (it would risk the
+        // MediaElement catch-up glitch if the source resolves to MediaElement) and must restart from
+        // the start sample on resume so a cue with an intro region (loopStart > start) is not truncated.
+
+        [Test]
+        public void PauseBySystem_LoopBackendPending_StopsBothSourcesWithoutPausing()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 44100, 220500);
+            _player.Play();
+            _source0.IsPlaying = true; // audible, but backend not yet resolved
+
+            _player.PauseBySystem();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_source1.PauseCount, Is.EqualTo(0));
+            Assert.That(_source0.StopCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(_source1.StopCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
+        [Test]
+        public void ResumeBySystem_LoopBackendPending_ReschedulesFromStartSample()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 44100, 220500);
+            _player.Play();
+            _source0.IsPlaying = true;
+            _player.PauseBySystem();
+            _source0.TimeSamples = 99999; // ensure the resume reschedule overwrites the position
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.TimeSamples, Is.EqualTo(0)); // start sample, not loopStart (44100)
+        }
+
+        // A MediaElement crossover loop interrupted by a system pause is rescheduled fresh on resume.
+        // A pause that lands inside the intro region (start..loopStart) must resume from the captured
+        // live position so the remaining intro is not truncated; a pause inside the loop body resumes
+        // from loopStart, the loop's own restart point.
+
+        [Test]
+        public void ResumeBySystem_LoopMediaElement_PausedDuringIntro_ResumesFromCapturedPosition()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 44100, 220500);
+            _player.Play();
+            _source0.IsPlaying = true;
+            _player.ManualUpdate(0f); // resolve backend -> MediaElement crossover (not native, not pending)
+            _source0.TimeSamples = 22050; // mid-intro (< loopStart 44100)
+            _player.PauseBySystem();
+            _source0.TimeSamples = 99999; // residue after stop; resume must overwrite from captured value
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.TimeSamples, Is.EqualTo(22050));
+        }
+
+        [Test]
+        public void ResumeBySystem_LoopMediaElement_PausedInLoopBody_ResumesFromLoopStart()
+        {
+            _player.LoadTypeOverride = AudioClipLoadType.CompressedInMemory;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 44100, 220500);
+            _player.Play();
+            _source0.IsPlaying = true;
+            _player.ManualUpdate(0f); // resolve backend -> MediaElement crossover
+            _source0.TimeSamples = 100000; // inside loop body (>= loopStart 44100)
+            _player.PauseBySystem();
+            _source0.TimeSamples = 99999;
+
+            _player.ResumeBySystem();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.TimeSamples, Is.EqualTo(44100));
         }
 
         [Test]

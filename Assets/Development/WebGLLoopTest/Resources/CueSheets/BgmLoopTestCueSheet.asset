@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a2a166b4c2c548b991995a3cb1b2885, type: 3}
+  m_Name: BgmLoopTestCueSheet
+  m_EditorClassIdentifier: 
+  cueSheet:
+    name: BgmLoopTestCueSheet
+    throttleType: 0
+    throttleLimit: 0
+    volume: 1
+    pitch: 1
+    pitchInvert: 0
+    referenceSampleRate: 44100
+    cueList:
+    - name: DecompressOnLoad
+      categoryId: 0
+      throttleType: 0
+      throttleLimit: 3
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      cueId: 1
+      trackList:
+      - name: DecompressOnLoad
+        audioClip: {fileID: 8300000, guid: 7c3c7a7e4fce74155938b4176b33c9a5, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 349693
+        loopStartSample: 149693
+        isLoop: 1
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 0d7991c9-88d6-4cd1-abcf-d1aefb487f0c
+        colorId: 
+      id: bba50dbf-8944-4251-b059-f7f9546f963f
+      colorId: 
+    - name: CompressedInMemory
+      categoryId: 0
+      throttleType: 0
+      throttleLimit: 3
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      cueId: 2
+      trackList:
+      - name: CompressedInMemory
+        audioClip: {fileID: 8300000, guid: 1747fd66e075a40d6a80e87e1ec61d21, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 349693
+        loopStartSample: 149693
+        isLoop: 1
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 5a1422d5-52ea-49e0-b575-b0e822008bac
+        colorId: 
+      id: 91abd040-ad35-4952-b484-023c91d9a653
+      colorId: 
+    - name: Streaming
+      categoryId: 0
+      throttleType: 0
+      throttleLimit: 3
+      volume: 1
+      volumeRange: 0
+      pitch: 1
+      pitchRange: 0
+      pitchInvert: 0
+      playType: 0
+      cueId: 3
+      trackList:
+      - name: Streaming
+        audioClip: {fileID: 8300000, guid: d24bc86cc1f7b4872b08583c0cbdb8b8, type: 3}
+        volume: 1
+        volumeRange: 0
+        pitch: 1
+        pitchRange: 0
+        pitchInvert: 0
+        startSample: 0
+        endSample: 349693
+        loopStartSample: 149693
+        isLoop: 1
+        randomWeight: 0
+        priority: 0
+        fadeTime: 0
+        id: 8efce089-c99e-4f3e-825e-d914e9a791c4
+        colorId: 
+      id: 09e87886-6490-4e82-8839-6542e19b9f16
+      colorId: 
+    id: 4fb859b0-418f-4de3-b3f1-2dd424b43473

@@ -118,6 +118,12 @@ namespace AudioConductor.Core
             _frequency = clip.frequency;
             ClipSamples = clip.samples;
             CategoryId = categoryId;
+#if UNITY_WEBGL
+            // Decide the loop strategy from the playback backend (buffer = native loop,
+            // MediaElement = crossover). The backend can vary by browser/version, so for
+            // CompressedInMemory/Streaming it may be resolved lazily after the first play.
+            SetupNativeLoopMode(clip.loadType);
+#endif
 
             var convertedStart = ConvertSample(startSample, referenceSampleRate, _frequency);
             var convertedLoopStart = ConvertSample(loopStartSample, referenceSampleRate, _frequency);
@@ -250,6 +256,9 @@ namespace AudioConductor.Core
 
             _isPlaybackActive = false;
             _wasStoppedBeforePlay = false;
+#if UNITY_WEBGL
+            CancelPendingBinds();
+#endif
             InvokeStopAction();
             IsPaused = false;
         }
@@ -357,13 +366,21 @@ namespace AudioConductor.Core
                 return;
 
 #if UNITY_WEBGL
-            TryRearmSchedule();
+            if (UsesAudioConductorScheduling)
+            {
+                // Resolve the deferred backend once the first source exists; this commits the loop
+                // strategy (native loop for a buffer source, crossover for a MediaElement source).
+                if (_backendDetectPending && !ResolvePendingBackend())
+                    return;
 
-            // While the arm made during suspension is still pending, the queued sound has
-            // produced no audio yet; advancing loop scheduling here would stack further
-            // suspended arms whose scheduled stops are all discarded by the engine.
-            if (_armedWhileContextSuspended)
-                return;
+                TryRearmSchedule();
+
+                // While the arm made during suspension is still pending, the queued sound has
+                // produced no audio yet; advancing loop scheduling here would stack further
+                // suspended arms whose scheduled stops are all discarded by the engine.
+                if (_armedWhileContextSuspended)
+                    return;
+            }
 #endif
 
             if (_dspClock.DspTime < _nextEventTime)
@@ -432,9 +449,12 @@ namespace AudioConductor.Core
             _wasStoppedBeforePlay = false;
 #if UNITY_WEBGL
             _isSystemPaused = false;
+            _resumeFromLoopStart = false;
+            _webGLNativeLoopActive = false;
             _armedWhileContextSuspended = false;
             _lastScheduledSourceIndex = 0;
             _lastScheduledPlayStartTime = 0;
+            CancelPendingBinds();
 #endif
             _nextEventTime = 0;
             _pausedIndex = 0;
@@ -467,10 +487,33 @@ namespace AudioConductor.Core
             _scheduledEndTime = CalculateScheduledEndTime(playStartTime, startSample, pitch);
 
             _sources[_nextPlayAudioSourceIndex].TimeSamples = startSample;
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+                PrepareNativeLoopBeforePlay(startSample);
+#endif
             _sources[_nextPlayAudioSourceIndex].PlayScheduled(playStartTime);
 #if UNITY_WEBGL
-            _lastScheduledPlayStartTime = playStartTime;
-            ArmScheduledEnd(_nextPlayAudioSourceIndex, _scheduledEndTime);
+            if (UsesAudioConductorScheduling)
+            {
+                _lastScheduledPlayStartTime = playStartTime;
+                if (_backendDetectPending)
+                {
+                    // Backend unknown: play, but defer arming until ResolvePendingBackend runs on the
+                    // next update. Arming a stop now would be irreversible on a buffer source and
+                    // break the native loop we may switch to.
+                    _lastScheduledSourceIndex = _nextPlayAudioSourceIndex;
+                    _armedWhileContextSuspended = false;
+                    _nextEventTime = double.MaxValue;
+                    FlipNextPlayAudioSourceIndex();
+                    return;
+                }
+
+                ArmScheduledEnd(_nextPlayAudioSourceIndex, _scheduledEndTime);
+            }
+            else
+            {
+                _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
+            }
 #else
             _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
 #endif
@@ -492,7 +535,21 @@ namespace AudioConductor.Core
             _scheduledEndTime = CalculateScheduledEndTime(_dspClock.DspTime, nowSample, pitch);
 
 #if UNITY_WEBGL
-            ArmScheduledEnd(ReferenceEquals(source, _sources[0]) ? 0 : 1, _scheduledEndTime);
+            if (UsesAudioConductorScheduling)
+            {
+                // Backend unknown: defer arming. Arming a stop now would be irreversible on a buffer
+                // source (WebAudio stop() cannot be cancelled, and a later native loop cannot revive
+                // it). ResolvePendingBackend commits the loop strategy on the next update - a native
+                // loop for a buffer source, or the crossover arm for a MediaElement source - so the
+                // recalculated end time is reconstructed there. Mirrors the deferral in SchedulePlayback.
+                if (_backendDetectPending)
+                    return;
+                ArmScheduledEnd(ReferenceEquals(source, _sources[0]) ? 0 : 1, _scheduledEndTime);
+            }
+            else
+            {
+                source.SetScheduledEndTime(_scheduledEndTime);
+            }
 #else
             source.SetScheduledEndTime(_scheduledEndTime);
 #endif
@@ -503,7 +560,10 @@ namespace AudioConductor.Core
         {
             _scheduledEndTime += pausedDuration;
 #if UNITY_WEBGL
-            ArmScheduledEnd(_pausedIndex, _scheduledEndTime);
+            if (UsesAudioConductorScheduling)
+                ArmScheduledEnd(_pausedIndex, _scheduledEndTime);
+            else
+                _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
 #else
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
 #endif
