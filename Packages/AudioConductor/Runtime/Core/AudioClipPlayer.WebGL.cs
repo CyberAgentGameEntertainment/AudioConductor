@@ -383,9 +383,8 @@ namespace AudioConductor.Core
         private int ResolveSystemResumeSample()
         {
             var source = GetPlayingSource();
-            return source != null && source.TimeSamples < _loopStartSample
-                ? source.TimeSamples
-                : _loopStartSample;
+            if (source == null) return _startSample;
+            return source.TimeSamples < _loopStartSample ? source.TimeSamples : _loopStartSample;
         }
 
         internal void ResumeBySystem()
