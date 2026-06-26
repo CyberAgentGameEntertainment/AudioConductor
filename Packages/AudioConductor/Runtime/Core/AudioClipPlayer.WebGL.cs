@@ -311,6 +311,7 @@ namespace AudioConductor.Core
                 // the loop strategy on resume.
                 _sources[0].Stop();
                 _sources[1].Stop();
+                CancelPendingBinds();
                 _wasStoppedBeforePlay = true;
                 return;
             }
@@ -331,6 +332,7 @@ namespace AudioConductor.Core
                 _resumeSample = ResolveSystemResumeSample();
                 _sources[0].Stop();
                 _sources[1].Stop();
+                CancelPendingBinds();
                 _resumeFromLoopStart = true;
                 return;
             }
@@ -356,6 +358,7 @@ namespace AudioConductor.Core
                     // behavior per Unity docs, so stop both and reschedule fresh on ResumeBySystem.
                     _sources[0].Stop();
                     _sources[1].Stop();
+                    CancelPendingBinds();
                     _wasStoppedBeforePlay = true;
                 }
 
@@ -369,6 +372,7 @@ namespace AudioConductor.Core
             else
             {
                 _sources[0].Stop();
+                CancelPendingBinds();
                 _wasStoppedBeforePlay = true;
             }
         }

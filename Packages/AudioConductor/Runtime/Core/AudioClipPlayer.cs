@@ -186,6 +186,9 @@ namespace AudioConductor.Core
                     // behavior per Unity docs, so stop both and reschedule fresh on Resume.
                     _sources[0].Stop();
                     _sources[1].Stop();
+#if UNITY_WEBGL
+                    CancelPendingBinds();
+#endif
                     _wasStoppedBeforePlay = true;
                 }
 
@@ -200,6 +203,9 @@ namespace AudioConductor.Core
             else
             {
                 _sources[0].Stop();
+#if UNITY_WEBGL
+                CancelPendingBinds();
+#endif
                 _wasStoppedBeforePlay = true;
             }
 
