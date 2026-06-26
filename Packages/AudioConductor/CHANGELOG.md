@@ -1,12 +1,12 @@
 # Changelog
 
-## v2.4.0 - 2026/06/11
+## v2.4.0 - 2026/06/26
 
 - New Features
-  - Add `referenceSampleRate` to CueSheet: sample positions are automatically scaled at runtime when the clip's actual decoding frequency differs from the authored rate, preventing playback drift on platforms that resample audio (e.g. when Audio Import Settings do not use Preserve Sample Rate)
+  - Add `referenceSampleRate` to CueSheet: sample positions are automatically scaled at runtime when the clip's actual decoding frequency differs from the authored rate, preventing playback drift on platforms that resample audio (e.g. when Audio Import Settings do not use Preserve Sample Rate); the editor warns when `referenceSampleRate` is unset (Inspector, validation window, and build) and shows a one-time migration dialog on startup to help set it on existing CueSheets
+  - Seamless BGM loop and reliable scheduled playback on WebGL: Unity's `AudioSource.SetScheduledEndTime` does not work on WebGL even in versions where the reported bug is marked as fixed, and Unity exposes no API to correlate a C# AudioSource with its underlying WebAudio channel. AudioConductor intercepts Unity's internal channel-creation hook to establish the binding and manages loop points and scheduled stops directly via WebAudio. DecompressOnLoad uses native WebAudio loop; CompressedInMemory and Streaming detect their backend at runtime and apply native loop or a crossover strategy accordingly. Pause/resume on app focus loss and system interruptions is also handled under this layer.
 - Fix Issues
-  - Auto-pause and resume audio when the WebGL app loses focus
-  - Fix pause/resume not working correctly when Pause is called immediately after Play
+  - Fix out-of-range sample position assignment when setting up a cue with loop points
 
 ## v2.3.1 - 2026/06/11
 
