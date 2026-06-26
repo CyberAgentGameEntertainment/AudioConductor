@@ -20,6 +20,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     internal sealed class CueSheetParameterPaneModel : ICueSheetParameterPaneModel
     {
         private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<bool> _canApplyReferenceSampleRate;
         private readonly AutoIncrementHistory _history;
         private readonly CueSheet _rawCueSheet;
         private readonly ObservableCueSheet _target;
@@ -32,11 +33,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _target = new ObservableCueSheet(cueSheet);
             _history = history;
             _assetSaveService = assetSaveService;
+            _canApplyReferenceSampleRate = new ObservableProperty<bool>(CanApplyReferenceSampleRate);
         }
 
         public IReadOnlyObservableProperty<int> ReferenceSampleRateObservable => _target.ReferenceSampleRateObservable;
 
         public bool CanApplyReferenceSampleRate => CollectClipFrequencies().Count == 1;
+
+        public IReadOnlyObservableProperty<bool> CanApplyReferenceSampleRateObservable => _canApplyReferenceSampleRate;
+
+        public void NotifyClipsChanged()
+        {
+            _canApplyReferenceSampleRate.Value = CanApplyReferenceSampleRate;
+        }
 
         public void ApplyReferenceSampleRate()
         {

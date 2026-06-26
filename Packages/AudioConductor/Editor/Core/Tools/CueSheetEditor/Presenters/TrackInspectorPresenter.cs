@@ -35,6 +35,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.Dispose();
         }
 
+        public event Action? ClipChanged;
+
         public void Setup()
         {
             _view.Setup();
@@ -71,6 +73,9 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .DisposeWith(_bindDisposable);
             model.AudioClipObservable
                 .Subscribe(_view.SetAudioClip)
+                .DisposeWith(_bindDisposable);
+            model.AudioClipObservable
+                .Subscribe(_ => ClipChanged?.Invoke())
                 .DisposeWith(_bindDisposable);
             model.AudioClipObservable
                 .Subscribe(_view.SetSampleRange)

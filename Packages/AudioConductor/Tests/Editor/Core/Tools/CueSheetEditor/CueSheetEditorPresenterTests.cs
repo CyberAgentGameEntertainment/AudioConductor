@@ -250,6 +250,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             internal int SetupCount { get; private set; }
             internal List<string> FocusCueArgs { get; } = new();
 
+            public event Action? TrackClipChanged;
+
             public void Dispose()
             {
                 DisposeCount++;
@@ -273,6 +275,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Tests
             public void FocusCue(string cueEditorId)
             {
                 FocusCueArgs.Add(cueEditorId);
+            }
+
+            internal void RaiseTrackClipChanged()
+            {
+                TrackClipChanged?.Invoke();
             }
         }
     }

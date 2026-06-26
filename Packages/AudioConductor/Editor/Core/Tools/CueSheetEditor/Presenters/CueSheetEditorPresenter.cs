@@ -107,11 +107,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _view.TabSelectedAsObservable
                 .Subscribe(index => { _model.ObservablePaneState.Value = (Pane)index; })
                 .DisposeWith(_viewEventDisposable);
+            _cueListEditorPanePresenter.TrackClipChanged += OnTrackClipChanged;
         }
 
         private void CleanupViewEventHandlers()
         {
             _viewEventDisposable.Clear();
+            _cueListEditorPanePresenter.TrackClipChanged -= OnTrackClipChanged;
+        }
+
+        private void OnTrackClipChanged()
+        {
+            _model.CueSheetParameterPaneModel.NotifyClipsChanged();
         }
 
         private void OnSelectPane(Pane pane)

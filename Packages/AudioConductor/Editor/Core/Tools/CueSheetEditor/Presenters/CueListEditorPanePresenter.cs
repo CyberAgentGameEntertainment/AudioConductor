@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces;
 using AudioConductor.Editor.Core.Tools.CueSheetEditor.Views;
 using AudioConductor.Editor.Foundation.TinyRx;
@@ -39,6 +40,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _inspectorPresenter = null;
             _cueListPresenter = cueListPresenter;
         }
+
+        public event Action? TrackClipChanged;
 
         public void Dispose()
         {
@@ -125,13 +128,24 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
         private void SetupEventHandlers()
         {
             if (_inspectorPresenter is not null)
+            {
                 _cueListPresenter.OnSelectionItemChanged += _inspectorPresenter.SetModel;
+                _inspectorPresenter.TrackClipChanged += OnTrackClipChanged;
+            }
         }
 
         private void CleanupEventHandlers()
         {
             if (_inspectorPresenter is not null)
+            {
                 _cueListPresenter.OnSelectionItemChanged -= _inspectorPresenter.SetModel;
+                _inspectorPresenter.TrackClipChanged -= OnTrackClipChanged;
+            }
+        }
+
+        private void OnTrackClipChanged()
+        {
+            TrackClipChanged?.Invoke();
         }
     }
 }

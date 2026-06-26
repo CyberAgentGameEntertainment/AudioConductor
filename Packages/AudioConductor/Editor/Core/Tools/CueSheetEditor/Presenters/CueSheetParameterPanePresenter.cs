@@ -69,11 +69,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 .Subscribe(_view.SetPitchInvert)
                 .DisposeWith(_bindDisposable);
             _model.ReferenceSampleRateObservable
-                .Subscribe(value =>
-                {
-                    _view.SetReferenceSampleRate(value);
-                    _view.SetApplyButtonEnabled(_model.CanApplyReferenceSampleRate);
-                })
+                .Subscribe(_view.SetReferenceSampleRate)
+                .DisposeWith(_bindDisposable);
+            _model.CanApplyReferenceSampleRateObservable
+                .Subscribe(_view.SetApplyButtonEnabled)
                 .DisposeWith(_bindDisposable);
         }
 

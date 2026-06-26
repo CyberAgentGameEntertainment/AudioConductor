@@ -39,6 +39,10 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
 
         bool CanApplyReferenceSampleRate { get; }
 
+        IReadOnlyObservableProperty<bool> CanApplyReferenceSampleRateObservable { get; }
+
+        void NotifyClipsChanged();
+
         void ApplyReferenceSampleRate();
     }
 }

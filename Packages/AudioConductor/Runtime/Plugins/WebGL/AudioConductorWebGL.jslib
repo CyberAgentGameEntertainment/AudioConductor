@@ -236,8 +236,14 @@ mergeInto(LibraryManager.library, {
         if (!channel || !channel.source) return;
         // Future-only: a past endTime (stale after a ManualUpdate stall) must not become stop(0) and
         // silence a still-playing source. A later re-arm with a fresh future endTime stops it correctly.
+        // Allow a 0.1 ms grace margin (delta > -1e-4) to absorb JS execution lag: TryRearmSchedule sets
+        // _scheduledEndTime = _dspClock.DspTime for an immediate boundary, but by the time JS evaluates
+        // _GetFakemodTimeInSeconds the clock has advanced slightly, making delta zero or marginally negative.
+        // A ManualUpdate stall produces a delta of at least one frame (~16 ms), well outside this margin.
         var now = _GetFakemodTimeInSeconds();
-        if (endTime > now) channel.stop(endTime - now);
+        var delta = endTime - now;
+        if (delta > 0) channel.stop(delta);
+        else if (delta > -1e-4) channel.stop(0);
     },
 
     // Overrides Unity's JS_Sound_Create_Channel (delegating allocation to the captured stock impl) to

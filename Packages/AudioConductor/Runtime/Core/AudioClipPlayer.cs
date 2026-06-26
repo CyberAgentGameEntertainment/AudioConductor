@@ -656,7 +656,7 @@ namespace AudioConductor.Core
         {
             if (referenceFrequency == 0 || referenceFrequency == clipFrequency)
                 return sample;
-            return Mathf.RoundToInt((float)sample * clipFrequency / referenceFrequency);
+            return (int)Math.Round((double)sample * clipFrequency / referenceFrequency, MidpointRounding.AwayFromZero);
         }
     }
 }

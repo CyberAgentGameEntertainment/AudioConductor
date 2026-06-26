@@ -11,7 +11,7 @@ public static class WebGLBuildScript
     [MenuItem("Build/WebGL Sample")]
     public static void BuildWebGL()
     {
-        var outputPath = "/tmp/AudioConductorWebGL";
+        var outputPath = Path.Combine(Path.GetTempPath(), "AudioConductorWebGL");
         if (Directory.Exists(outputPath))
             Directory.Delete(outputPath, true);
 
