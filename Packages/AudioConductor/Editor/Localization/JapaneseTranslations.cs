@@ -16,7 +16,10 @@ namespace AudioConductor.Editor.Localization
             { "settings.throttle_limit", "同時発音数の上限" },
             { "settings.managed_pool_size", "構築時に事前生成するマネージド AudioClipPlayer の数" },
             { "settings.oneshot_pool_size", "構築時に事前生成するワンショット AudioClipPlayer の数" },
-            { "settings.deactivate_pooled_objects", "有効にすると、アイドル中のプール済み AudioClipPlayer の GameObject を非アクティブにします。アクティブな GameObject のオーバーヘッドを削減しますが、貸出/返却時に SetActive 呼び出しコストが発生します。" },
+            {
+                "settings.deactivate_pooled_objects",
+                "有効にすると、アイドル中のプール済み AudioClipPlayer の GameObject を非アクティブにします。アクティブな GameObject のオーバーヘッドを削減しますが、貸出/返却時に SetActive 呼び出しコストが発生します。"
+            },
             { "category.name", "カテゴリ名" },
             { "category.throttle_type", "同時発音の制御方式" },
             { "category.throttle_limit", "同時発音数の上限" },
@@ -78,6 +81,15 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.volume", "CueSheet のデフォルト音量スケール (0.0 〜 1.0)" },
             { "cue_sheet_parameter.pitch", "CueSheet のデフォルトピッチスケール (0.01 〜 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "CueSheet のピッチ変動方向を反転" },
+            {
+                "cue_sheet_parameter.reference_sample_rate",
+                "この CueSheet のサンプル位置が作成された基準サンプルレート。読み取り専用。起動時のマイグレーションダイアログまたは Apply ボタンで設定します。"
+            },
+            {
+                "cue_sheet_parameter.reference_sample_rate_warning",
+                "referenceSampleRate が未設定です。WebGL 等、オーディオデコード周波数が異なるプラットフォームでサンプル位置がずれる可能性があります。プロジェクトを再起動してマイグレーションダイアログを実行するか、下の Apply ボタンを使用してください。"
+            },
+            { "cue_sheet_parameter.apply_reference_sample_rate", "クリップ周波数を基準サンプルレートとして適用" },
             { "other_operation.export_csv", "CueSheet データを CSV としてエクスポート" },
             { "other_operation.import_csv", "CSV から CueSheet データをインポート" },
             { "cue_enum_definition.default_output_path", "生成する enum ファイルのデフォルト出力先ディレクトリ" },
@@ -95,7 +107,22 @@ namespace AudioConductor.Editor.Localization
             { "cue_enum_definition.asset.asset", "CueSheetAsset の参照" },
             { "cue_enum_definition.asset.cue_sheet_name", "CueSheet の名前" },
             { "cue_enum_definition.asset.cue_count", "この CueSheet の Cue 数" },
-            { "cue_enum_definition.excluded.path_rule", "CueSheetAsset を自動除外する glob パターン" }
+            { "cue_enum_definition.excluded.path_rule", "CueSheetAsset を自動除外する glob パターン" },
+            {
+                "migration.reference_sample_rate.dialog_title",
+                "AudioConductor マイグレーション"
+            },
+            {
+                "migration.reference_sample_rate.dialog_message",
+                "以下の CueSheet は referenceSampleRate が未設定です。\n 現在のクリップ周波数を適用しますか？"
+            },
+            { "migration.reference_sample_rate.apply", "適用" },
+            { "migration.reference_sample_rate.skip", "スキップ" },
+            { "migration.reference_sample_rate.dont_show_again", "次回から表示しない" },
+            {
+                "migration.reference_sample_rate.inconsistent_warning",
+                "[AudioConductor] CueSheet '{0}' の AudioClip にサンプルレートの混在があります。referenceSampleRate を手動で設定してください。"
+            }
         };
     }
 }

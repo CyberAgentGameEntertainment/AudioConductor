@@ -265,7 +265,7 @@ namespace AudioConductor.Core
             var pitch = Calculator.CalcPitch(cueSheet, cue, track);
             var isLoop = options?.IsLoop == true || track.isLoop;
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, isLoop,
-                track.startSample, track.loopStartSample, track.endSample);
+                track.startSample, track.loopStartSample, track.endSample, cueSheet.referenceSampleRate);
             player.Play();
             if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
             if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);
@@ -304,7 +304,7 @@ namespace AudioConductor.Core
             var volume = Calculator.CalcVolume(cueSheet, cue, track);
             var pitch = Calculator.CalcPitch(cueSheet, cue, track);
             player.Setup(category?.audioMixerGroup, track.audioClip, cue.categoryId, volume, pitch, false,
-                track.startSample, track.loopStartSample, track.endSample);
+                track.startSample, track.loopStartSample, track.endSample, cueSheet.referenceSampleRate);
             player.Play();
             if (options?.OnStop is { } onStop) player.SetStopAction(onStop);
             if (options?.OnEnd is { } onEnd) player.SetEndAction(onEnd);

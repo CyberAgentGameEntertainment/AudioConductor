@@ -445,6 +445,22 @@ namespace AudioConductor.Editor.Core.Tests
         }
 
         [Test]
+        public void Pause_Loop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: true, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+
+            _player.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_source1.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
+        }
+
+        [Test]
         public void Pause_NonLoop_PausesSource0()
         {
             _clock.DspTime = 0.0;
@@ -454,6 +470,20 @@ namespace AudioConductor.Editor.Core.Tests
             _player.Pause();
 
             Assert.That(_source0.PauseCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Pause_NonLoop_NeitherSourcePlaying_SetsStatePausedWithoutPausingAnySources()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+
+            _player.Pause();
+
+            Assert.That(_source0.PauseCount, Is.EqualTo(0));
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Paused));
         }
 
         // --- Resume (loop branch) ---
@@ -491,6 +521,23 @@ namespace AudioConductor.Editor.Core.Tests
         }
 
         [Test]
+        public void Resume_Loop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: true, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source1.IsPlaying = false;
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
+            Assert.That(_source1.IsPlaying, Is.False);
+        }
+
+        [Test]
         public void Resume_NonLoop_UnPausesSource0()
         {
             _clock.DspTime = 0.0;
@@ -501,6 +548,21 @@ namespace AudioConductor.Editor.Core.Tests
             _player.Resume();
 
             Assert.That(_source0.UnPauseCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Resume_NonLoop_WasStoppedBeforePlay_Reschedules()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _player.Pause();
+
+            _player.Resume();
+
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
+            Assert.That(_source0.IsPlaying, Is.True);
         }
 
         // --- SetEndAction / _onEnd fire ---
@@ -520,6 +582,48 @@ namespace AudioConductor.Editor.Core.Tests
             _player.ManualUpdate(10.0f);
 
             Assert.That(called, Is.True);
+        }
+
+        // --- Setup with referenceSampleRate ---
+
+        [Test]
+        public void Setup_ReferenceSampleRateZero_EndSampleNotScaled()
+        {
+            // referenceSampleRate=0 means unset; no conversion applied
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 0);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayScheduleDelay(0.1) + 22050/44100 = 0.6
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_ReferenceSampleRateMatchesClipFrequency_EndSampleNotScaled()
+        {
+            // referenceSampleRate == clipFrequency → no conversion
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 44100);
+
+            _player.Play();
+
+            // same as referenceSampleRate=0 case: 0.1 + 22050/44100 = 0.6
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_ReferenceSampleRateDiffersFromClipFrequency_EndSampleScaled()
+        {
+            // referenceSampleRate=22050, clipFrequency=44100 → endSample scaled by 44100/22050 = 2
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 22050);
+
+            _player.Play();
+
+            // convertedEnd = RoundToInt(22050 * 44100 / 22050) = 44100
+            // scheduledEndTime = 0.1 + 44100/44100 = 1.1
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.1).Within(0.001));
         }
 
         // --- GetCurrentSample / SetCurrentSample ---

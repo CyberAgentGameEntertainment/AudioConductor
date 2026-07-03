@@ -34,5 +34,15 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Interfaces
         bool PitchInvert { get; set; }
 
         IReadOnlyObservableProperty<bool> PitchInvertObservable { get; }
+
+        IReadOnlyObservableProperty<int> ReferenceSampleRateObservable { get; }
+
+        bool CanApplyReferenceSampleRate { get; }
+
+        IReadOnlyObservableProperty<bool> CanApplyReferenceSampleRateObservable { get; }
+
+        void NotifyClipsChanged();
+
+        void ApplyReferenceSampleRate();
     }
 }

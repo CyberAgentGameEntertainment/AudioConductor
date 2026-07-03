@@ -18,6 +18,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
         private readonly ObservableProperty<string> _name;
         private readonly ObservableProperty<float> _pitch;
         private readonly ObservableProperty<bool> _pitchInvert;
+        private readonly ObservableProperty<int> _referenceSampleRate;
         private readonly ObservableProperty<int> _throttleLimit;
         private readonly ObservableProperty<ThrottleType> _throttleType;
         private readonly ObservableProperty<float> _volume;
@@ -33,10 +34,19 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             _volume = new(_cueSheet.volume);
             _pitch = new(_cueSheet.pitch);
             _pitchInvert = new(_cueSheet.pitchInvert);
+            _referenceSampleRate = new(_cueSheet.referenceSampleRate);
             // ReSharper enable ArrangeObjectCreationWhenTypeNotEvident
         }
 
         public string Id => _cueSheet.Id;
+
+        public int ReferenceSampleRate
+        {
+            get => _referenceSampleRate.Value;
+            set => _referenceSampleRate.SetValueAndNotify(_cueSheet.referenceSampleRate = value);
+        }
+
+        public IReadOnlyObservableProperty<int> ReferenceSampleRateObservable => _referenceSampleRate;
 
         public string Name
         {

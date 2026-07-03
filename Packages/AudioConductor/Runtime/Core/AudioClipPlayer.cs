@@ -13,10 +13,15 @@ using UnityEngine.Audio;
 
 namespace AudioConductor.Core
 {
-    internal sealed class AudioClipPlayer : IFadeable
+    // ReSharper disable once PartialTypeWithSinglePart
+    internal sealed partial class AudioClipPlayer : IFadeable
     {
         private const int SourceNum = 2;
+
         private const float LoopLookaheadDuration = 1.0f;
+
+        // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
+        private const float PlayScheduleDelay = 0.1f;
         private const int VolumeScale = 10000;
         private readonly IDspClock _dspClock;
         private readonly IAudioPlayerLifecycle _lifecycle;
@@ -42,6 +47,7 @@ namespace AudioConductor.Core
         private float _volumeCategory = 1f;
         private float _volumeMaster = 1f;
         private float _volumeRuntime;
+        private bool _wasStoppedBeforePlay;
 
         internal AudioClipPlayer(IAudioSourceWrapper[] sources, IDspClock dspClock,
             IAudioPlayerLifecycle lifecycle)
@@ -61,7 +67,12 @@ namespace AudioConductor.Core
         public PlayerState State
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => IsPaused ? PlayerState.Paused
+            get =>
+#if UNITY_WEBGL
+                IsPaused || _isSystemPaused ? PlayerState.Paused
+#else
+                IsPaused ? PlayerState.Paused
+#endif
                 : _sources[0].IsPlaying || _sources[1].IsPlaying ? PlayerState.Playing
                 : PlayerState.Stopped;
         }
@@ -85,7 +96,8 @@ namespace AudioConductor.Core
             bool isLoop,
             int startSample,
             int loopStartSample,
-            int endSample)
+            int endSample,
+            int referenceSampleRate = 0)
         {
             if (clip == null)
                 return;
@@ -98,7 +110,6 @@ namespace AudioConductor.Core
             _sources[0].Clip = clip;
             _sources[0].PlayOnAwake = false;
             _sources[0].Loop = false;
-            _sources[0].TimeSamples = startSample;
             _sources[1].OutputAudioMixerGroup = audioMixerGroup;
             _sources[1].Clip = clip;
             _sources[1].PlayOnAwake = false;
@@ -107,15 +118,27 @@ namespace AudioConductor.Core
             _frequency = clip.frequency;
             ClipSamples = clip.samples;
             CategoryId = categoryId;
+#if UNITY_WEBGL
+            // Decide the loop strategy from the playback backend (buffer = native loop,
+            // MediaElement = crossover). The backend can vary by browser/version, so for
+            // CompressedInMemory/Streaming it may be resolved lazily after the first play.
+            SetupNativeLoopMode(clip.loadType);
+#endif
+
+            var convertedStart = ConvertSample(startSample, referenceSampleRate, _frequency);
+            var convertedLoopStart = ConvertSample(loopStartSample, referenceSampleRate, _frequency);
+            var convertedEnd = ConvertSample(endSample, referenceSampleRate, _frequency);
 
             _volumeRuntime = 1f;
             SetPitchInternal(pitch);
             VolumeAsset = volume;
             UpdateVolume();
 
-            _startSample = ValueRangeConst.StartSample.Clamp(startSample, ClipSamples);
-            _loopStartSample = ValueRangeConst.LoopStartSample.Clamp(loopStartSample, ClipSamples);
-            _endSample = ValueRangeConst.EndSample.Clamp(endSample, ClipSamples);
+            _startSample = ValueRangeConst.StartSample.Clamp(convertedStart, ClipSamples);
+            _loopStartSample = ValueRangeConst.LoopStartSample.Clamp(convertedLoopStart, ClipSamples);
+            _endSample = ValueRangeConst.EndSample.Clamp(convertedEnd, ClipSamples);
+
+            _sources[0].TimeSamples = _startSample;
         }
 
         public void Play()
@@ -123,13 +146,11 @@ namespace AudioConductor.Core
             _sources[0].Stop();
             _sources[1].Stop();
 
+            _wasStoppedBeforePlay = false;
             _isPlaybackActive = true;
             _sources[1].Enabled = _isLoop;
 
-            // for smooth switching of AudioSource
-            // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
-            const float delay = 0.1f;
-            SchedulePlayback(_dspClock.DspTime + delay, _startSample);
+            SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
         }
 
         public void Restart()
@@ -158,12 +179,36 @@ namespace AudioConductor.Core
                     _sources[1].Pause();
                     _pausedIndex = 1;
                 }
+                else
+                {
+                    // Neither source is playing yet (within PlayScheduleDelay window).
+                    // AudioSource.Pause() on a scheduled-but-not-yet-playing source has undefined
+                    // behavior per Unity docs, so stop both and reschedule fresh on Resume.
+                    _sources[0].Stop();
+                    _sources[1].Stop();
+#if UNITY_WEBGL
+                    CancelPendingBinds();
+#endif
+                    _wasStoppedBeforePlay = true;
+                }
 
                 IsPaused = true;
                 return;
             }
 
-            _sources[0].Pause();
+            if (_sources[0].IsPlaying)
+            {
+                _sources[0].Pause();
+            }
+            else
+            {
+                _sources[0].Stop();
+#if UNITY_WEBGL
+                CancelPendingBinds();
+#endif
+                _wasStoppedBeforePlay = true;
+            }
+
             IsPaused = true;
         }
 
@@ -171,6 +216,27 @@ namespace AudioConductor.Core
         {
             if (!IsPaused)
                 return;
+
+            if (_wasStoppedBeforePlay)
+            {
+                IsPaused = false;
+                if (_isPlaybackActive
+#if UNITY_WEBGL
+                    && !_isSystemPaused
+#endif
+                   )
+                {
+                    _wasStoppedBeforePlay = false;
+                    _nextPlayAudioSourceIndex = 0;
+                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+                }
+                else if (!_isPlaybackActive)
+                {
+                    _wasStoppedBeforePlay = false;
+                }
+
+                return;
+            }
 
             _pauseEndTime = _dspClock.DspTime;
             var pausedDuration = _pauseEndTime - _pauseStartTime;
@@ -195,6 +261,10 @@ namespace AudioConductor.Core
                 _sources[1].Stop();
 
             _isPlaybackActive = false;
+            _wasStoppedBeforePlay = false;
+#if UNITY_WEBGL
+            CancelPendingBinds();
+#endif
             InvokeStopAction();
             IsPaused = false;
         }
@@ -294,8 +364,30 @@ namespace AudioConductor.Core
 
             UpdateVolume();
 
-            if (IsPaused)
+            if (IsPaused
+#if UNITY_WEBGL
+                || _isSystemPaused
+#endif
+               )
                 return;
+
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+            {
+                // Resolve the deferred backend once the first source exists; this commits the loop
+                // strategy (native loop for a buffer source, crossover for a MediaElement source).
+                if (_backendDetectPending && !ResolvePendingBackend())
+                    return;
+
+                TryRearmSchedule();
+
+                // While the arm made during suspension is still pending, the queued sound has
+                // produced no audio yet; advancing loop scheduling here would stack further
+                // suspended arms whose scheduled stops are all discarded by the engine.
+                if (_armedWhileContextSuspended)
+                    return;
+            }
+#endif
 
             if (_dspClock.DspTime < _nextEventTime)
                 return;
@@ -360,6 +452,16 @@ namespace AudioConductor.Core
             _pitchExternal = 1f;
             _nextPlayAudioSourceIndex = 0;
             IsPaused = false;
+            _wasStoppedBeforePlay = false;
+#if UNITY_WEBGL
+            _isSystemPaused = false;
+            _resumeFromLoopStart = false;
+            _webGLNativeLoopActive = false;
+            _armedWhileContextSuspended = false;
+            _lastScheduledSourceIndex = 0;
+            _lastScheduledPlayStartTime = 0;
+            CancelPendingBinds();
+#endif
             _nextEventTime = 0;
             _pausedIndex = 0;
             _pauseStartTime = 0;
@@ -391,11 +493,37 @@ namespace AudioConductor.Core
             _scheduledEndTime = CalculateScheduledEndTime(playStartTime, startSample, pitch);
 
             _sources[_nextPlayAudioSourceIndex].TimeSamples = startSample;
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+                PrepareNativeLoopBeforePlay(startSample);
+#endif
             _sources[_nextPlayAudioSourceIndex].PlayScheduled(playStartTime);
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+            {
+                _lastScheduledPlayStartTime = playStartTime;
+                if (_backendDetectPending)
+                {
+                    // Backend unknown: play, but defer arming until ResolvePendingBackend runs on the
+                    // next update. Arming a stop now would be irreversible on a buffer source and
+                    // break the native loop we may switch to.
+                    _lastScheduledSourceIndex = _nextPlayAudioSourceIndex;
+                    _armedWhileContextSuspended = false;
+                    _nextEventTime = double.MaxValue;
+                    FlipNextPlayAudioSourceIndex();
+                    return;
+                }
+
+                ArmScheduledEnd(_nextPlayAudioSourceIndex, _scheduledEndTime);
+            }
+            else
+            {
+                _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
+            }
+#else
             _sources[_nextPlayAudioSourceIndex].SetScheduledEndTime(_scheduledEndTime);
-
+#endif
             UpdateNextEventTime();
-
             FlipNextPlayAudioSourceIndex();
         }
 
@@ -412,14 +540,39 @@ namespace AudioConductor.Core
             var nowSample = source.TimeSamples;
             _scheduledEndTime = CalculateScheduledEndTime(_dspClock.DspTime, nowSample, pitch);
 
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+            {
+                // Backend unknown: defer arming. Arming a stop now would be irreversible on a buffer
+                // source (WebAudio stop() cannot be cancelled, and a later native loop cannot revive
+                // it). ResolvePendingBackend commits the loop strategy on the next update - a native
+                // loop for a buffer source, or the crossover arm for a MediaElement source - so the
+                // recalculated end time is reconstructed there. Mirrors the deferral in SchedulePlayback.
+                if (_backendDetectPending)
+                    return;
+                ArmScheduledEnd(ReferenceEquals(source, _sources[0]) ? 0 : 1, _scheduledEndTime);
+            }
+            else
+            {
+                source.SetScheduledEndTime(_scheduledEndTime);
+            }
+#else
             source.SetScheduledEndTime(_scheduledEndTime);
+#endif
             UpdateNextEventTime();
         }
 
         private void ShiftScheduleByPauseDuration(double pausedDuration)
         {
             _scheduledEndTime += pausedDuration;
+#if UNITY_WEBGL
+            if (UsesAudioConductorScheduling)
+                ArmScheduledEnd(_pausedIndex, _scheduledEndTime);
+            else
+                _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
+#else
             _sources[_pausedIndex].SetScheduledEndTime(_scheduledEndTime);
+#endif
             _nextEventTime += pausedDuration;
         }
 
@@ -501,6 +654,15 @@ namespace AudioConductor.Core
                 return _sources[0].TimeSamples > _sources[1].TimeSamples ? _sources[0] : _sources[1];
 
             return playing0 ? _sources[0] : playing1 ? _sources[1] : null;
+        }
+
+        // Converts a sample position from referenceSampleRate to clipFrequency.
+        // When referenceFrequency is unset (0) or already matches clipFrequency, no conversion is applied.
+        private static int ConvertSample(int sample, int referenceFrequency, int clipFrequency)
+        {
+            if (referenceFrequency == 0 || referenceFrequency == clipFrequency)
+                return sample;
+            return (int)Math.Round((double)sample * clipFrequency / referenceFrequency, MidpointRounding.AwayFromZero);
         }
     }
 }

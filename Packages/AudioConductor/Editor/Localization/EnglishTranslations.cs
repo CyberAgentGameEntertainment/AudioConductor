@@ -16,7 +16,10 @@ namespace AudioConductor.Editor.Localization
             { "settings.throttle_limit", "Limit of concurrent play." },
             { "settings.managed_pool_size", "Number of managed AudioClipPlayers to pre-create on construction." },
             { "settings.oneshot_pool_size", "Number of one-shot AudioClipPlayers to pre-create on construction." },
-            { "settings.deactivate_pooled_objects", "When enabled, pooled AudioClipPlayer GameObjects are deactivated while idle. Reduces active GameObject overhead at the cost of SetActive calls on rent/return." },
+            {
+                "settings.deactivate_pooled_objects",
+                "When enabled, pooled AudioClipPlayer GameObjects are deactivated while idle. Reduces active GameObject overhead at the cost of SetActive calls on rent/return."
+            },
             { "category.name", "Category name." },
             { "category.throttle_type", "Concurrent play control type." },
             { "category.throttle_limit", "Limit of concurrent play." },
@@ -78,6 +81,15 @@ namespace AudioConductor.Editor.Localization
             { "cue_sheet_parameter.volume", "Default CueSheet volume scale. (0.0 to 1.0)" },
             { "cue_sheet_parameter.pitch", "Default CueSheet pitch scale. (0.01 to 3.0)" },
             { "cue_sheet_parameter.pitch_invert", "Invert CueSheet pitch variation direction." },
+            {
+                "cue_sheet_parameter.reference_sample_rate",
+                "The sample rate at which sample positions in this CueSheet were authored. Read-only; set via the startup migration dialog or the Apply button."
+            },
+            {
+                "cue_sheet_parameter.reference_sample_rate_warning",
+                "referenceSampleRate is not set. Sample positions may drift on platforms with different audio decoding frequencies (e.g. WebGL). Re-open the project to run the migration dialog, or use the Apply button below."
+            },
+            { "cue_sheet_parameter.apply_reference_sample_rate", "Apply clip frequency as reference sample rate" },
             { "other_operation.export_csv", "Export CueSheet data to CSV." },
             { "other_operation.import_csv", "Import CueSheet data from CSV." },
             { "cue_enum_definition.default_output_path", "Default output directory for generated enum files." },
@@ -115,7 +127,22 @@ namespace AudioConductor.Editor.Localization
             { "cue_enum_definition.asset.asset", "The CueSheetAsset reference." },
             { "cue_enum_definition.asset.cue_sheet_name", "Name of the CueSheet." },
             { "cue_enum_definition.asset.cue_count", "Number of cues in this CueSheet." },
-            { "cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets." }
+            { "cue_enum_definition.excluded.path_rule", "Glob pattern to auto-exclude CueSheetAssets." },
+            {
+                "migration.reference_sample_rate.dialog_title",
+                "AudioConductor Migration"
+            },
+            {
+                "migration.reference_sample_rate.dialog_message",
+                "The following CueSheets have no referenceSampleRate set.\nApply the current clip frequencies?"
+            },
+            { "migration.reference_sample_rate.apply", "Apply" },
+            { "migration.reference_sample_rate.skip", "Skip" },
+            { "migration.reference_sample_rate.dont_show_again", "Don't show again" },
+            {
+                "migration.reference_sample_rate.inconsistent_warning",
+                "[AudioConductor] CueSheet '{0}' has mixed AudioClip sample rates. Set referenceSampleRate manually."
+            }
         };
     }
 }

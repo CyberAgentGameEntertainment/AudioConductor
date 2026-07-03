@@ -49,6 +49,12 @@ namespace AudioConductor.Core.Models
         public bool pitchInvert;
 
         /// <summary>
+        ///     The sample rate at which sample positions in this CueSheet's tracks were authored.
+        ///     Zero means unset; no frequency conversion is applied at runtime.
+        /// </summary>
+        public int referenceSampleRate;
+
+        /// <summary>
         ///     List of <see cref="Cue" />.
         /// </summary>
         public List<Cue> cueList = new();

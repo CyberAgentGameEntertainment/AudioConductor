@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
@@ -13,11 +14,132 @@ using AudioConductor.Editor.Foundation.CommandBasedUndo;
 using AudioConductor.Editor.Foundation.TinyRx;
 using NUnit.Framework;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 {
     internal sealed class CueSheetParameterPaneModelTests
     {
+        private readonly List<AudioClip> _clips = new();
+
+        [TearDown]
+        public void TearDown()
+        {
+            foreach (var clip in _clips)
+                Object.DestroyImmediate(clip);
+            _clips.Clear();
+        }
+
+        private AudioClip CreateClip(int frequency)
+        {
+            var clip = AudioClip.Create("test", frequency, 1, frequency, false);
+            _clips.Add(clip);
+            return clip;
+        }
+
+        private static CueSheet BuildCueSheet(params AudioClip?[] clipsPerTrack)
+        {
+            var cue = new Cue { name = "cue" };
+            foreach (var clip in clipsPerTrack)
+                cue.trackList.Add(new Track { name = "track", audioClip = clip });
+            return new CueSheet { name = "sheet", cueList = { cue } };
+        }
+
+        // --- CanApplyReferenceSampleRate ---
+
+        [Test]
+        public void CanApplyReferenceSampleRate_NoCues_ReturnsFalse()
+        {
+            var cueSheet = new CueSheet { name = "sheet" };
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            Assert.That(model.CanApplyReferenceSampleRate, Is.False);
+        }
+
+        [Test]
+        public void CanApplyReferenceSampleRate_TracksWithNoClips_ReturnsFalse()
+        {
+            var cueSheet = BuildCueSheet(null, null);
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            Assert.That(model.CanApplyReferenceSampleRate, Is.False);
+        }
+
+        [Test]
+        public void CanApplyReferenceSampleRate_AllTracksHaveSameFrequency_ReturnsTrue()
+        {
+            var clip1 = CreateClip(44100);
+            var clip2 = CreateClip(44100);
+            var cueSheet = BuildCueSheet(clip1, clip2);
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            Assert.That(model.CanApplyReferenceSampleRate, Is.True);
+        }
+
+        [Test]
+        public void CanApplyReferenceSampleRate_TracksHaveDifferentFrequencies_ReturnsFalse()
+        {
+            var clip1 = CreateClip(44100);
+            var clip2 = CreateClip(48000);
+            var cueSheet = BuildCueSheet(clip1, clip2);
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            Assert.That(model.CanApplyReferenceSampleRate, Is.False);
+        }
+
+        // --- ApplyReferenceSampleRate ---
+
+        [Test]
+        public void ApplyReferenceSampleRate_SetsClipFrequency()
+        {
+            var clip = CreateClip(44100);
+            var cueSheet = BuildCueSheet(clip);
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            model.ApplyReferenceSampleRate();
+
+            Assert.That(model.ReferenceSampleRateObservable.Value, Is.EqualTo(44100));
+            Assert.That(cueSheet.referenceSampleRate, Is.EqualTo(44100));
+        }
+
+        [Test]
+        public void ApplyReferenceSampleRate_InconsistentFrequencies_DoesNothing()
+        {
+            var clip1 = CreateClip(44100);
+            var clip2 = CreateClip(48000);
+            var cueSheet = BuildCueSheet(clip1, clip2);
+            var model = new CueSheetParameterPaneModel(cueSheet, new AutoIncrementHistory(), new AssetSaveService());
+
+            model.ApplyReferenceSampleRate();
+
+            Assert.That(model.ReferenceSampleRateObservable.Value, Is.EqualTo(0));
+            Assert.That(cueSheet.referenceSampleRate, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ApplyReferenceSampleRate_History()
+        {
+            var clip = CreateClip(44100);
+            var cueSheet = BuildCueSheet(clip);
+            var history = new AutoIncrementHistory();
+            var model = new CueSheetParameterPaneModel(cueSheet, history, new AssetSaveService());
+
+            model.ApplyReferenceSampleRate();
+
+            Assert.That(model.ReferenceSampleRateObservable.Value, Is.EqualTo(44100));
+            Assert.That(cueSheet.referenceSampleRate, Is.EqualTo(44100));
+
+            history.Undo();
+
+            Assert.That(model.ReferenceSampleRateObservable.Value, Is.EqualTo(0));
+            Assert.That(cueSheet.referenceSampleRate, Is.EqualTo(0));
+
+            history.Redo();
+
+            Assert.That(model.ReferenceSampleRateObservable.Value, Is.EqualTo(44100));
+            Assert.That(cueSheet.referenceSampleRate, Is.EqualTo(44100));
+        }
+
         [Test]
         public void NameHistory()
         {

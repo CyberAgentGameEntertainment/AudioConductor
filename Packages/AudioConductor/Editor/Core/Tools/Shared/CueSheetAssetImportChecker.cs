@@ -9,12 +9,16 @@ using System.Collections.Generic;
 using System.Linq;
 using AudioConductor.Core.Models;
 using UnityEditor;
+using UnityEngine;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
     [InitializeOnLoad]
     internal class CueSheetAssetImportChecker : AssetPostprocessor
     {
+        private const string ReferenceSampleRateMigrationSkipKey =
+            "AudioConductor.ReferenceSampleRateMigration.Skip";
+
         private static readonly Dictionary<string, CueSheetAsset> CueSheetAssets;
         private static readonly HashSet<string> CueSheetIds;
 
@@ -35,6 +39,8 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 CueSheetIds.Add(asset.cueSheet.Id);
                 MigrateCueIds(asset);
             }
+
+            EditorApplication.delayCall += () => MigrateReferenceSampleRates(CueSheetAssets.Values);
         }
 
         private static void OnPostprocessAllAssets(string[] importedAssets,
@@ -164,6 +170,83 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
+        }
+
+        internal static void MigrateReferenceSampleRates(IEnumerable<CueSheetAsset> assets)
+        {
+            if (EditorPrefs.GetBool(ReferenceSampleRateMigrationSkipKey, false))
+                return;
+
+            var toMigrate = new List<(CueSheetAsset asset, int frequency)>();
+            var inconsistentNames = new List<string>();
+
+            foreach (var asset in assets)
+            {
+                if (asset.cueSheet.referenceSampleRate != 0)
+                    continue;
+
+                var frequencies = CollectClipFrequencies(asset.cueSheet);
+                if (frequencies.Count == 0)
+                    continue;
+
+                if (frequencies.Count == 1)
+                    toMigrate.Add((asset, frequencies.First()));
+                else
+                    inconsistentNames.Add(asset.name);
+            }
+
+            foreach (var name in inconsistentNames)
+                Debug.LogWarning(string.Format(
+                    Localization.Localization.Tr("migration.reference_sample_rate.inconsistent_warning"),
+                    name));
+
+            if (toMigrate.Count == 0)
+                return;
+
+            var names = string.Join("\n", toMigrate.Select(x => $"  {x.asset.name} ({x.frequency} Hz)"));
+            var message =
+                $"{Localization.Localization.Tr("migration.reference_sample_rate.dialog_message")}\n\n{names}";
+
+            if (Application.isBatchMode)
+            {
+                Debug.LogWarning($"[AudioConductor] {message}");
+                return;
+            }
+
+            // 2: Don't show again
+            var result = EditorUtility.DisplayDialogComplex(
+                Localization.Localization.Tr("migration.reference_sample_rate.dialog_title"),
+                message,
+                Localization.Localization.Tr("migration.reference_sample_rate.apply"),
+                Localization.Localization.Tr("migration.reference_sample_rate.skip"),
+                Localization.Localization.Tr("migration.reference_sample_rate.dont_show_again"));
+
+            if (result == 2)
+            {
+                EditorPrefs.SetBool(ReferenceSampleRateMigrationSkipKey, true);
+                return;
+            }
+
+            if (result != 0)
+                return;
+
+            foreach (var (asset, frequency) in toMigrate)
+            {
+                asset.cueSheet.referenceSampleRate = frequency;
+                EditorUtility.SetDirty(asset);
+            }
+
+            AssetDatabase.SaveAssets();
+        }
+
+        internal static HashSet<int> CollectClipFrequencies(CueSheet cueSheet)
+        {
+            var frequencies = new HashSet<int>();
+            foreach (var cue in cueSheet.cueList)
+            foreach (var track in cue.trackList)
+                if (track.audioClip != null)
+                    frequencies.Add(track.audioClip.frequency);
+            return frequencies;
         }
     }
 }

@@ -4,6 +4,8 @@
 
 #nullable enable
 
+using System.Collections.Generic;
+using System.Linq;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Shared;
@@ -18,16 +20,67 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
     internal sealed class CueSheetParameterPaneModel : ICueSheetParameterPaneModel
     {
         private readonly IAssetSaveService _assetSaveService;
+        private readonly ObservableProperty<bool> _canApplyReferenceSampleRate;
         private readonly AutoIncrementHistory _history;
+        private readonly CueSheet _rawCueSheet;
         private readonly ObservableCueSheet _target;
 
         public CueSheetParameterPaneModel([NotNull] CueSheet cueSheet,
             [NotNull] AutoIncrementHistory history,
             [NotNull] IAssetSaveService assetSaveService)
         {
+            _rawCueSheet = cueSheet;
             _target = new ObservableCueSheet(cueSheet);
             _history = history;
             _assetSaveService = assetSaveService;
+            _canApplyReferenceSampleRate = new ObservableProperty<bool>(CanApplyReferenceSampleRate);
+        }
+
+        public IReadOnlyObservableProperty<int> ReferenceSampleRateObservable => _target.ReferenceSampleRateObservable;
+
+        public bool CanApplyReferenceSampleRate => CollectClipFrequencies().Count == 1;
+
+        public IReadOnlyObservableProperty<bool> CanApplyReferenceSampleRateObservable => _canApplyReferenceSampleRate;
+
+        public void NotifyClipsChanged()
+        {
+            _canApplyReferenceSampleRate.Value = CanApplyReferenceSampleRate;
+        }
+
+        public void ApplyReferenceSampleRate()
+        {
+            var frequencies = CollectClipFrequencies();
+            if (frequencies.Count != 1)
+                return;
+            var frequency = frequencies.First();
+            var old = _target.ReferenceSampleRate;
+            _history.Register($"Set CueSheet {nameof(CueSheet.referenceSampleRate)} {frequency}", Redo, Undo);
+
+            #region LocalMethods
+
+            void Redo()
+            {
+                _target.ReferenceSampleRate = frequency;
+                _assetSaveService.Save();
+            }
+
+            void Undo()
+            {
+                _target.ReferenceSampleRate = old;
+                _assetSaveService.Save();
+            }
+
+            #endregion
+        }
+
+        private HashSet<int> CollectClipFrequencies()
+        {
+            var frequencies = new HashSet<int>();
+            foreach (var cue in _rawCueSheet.cueList)
+            foreach (var track in cue.trackList)
+                if (track.audioClip != null)
+                    frequencies.Add(track.audioClip.frequency);
+            return frequencies;
         }
 
         #region Name

@@ -27,14 +27,18 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
             _cueTrackInspectorPresenter = new CueTrackInspectorPresenter(_view.Q<CueTrackInspectorView>());
             _cueInspectorPresenter = new CueInspectorPresenter(_view.Q<CueInspectorView>());
             _trackInspectorPresenter = new TrackInspectorPresenter(_view.Q<TrackInspectorView>());
+            _trackInspectorPresenter.ClipChanged += OnTrackClipChanged;
         }
 
         public void Dispose()
         {
+            _trackInspectorPresenter.ClipChanged -= OnTrackClipChanged;
             _trackInspectorPresenter.Dispose();
             _cueInspectorPresenter.Dispose();
             _view.Dispose();
         }
+
+        public event Action? TrackClipChanged;
 
         public void Setup()
         {
@@ -62,6 +66,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Presenters
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model.InspectorType), model.InspectorType, null);
             }
+        }
+
+        private void OnTrackClipChanged()
+        {
+            TrackClipChanged?.Invoke();
         }
 
         private void CloseAllInspector()
