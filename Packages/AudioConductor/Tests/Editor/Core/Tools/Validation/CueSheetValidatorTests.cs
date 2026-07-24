@@ -278,28 +278,13 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
         }
 
         [Test]
-        public void Validate_TrackEndSampleZeroWithClip_ReturnsError()
+        public void Validate_TrackEndSampleZeroWithoutClip_NoEndSampleOutOfRangeError()
         {
-            var clip = AudioClip.Create("clip", 44100, 1, 44100, false);
-            var track = new Track { name = "T", audioClip = clip, endSample = 0 };
-            _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
-
-            var issues = TrackOnly(new EndSampleZeroRule()).Validate(_asset, null);
-
-            Assert.That(
-                issues.Select(i => (i.Code, i.Severity)),
-                Is.EquivalentTo(new[] { ("Track.EndSampleZero", ValidationSeverity.Error) }));
-
-            Object.DestroyImmediate(clip);
-        }
-
-        [Test]
-        public void Validate_TrackEndSampleZeroWithoutClip_NoEndSampleZeroError()
-        {
+            // endSample = 0 is the sentinel meaning "play to clip end", not an error.
             var track = new Track { name = "T", audioClip = null, endSample = 0 };
             _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
 
-            var issues = TrackOnly(new EndSampleZeroRule()).Validate(_asset, null);
+            var issues = TrackOnly(new EndSampleOutOfRangeRule()).Validate(_asset, null);
 
             Assert.That(issues, Is.Empty);
         }
@@ -341,6 +326,22 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
         {
             var clip = AudioClip.Create("clip", 44100, 1, 44100, false);
             var track = new Track { name = "T", audioClip = clip, startSample = 0, endSample = 0 };
+            _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
+
+            var issues = TrackOnly(new InvalidSampleRangeRule()).Validate(_asset, null);
+
+            Assert.That(issues, Is.Empty);
+
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
+        public void Validate_TrackStartSampleNonZeroWithEndSampleZero_NoSampleRangeError()
+        {
+            // endSample = 0 is the sentinel meaning "play to clip end"; the guard must
+            // skip the range check even when startSample alone would exceed 0.
+            var clip = AudioClip.Create("clip", 44100, 1, 44100, false);
+            var track = new Track { name = "T", audioClip = clip, startSample = 100, endSample = 0 };
             _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
 
             var issues = TrackOnly(new InvalidSampleRangeRule()).Validate(_asset, null);
@@ -461,6 +462,23 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
         }
 
         [Test]
+        public void Validate_LoopTrackLoopStartNonZeroWithEndSampleZero_NoLoopStartOutOfRangeError()
+        {
+            // endSample = 0 is the sentinel meaning "play to clip end"; the guard must
+            // skip the range check even when loopStartSample alone would exceed 0.
+            var clip = AudioClip.Create("clip", 44100, 1, 44100, false);
+            var track = new Track
+                { name = "T", audioClip = clip, endSample = 0, isLoop = true, loopStartSample = 500 };
+            _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
+
+            var issues = TrackOnly(new LoopStartOutOfRangeRule()).Validate(_asset, null);
+
+            Assert.That(issues, Is.Empty);
+
+            Object.DestroyImmediate(clip);
+        }
+
+        [Test]
         public void Validate_TrackAudioClipNullWithLoopStartOutOfRange_ReturnsAllErrors()
         {
             var track = new Track
@@ -547,17 +565,17 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
         }
 
         [Test]
-        public void Validate_TrackEndSampleNegative_ReturnsError()
+        public void Validate_TrackEndSampleNegative_NoEndSampleOutOfRangeError()
         {
+            // Negative endSample values (e.g. -1) are a valid sentinel meaning
+            // "play to clip end", not an error.
             var clip = AudioClip.Create("clip", 44100, 1, 44100, false);
             var track = new Track { name = "T", audioClip = clip, endSample = -1 };
             _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
 
             var issues = TrackOnly(new EndSampleOutOfRangeRule()).Validate(_asset, null);
 
-            Assert.That(
-                issues.Select(i => (i.Code, i.Severity)),
-                Is.EquivalentTo(new[] { ("Track.EndSampleOutOfRange", ValidationSeverity.Error) }));
+            Assert.That(issues, Is.Empty);
 
             Object.DestroyImmediate(clip);
         }
@@ -607,8 +625,9 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
         }
 
         [Test]
-        public void Validate_TrackAudioClipNullWithNegativeEndSample_ReturnsEndSampleOutOfRangeError()
+        public void Validate_TrackAudioClipNullWithNegativeEndSample_ReturnsOnlyMissingAudioClipError()
         {
+            // Negative endSample is a valid sentinel, so only the missing-clip error remains.
             var track = new Track { name = "T", audioClip = null, endSample = -1 };
             _asset.cueSheet.cueList.Add(MakeCue(tracks: new List<Track> { track }));
 
@@ -616,11 +635,7 @@ namespace AudioConductor.Editor.Core.Tools.Validation.Tests
 
             Assert.That(
                 issues.Select(i => (i.Code, i.Severity)),
-                Is.EquivalentTo(new[]
-                {
-                    ("Track.EndSampleOutOfRange", ValidationSeverity.Error),
-                    ("Track.MissingAudioClip", ValidationSeverity.Error)
-                }));
+                Is.EquivalentTo(new[] { ("Track.MissingAudioClip", ValidationSeverity.Error) }));
         }
 
         [Test]
