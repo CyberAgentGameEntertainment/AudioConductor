@@ -414,7 +414,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             Assert.That(cueSheet.cueList[insertIndex].trackList.Count, Is.EqualTo(1));
             Assert.That(cueSheet.cueList[insertIndex].trackList[0].name, Is.EqualTo(asset.name));
             Assert.That(cueSheet.cueList[insertIndex].trackList[0].audioClip, Is.EqualTo(asset));
-            Assert.That(cueSheet.cueList[insertIndex].trackList[0].endSample, Is.EqualTo(asset.samples));
+            Assert.That(cueSheet.cueList[insertIndex].trackList[0].endSample, Is.EqualTo(0));
 
             history.Undo();
 
@@ -443,7 +443,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             Assert.That(cueSheet.cueList[parentIndex].trackList.Count, Is.EqualTo(parentInitial.Count + 1));
             Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].name, Is.EqualTo(asset.name));
             Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].audioClip, Is.EqualTo(asset));
-            Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].endSample, Is.EqualTo(asset.samples));
+            Assert.That(cueSheet.cueList[parentIndex].trackList[insertIndex].endSample, Is.EqualTo(0));
 
             history.Undo();
 

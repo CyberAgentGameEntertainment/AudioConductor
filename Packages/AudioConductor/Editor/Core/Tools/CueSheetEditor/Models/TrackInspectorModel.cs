@@ -256,7 +256,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
                     {
                         track.audioClip = value;
                         track.startSample = 0;
-                        track.endSample = samples;
+                        track.endSample =
+                            0; // 0 is a sentinel meaning "play to clip end"; keeps track in sync if clip content is replaced later
                         track.loopStartSample = ValueRangeConst.LoopStartSample.Clamp(track.loopStartSample, samples);
                     }
 

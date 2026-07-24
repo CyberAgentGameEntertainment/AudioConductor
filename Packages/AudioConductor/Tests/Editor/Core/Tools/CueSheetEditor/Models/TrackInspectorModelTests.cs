@@ -311,7 +311,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
                 {
                     Assert.That(track.audioClip, Is.EqualTo(testValue));
                     Assert.That(track.startSample, Is.EqualTo(0));
-                    Assert.That(track.endSample, Is.EqualTo(samples));
+                    Assert.That(track.endSample, Is.EqualTo(0));
                     Assert.That(track.loopStartSample, Is.InRange(0, loopStartMax));
                 }
 
