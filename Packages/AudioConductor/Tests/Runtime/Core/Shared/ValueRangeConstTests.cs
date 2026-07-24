@@ -312,6 +312,27 @@ namespace AudioConductor.Core.Shared.Tests
                 var endMax = ValueRangeConst.EndSample.Clamp(audioClipSamples, audioClipSamples);
                 Assert.That(endMax, Is.EqualTo(startMax + 1));
             }
+
+            [Test]
+            public void Resolve_ZeroEndSample_ReturnsClipSamples()
+            {
+                var result = ValueRangeConst.EndSample.Resolve(0, 1000);
+                Assert.That(result, Is.EqualTo(1000));
+            }
+
+            [Test]
+            public void Resolve_NegativeEndSample_ReturnsClipSamples()
+            {
+                var result = ValueRangeConst.EndSample.Resolve(-5, 1000);
+                Assert.That(result, Is.EqualTo(1000));
+            }
+
+            [Test]
+            public void Resolve_PositiveEndSample_ReturnsEndSampleUnchanged()
+            {
+                var result = ValueRangeConst.EndSample.Resolve(900, 1000);
+                Assert.That(result, Is.EqualTo(900));
+            }
         }
 
         public class LoopStartSampleTests
