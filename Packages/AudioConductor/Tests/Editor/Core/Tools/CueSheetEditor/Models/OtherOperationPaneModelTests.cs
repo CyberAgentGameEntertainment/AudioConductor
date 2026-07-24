@@ -57,6 +57,15 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,30,2,Voice1,,,0.6,0,1
 ,,,,,,,,,,,,,Voice2,,testClip5,1,0,1,0,FALSE,0,0,0,FALSE,5,0,0
 ";
 
+        private const string ImportTestCsvNegativeEndSample = @"CueSheetParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueSheetName,ThrottleLimit,ThrottleType,Volume,Pitch,PitchInvert,,,,,,,,,,,,,,,,,,,,,,
+ImportTest CueSheet,0,PriorityOrder,1,1,FALSE,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueListParameters,,,,,,,,,,,,,,,,,,,,,,,,,,,
+CueName,ColorId,CategoryId,ThrottleLimit,ThrottleType,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,PlayType,CueId,TrackCount,TrackName,ColorId,ClipName,Volume,VolumeRange,Pitch,PitchRange,PitchInvert,StartSample,EndSample,LoopStartSample,IsLoop,RandomWeight,Priority,FadeTime
+TestCue,,0,0,PriorityOrder,1,0,1,0,FALSE,Sequential,1,1,TestTrack,,testClip1,1,0,1,0,FALSE,0,-5,0,FALSE,0,0,0
+";
+
         private static CueSheet CreateTestCueSheet()
         {
             return new CueSheet
@@ -341,6 +350,21 @@ CatVoice,,3,1,PriorityOrder,1,0,1.065574,0,TRUE,Sequential,30,2,Voice1,,,0.6,0,1
             Assert.That(cueSheet.cueList[2].name, Is.EqualTo("CatVoice"));
             Assert.That(cueSheet.cueList[2].cueId, Is.EqualTo(30));
             Assert.That(cueSheet.cueList[2].trackList.Count, Is.EqualTo(2));
+        }
+
+        // endSample<=0 is a valid sentinel meaning "play to clip end", so a negative CSV
+        // value must be normalized to 0 by the lower-bound clamp, not left negative.
+        [Test]
+        public void ImportCsv_NegativeEndSample_IsClampedToZero()
+        {
+            var history = new AutoIncrementHistory();
+            var cueSheet = CreateTestCueSheet();
+            var model = new OtherOperationPaneModel(cueSheet, history, new AssetSaveService());
+
+            var success = model.ImportCsv(ImportTestCsvNegativeEndSample.Split('\n'));
+
+            Assert.True(success);
+            Assert.That(cueSheet.cueList[0].trackList[0].endSample, Is.EqualTo(0));
         }
     }
 }

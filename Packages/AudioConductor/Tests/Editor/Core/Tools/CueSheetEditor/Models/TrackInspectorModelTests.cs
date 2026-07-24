@@ -943,6 +943,23 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
             }
         }
 
+        // endSample<=0 is a valid sentinel meaning "play to clip end", so a negative
+        // input must be normalized to 0 by the lower-bound clamp, not left negative.
+        [Test]
+        public void EndSample_SetNegativeValue_IsClampedToZero()
+        {
+            var history = new AutoIncrementHistory();
+            var tracks = CreateTestTargetTracks();
+            var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
+                new AssetSaveService());
+
+            model.EndSample = -5;
+
+            Assert.That(model.EndSample, Is.EqualTo(0));
+            foreach (var track in tracks)
+                Assert.That(track.endSample, Is.EqualTo(0));
+        }
+
         [Test]
         public void EndSampleHistory()
         {
