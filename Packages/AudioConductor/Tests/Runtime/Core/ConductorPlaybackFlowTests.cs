@@ -351,7 +351,9 @@ namespace AudioConductor.Core.Tests
         {
             var clip = CreateClip();
             var cue = CreateCue("cue1");
-            cue.trackList.Add(CreateTrack(clip));
+            var track = CreateTrack(clip);
+            track.endSample = clip.samples;
+            cue.trackList.Add(track);
             var asset = CreateSheetAsset(cue);
 
             using var conductor = CreateConductor();

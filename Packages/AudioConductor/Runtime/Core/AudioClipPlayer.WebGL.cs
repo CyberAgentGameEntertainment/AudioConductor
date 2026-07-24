@@ -21,7 +21,6 @@ namespace AudioConductor.Core
         private int _resumeSample;
         private bool _armedWhileContextSuspended;
         private int _lastScheduledSourceIndex;
-        private double _lastScheduledPlayStartTime;
 
         private bool _webGLNativeLoopActive;
 
@@ -255,10 +254,13 @@ namespace AudioConductor.Core
             var source = GetPlayingSource();
             if (source == null)
             {
-                // Distinguish PlayScheduleDelay window (source queued but not yet audible)
-                // from catch-up overshot (source already stopped) using scheduled start time,
-                // because TimeSamples is unreliable (may be 0 or stale) after a source stops.
-                if (_dspClock.DspTime < _lastScheduledPlayStartTime)
+                // Distinguish the pre-audible window (source queued but not yet audible) from
+                // catch-up overshot (source already stopped past the clip end) by comparing
+                // against the scheduled end time: this holds regardless of PlayStartDelay (0 or
+                // PlayScheduleDelay) and loop/non-loop, unlike a start-time comparison which goes
+                // stale once the schedule's start time has already elapsed either way.
+                // TimeSamples itself is unreliable (may be 0 or stale) after a source stops.
+                if (_dspClock.DspTime < _scheduledEndTime)
 #if !UNITY_EDITOR
                     AudioConductor_SetScheduledEndTime(_webglPlayerId, _lastScheduledSourceIndex, _scheduledEndTime);
 #else
@@ -399,7 +401,7 @@ namespace AudioConductor.Core
                 if (_isPlaybackActive && !IsPaused)
                 {
                     _nextPlayAudioSourceIndex = 0;
-                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _resumeSample);
+                    SchedulePlayback(_dspClock.DspTime + PlayStartDelay, _resumeSample);
                 }
 
                 return;
@@ -412,7 +414,7 @@ namespace AudioConductor.Core
                 {
                     _wasStoppedBeforePlay = false;
                     _nextPlayAudioSourceIndex = 0;
-                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+                    SchedulePlayback(_dspClock.DspTime + PlayStartDelay, _startSample);
                 }
                 else if (!_isPlaybackActive)
                 {

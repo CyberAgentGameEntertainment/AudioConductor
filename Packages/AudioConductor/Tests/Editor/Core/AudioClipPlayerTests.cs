@@ -320,6 +320,30 @@ namespace AudioConductor.Editor.Core.Tests
             Assert.That(_player.GetPitch(), Is.EqualTo(1.5f));
         }
 
+        // --- Play scheduling delay ---
+
+        [Test]
+        public void Play_NonLoop_SchedulesImmediatelyWithoutDelay()
+        {
+            _clock.DspTime = 5.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+
+            _player.Play();
+
+            Assert.That(_source0.LastPlayScheduledTime, Is.EqualTo(_clock.DspTime));
+        }
+
+        [Test]
+        public void Play_Loop_SchedulesWithPlayScheduleDelay()
+        {
+            _clock.DspTime = 5.0;
+            SetupPlayer(isLoop: true, endSample: _clip.samples);
+
+            _player.Play();
+
+            Assert.That(_source0.LastPlayScheduledTime, Is.EqualTo(_clock.DspTime + 0.1).Within(0.0001));
+        }
+
         // --- Loop playback ---
 
         [Test]
@@ -478,7 +502,7 @@ namespace AudioConductor.Editor.Core.Tests
             _clock.DspTime = 0.0;
             SetupPlayer(isLoop: false, endSample: _clip.samples);
             _player.Play();
-            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source0.IsPlaying = false; // simulate the source not yet becoming audible
 
             _player.Pause();
 
@@ -556,13 +580,28 @@ namespace AudioConductor.Editor.Core.Tests
             _clock.DspTime = 0.0;
             SetupPlayer(isLoop: false, endSample: _clip.samples);
             _player.Play();
-            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source0.IsPlaying = false; // simulate the source not yet becoming audible
             _player.Pause();
 
             _player.Resume();
 
             Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
             Assert.That(_source0.IsPlaying, Is.True);
+        }
+
+        [Test]
+        public void Resume_NonLoop_WasStoppedBeforePlay_ReschedulesWithoutDelay()
+        {
+            _clock.DspTime = 0.0;
+            SetupPlayer(isLoop: false, endSample: _clip.samples);
+            _player.Play();
+            _source0.IsPlaying = false; // simulate the window before the source becomes audible
+            _player.Pause();
+
+            _clock.DspTime = 2.0;
+            _player.Resume();
+
+            Assert.That(_source0.LastPlayScheduledTime, Is.EqualTo(2.0));
         }
 
         // --- SetEndAction / _onEnd fire ---
@@ -591,12 +630,12 @@ namespace AudioConductor.Editor.Core.Tests
         {
             // referenceSampleRate=0 means unset; no conversion applied
             _clock.DspTime = 0.0;
-            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050, 0);
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050);
 
             _player.Play();
 
-            // scheduledEndTime = PlayScheduleDelay(0.1) + 22050/44100 = 0.6
-            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+            // scheduledEndTime = PlayStartDelay(0, non-loop) + 22050/44100 = 0.5
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.5).Within(0.001));
         }
 
         [Test]
@@ -608,8 +647,8 @@ namespace AudioConductor.Editor.Core.Tests
 
             _player.Play();
 
-            // same as referenceSampleRate=0 case: 0.1 + 22050/44100 = 0.6
-            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.6).Within(0.001));
+            // same as referenceSampleRate=0 case: 0 + 22050/44100 = 0.5
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.5).Within(0.001));
         }
 
         [Test]
@@ -622,8 +661,8 @@ namespace AudioConductor.Editor.Core.Tests
             _player.Play();
 
             // convertedEnd = RoundToInt(22050 * 44100 / 22050) = 44100
-            // scheduledEndTime = 0.1 + 44100/44100 = 1.1
-            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.1).Within(0.001));
+            // scheduledEndTime = 0 + 44100/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
         }
 
         // --- GetCurrentSample / SetCurrentSample ---
@@ -707,13 +746,13 @@ namespace AudioConductor.Editor.Core.Tests
             SetupPlayer(isLoop: false, endSample: _clip.samples);
             _player.Play();
             _source0.IsPlaying = true;
-            var endTimeBefore = _source0.LastScheduledEndTime;
+            var countBefore = _source0.SetScheduledEndTimeCount;
 
             _clock.DspTime = 0.5;
             _source0.TimeSamples = 22050; // halfway
             _player.SetCurrentSample(22050);
 
-            Assert.That(_source0.LastScheduledEndTime, Is.Not.EqualTo(endTimeBefore));
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.GreaterThan(countBefore));
         }
     }
 }

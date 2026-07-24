@@ -57,7 +57,8 @@ namespace AudioConductor.Core.Tests
 
             _player.Play();
 
-            // PlayScheduled uses dspTime + 0.1s delay; wait long enough for playback to start
+            // Non-loop playback schedules immediately (no delay); wait a couple of frames
+            // for the AudioSource to report IsPlaying.
             yield return new WaitForSeconds(0.2f);
 
             Assert.That(_player.State, Is.EqualTo(PlayerState.Playing));
