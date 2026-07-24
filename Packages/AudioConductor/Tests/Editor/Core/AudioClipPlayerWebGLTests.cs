@@ -253,7 +253,7 @@ namespace AudioConductor.Editor.Core.Tests
         {
             _clock.DspTime = 0.0;
             SetupAndPlay();
-            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source0.IsPlaying = false; // simulate the source not yet becoming audible
 
             _player.PauseBySystem();
 
@@ -266,7 +266,7 @@ namespace AudioConductor.Editor.Core.Tests
         {
             _clock.DspTime = 0.0;
             SetupAndPlay();
-            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source0.IsPlaying = false; // simulate the source not yet becoming audible
             _player.PauseBySystem();
 
             _player.ResumeBySystem();
@@ -280,7 +280,7 @@ namespace AudioConductor.Editor.Core.Tests
         {
             _clock.DspTime = 0.0;
             SetupAndPlay();
-            _source0.IsPlaying = false; // simulate PlayScheduleDelay window
+            _source0.IsPlaying = false; // simulate the source not yet becoming audible
             _player.PauseBySystem();
             _player.Pause();
 
@@ -419,7 +419,7 @@ namespace AudioConductor.Editor.Core.Tests
         }
 
         [Test]
-        public void ManualUpdate_ArmedWhileContextSuspended_InPlayScheduleDelayWindow_RearmsScheduledEnd()
+        public void ManualUpdate_ArmedWhileContextSuspended_NonLoop_BeforeSourceBecomesAudible_RearmsScheduledEnd()
         {
             var running = false;
             _player.IsAudioContextRunningOverride = () => running;
@@ -429,12 +429,52 @@ namespace AudioConductor.Editor.Core.Tests
             var originalEndTime = _source0.LastScheduledEndTime;
 
             running = true;
-            _clock.DspTime = 0.05; // within PlayScheduleDelay window (< 0.1)
+            _clock.DspTime = 0.05; // shortly after Play(); well before scheduledEndTime(10.0)
             _source0.IsPlaying = false; // source queued but not yet audible
             _player.ManualUpdate(0f);
 
             Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(2));
             Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(originalEndTime).Within(1e-3));
+        }
+
+        [Test]
+        public void ManualUpdate_ArmedWhileContextSuspended_Loop_LongSuspensionWithinClipDuration_RearmsScheduledEnd()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, true, 0, 0, _longClip.samples);
+            _player.Play();
+            var originalEndTime = _source0.LastScheduledEndTime;
+
+            running = true;
+            _clock.DspTime = 5.0; // beyond PlayScheduleDelay(0.1) but still well within scheduledEndTime(10.1)
+            _source0.IsPlaying = false; // source queued but not yet audible
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(2));
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(originalEndTime).Within(1e-3));
+        }
+
+        [Test]
+        public void ManualUpdate_ArmedWhileContextSuspended_NonLoop_CatchUpOvershot_FiresEndActionWithoutStaleRearm()
+        {
+            var running = false;
+            _player.IsAudioContextRunningOverride = () => running;
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _longClip, 0, 1f, 1f, false, 0, 0, _longClip.samples);
+            _player.Play();
+            var ended = false;
+            _player.SetEndAction(() => ended = true);
+
+            running = true;
+            _clock.DspTime = 15.0; // past scheduledEndTime(10.0); the queued sound already died
+            _source0.IsPlaying = false;
+            _player.ManualUpdate(0f);
+
+            Assert.That(_source0.SetScheduledEndTimeCount, Is.EqualTo(1)); // nothing to re-arm
+            Assert.That(ended, Is.True);
+            Assert.That(_player.State, Is.EqualTo(PlayerState.Stopped));
         }
 
         [Test]

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.4.1 - 2026/07/24
+
+- Fix Issues
+  - Fix unnecessary ~0.1s playback start delay for non-loop playback; loop playback keeps the delay to preserve buffer-priming headroom.
+
 ## v2.4.0 - 2026/06/26
 
 - New Features

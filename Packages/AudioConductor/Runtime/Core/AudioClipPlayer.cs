@@ -23,6 +23,7 @@ namespace AudioConductor.Core
         // https://qiita.com/tatmos/items/4c78c127291a0c3b74ed
         private const float PlayScheduleDelay = 0.1f;
         private const int VolumeScale = 10000;
+
         private readonly IDspClock _dspClock;
         private readonly IAudioPlayerLifecycle _lifecycle;
 
@@ -56,6 +57,13 @@ namespace AudioConductor.Core
             _dspClock = dspClock;
             _lifecycle = lifecycle;
         }
+
+        // Loop playback keeps PlayScheduleDelay's buffer-priming headroom (see link above):
+        // the initial schedule seeds the _scheduledEndTime chain that ScheduleNextLoop extends
+        // on every iteration, so its precision matters for every subsequent loop boundary.
+        // Non-loop playback has no such chain, so scheduling immediately removes perceptible
+        // startup lag with no downside.
+        private double PlayStartDelay => _isLoop ? PlayScheduleDelay : 0.0;
 
         internal float VolumeAsset { get; private set; }
         internal float PitchInternal { get; private set; }
@@ -150,7 +158,7 @@ namespace AudioConductor.Core
             _isPlaybackActive = true;
             _sources[1].Enabled = _isLoop;
 
-            SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+            SchedulePlayback(_dspClock.DspTime + PlayStartDelay, _startSample);
         }
 
         public void Restart()
@@ -167,31 +175,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                if (_sources[0].IsPlaying)
-                {
-                    _sources[0].Pause();
-                    _pausedIndex = 0;
-                    _sources[1].Stop();
-                }
-                else if (_sources[1].IsPlaying)
-                {
-                    _sources[0].Stop();
-                    _sources[1].Pause();
-                    _pausedIndex = 1;
-                }
-                else
-                {
-                    // Neither source is playing yet (within PlayScheduleDelay window).
-                    // AudioSource.Pause() on a scheduled-but-not-yet-playing source has undefined
-                    // behavior per Unity docs, so stop both and reschedule fresh on Resume.
-                    _sources[0].Stop();
-                    _sources[1].Stop();
-#if UNITY_WEBGL
-                    CancelPendingBinds();
-#endif
-                    _wasStoppedBeforePlay = true;
-                }
-
+                PauseLoop();
                 IsPaused = true;
                 return;
             }
@@ -228,7 +212,7 @@ namespace AudioConductor.Core
                 {
                     _wasStoppedBeforePlay = false;
                     _nextPlayAudioSourceIndex = 0;
-                    SchedulePlayback(_dspClock.DspTime + PlayScheduleDelay, _startSample);
+                    SchedulePlayback(_dspClock.DspTime + PlayStartDelay, _startSample);
                 }
                 else if (!_isPlaybackActive)
                 {
@@ -319,23 +303,15 @@ namespace AudioConductor.Core
 
         public int GetCurrentSample()
         {
-            if (_isLoop)
-            {
-                var source = GetPlayingSource();
-                return source == null ? 0 : source.TimeSamples;
-            }
-
-            return _sources[0].TimeSamples;
+            return _isLoop ? GetCurrentSampleLoop() : _sources[0].TimeSamples;
         }
 
         public void SetCurrentSample(int sample)
         {
             if (_isLoop)
             {
-                var source = GetPlayingSource();
-                if (source == null)
+                if (!SetCurrentSampleLoop(sample))
                     return;
-                source.TimeSamples = sample;
             }
             else
             {
@@ -459,7 +435,6 @@ namespace AudioConductor.Core
             _webGLNativeLoopActive = false;
             _armedWhileContextSuspended = false;
             _lastScheduledSourceIndex = 0;
-            _lastScheduledPlayStartTime = 0;
             CancelPendingBinds();
 #endif
             _nextEventTime = 0;
@@ -469,11 +444,6 @@ namespace AudioConductor.Core
             _scheduledEndTime = 0;
 
             _onStop = _onEnd = null;
-        }
-
-        private void ScheduleNextLoop()
-        {
-            SchedulePlayback(_scheduledEndTime, _loopStartSample);
         }
 
         private void SchedulePlayback(double playStartTime, int startSample)
@@ -501,7 +471,6 @@ namespace AudioConductor.Core
 #if UNITY_WEBGL
             if (UsesAudioConductorScheduling)
             {
-                _lastScheduledPlayStartTime = playStartTime;
                 if (_backendDetectPending)
                 {
                     // Backend unknown: play, but defer arming until ResolvePendingBackend runs on the
