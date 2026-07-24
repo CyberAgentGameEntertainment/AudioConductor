@@ -175,31 +175,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                if (_sources[0].IsPlaying)
-                {
-                    _sources[0].Pause();
-                    _pausedIndex = 0;
-                    _sources[1].Stop();
-                }
-                else if (_sources[1].IsPlaying)
-                {
-                    _sources[0].Stop();
-                    _sources[1].Pause();
-                    _pausedIndex = 1;
-                }
-                else
-                {
-                    // Neither source is playing yet (within PlayScheduleDelay window).
-                    // AudioSource.Pause() on a scheduled-but-not-yet-playing source has undefined
-                    // behavior per Unity docs, so stop both and reschedule fresh on Resume.
-                    _sources[0].Stop();
-                    _sources[1].Stop();
-#if UNITY_WEBGL
-                    CancelPendingBinds();
-#endif
-                    _wasStoppedBeforePlay = true;
-                }
-
+                PauseLoop();
                 IsPaused = true;
                 return;
             }
@@ -252,7 +228,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                _sources[_pausedIndex].UnPause();
+                ResumeLoop();
                 IsPaused = false;
                 return;
             }
@@ -266,7 +242,7 @@ namespace AudioConductor.Core
             _sources[0].Stop();
 
             if (_isLoop)
-                _sources[1].Stop();
+                StopLoop();
 
             _isPlaybackActive = false;
             _wasStoppedBeforePlay = false;
@@ -327,23 +303,15 @@ namespace AudioConductor.Core
 
         public int GetCurrentSample()
         {
-            if (_isLoop)
-            {
-                var source = GetPlayingSource();
-                return source == null ? 0 : source.TimeSamples;
-            }
-
-            return _sources[0].TimeSamples;
+            return _isLoop ? GetCurrentSampleLoop() : _sources[0].TimeSamples;
         }
 
         public void SetCurrentSample(int sample)
         {
             if (_isLoop)
             {
-                var source = GetPlayingSource();
-                if (source == null)
+                if (!SetCurrentSampleLoop(sample))
                     return;
-                source.TimeSamples = sample;
             }
             else
             {
@@ -476,11 +444,6 @@ namespace AudioConductor.Core
             _scheduledEndTime = 0;
 
             _onStop = _onEnd = null;
-        }
-
-        private void ScheduleNextLoop()
-        {
-            SchedulePlayback(_scheduledEndTime, _loopStartSample);
         }
 
         private void SchedulePlayback(double playStartTime, int startSample)
@@ -619,7 +582,7 @@ namespace AudioConductor.Core
             _sources[0].Volume = volume;
 
             if (_isLoop)
-                _sources[1].Volume = volume;
+                UpdateVolumeLoop(volume);
         }
 
         private void UpdatePitch()
@@ -629,7 +592,7 @@ namespace AudioConductor.Core
             RecalculateScheduledEndTime();
 
             if (_isLoop)
-                _sources[1].Pitch = pitch;
+                UpdatePitchLoop(pitch);
         }
 
         private void InvokeStopAction()
