@@ -272,7 +272,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                ResumeBySystemLoop();
+                _sources[_pausedIndex].UnPause();
                 return;
             }
 

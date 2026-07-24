@@ -185,11 +185,6 @@ namespace AudioConductor.Core
                 SchedulePlayback(_dspClock.DspTime + PlayStartDelay, _resumeSample);
             }
         }
-
-        private void ResumeBySystemLoop()
-        {
-            _sources[_pausedIndex].UnPause();
-        }
     }
 }
 

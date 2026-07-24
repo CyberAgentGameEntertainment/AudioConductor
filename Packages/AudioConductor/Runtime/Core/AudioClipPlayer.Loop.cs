@@ -36,16 +36,6 @@ namespace AudioConductor.Core
             }
         }
 
-        private void ResumeLoop()
-        {
-            _sources[_pausedIndex].UnPause();
-        }
-
-        private void StopLoop()
-        {
-            _sources[1].Stop();
-        }
-
         private int GetCurrentSampleLoop()
         {
             var source = GetPlayingSource();
@@ -64,16 +54,6 @@ namespace AudioConductor.Core
         private void ScheduleNextLoop()
         {
             SchedulePlayback(_scheduledEndTime, _loopStartSample);
-        }
-
-        private void UpdateVolumeLoop(float volume)
-        {
-            _sources[1].Volume = volume;
-        }
-
-        private void UpdatePitchLoop(float pitch)
-        {
-            _sources[1].Pitch = pitch;
         }
     }
 }

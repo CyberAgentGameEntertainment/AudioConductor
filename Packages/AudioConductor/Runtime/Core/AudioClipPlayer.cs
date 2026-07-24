@@ -228,7 +228,7 @@ namespace AudioConductor.Core
 
             if (_isLoop)
             {
-                ResumeLoop();
+                _sources[_pausedIndex].UnPause();
                 IsPaused = false;
                 return;
             }
@@ -242,7 +242,7 @@ namespace AudioConductor.Core
             _sources[0].Stop();
 
             if (_isLoop)
-                StopLoop();
+                _sources[1].Stop();
 
             _isPlaybackActive = false;
             _wasStoppedBeforePlay = false;
@@ -582,7 +582,7 @@ namespace AudioConductor.Core
             _sources[0].Volume = volume;
 
             if (_isLoop)
-                UpdateVolumeLoop(volume);
+                _sources[1].Volume = volume;
         }
 
         private void UpdatePitch()
@@ -592,7 +592,7 @@ namespace AudioConductor.Core
             RecalculateScheduledEndTime();
 
             if (_isLoop)
-                UpdatePitchLoop(pitch);
+                _sources[1].Pitch = pitch;
         }
 
         private void InvokeStopAction()
