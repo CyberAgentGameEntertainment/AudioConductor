@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.0 - 2026/07/27
+
+- New Features
+  - Support a non-positive `End sample` as a sentinel meaning "play until the end of the clip"; validation no longer rejects `End sample` values of 0 or less, and the range checks against `Start sample` / `Loop start sample` are skipped while the sentinel is in effect
+
 ## v2.4.1 - 2026/07/24
 
 - Fix Issues
