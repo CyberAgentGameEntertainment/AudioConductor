@@ -115,6 +115,16 @@ namespace AudioConductor.Core.Shared
             {
                 return Mathf.Clamp(value, Min, Mathf.Max(audioClipSamples, Min));
             }
+
+            /// <summary>
+            ///     Resolves the sentinel value (0 or less) to the AudioClip's current sample count,
+            ///     meaning "play until the end of the clip".
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int Resolve(int endSample, int clipSamples)
+            {
+                return endSample <= 0 ? clipSamples : endSample;
+            }
         }
 
         /// <summary>

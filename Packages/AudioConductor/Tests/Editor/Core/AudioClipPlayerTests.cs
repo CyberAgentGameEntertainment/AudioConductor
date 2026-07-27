@@ -360,9 +360,9 @@ namespace AudioConductor.Editor.Core.Tests
         [Test]
         public void Play_Loop_WithDuration0_DoesNotScheduleAudioSource()
         {
-            // endSample == startSample == 0 → samples=0 → duration=0
+            // endSample == startSample (both 100, non-sentinel) → samples=0 → duration=0
             _clock.DspTime = 0.0;
-            SetupPlayer(isLoop: true, endSample: 0);
+            _player.Setup(null, _clip, 0, 1f, 1f, true, 100, 0, 100);
 
             _player.Play();
 
@@ -373,7 +373,7 @@ namespace AudioConductor.Editor.Core.Tests
         public void ManualUpdate_Loop_WithDuration0_DoesNotRepeatSchedule()
         {
             _clock.DspTime = 0.0;
-            SetupPlayer(isLoop: true, endSample: 0);
+            _player.Setup(null, _clip, 0, 1f, 1f, true, 100, 0, 100);
             _player.Play();
 
             for (var i = 0; i < 5; i++)
@@ -662,6 +662,99 @@ namespace AudioConductor.Editor.Core.Tests
 
             // convertedEnd = RoundToInt(22050 * 44100 / 22050) = 44100
             // scheduledEndTime = 0 + 44100/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        // --- Setup with endSample sentinel (<=0) resolution ---
+
+        [Test]
+        public void Setup_EndSampleZero_ResolvesToClipSamples()
+        {
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 0);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSampleNegative_ResolvesToClipSamples()
+        {
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, -5);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSamplePositive_IsUnaffectedBySentinelResolution()
+        {
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 22050);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + 22050/44100 = 0.5
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(0.5).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSampleZero_WithReferenceSampleRateConversion_ResolvesToActualClipSamples()
+        {
+            // The raw endSample must be sentinel-checked before conversion, and the resolved
+            // ClipSamples must skip ConvertSample entirely (it is already in native units).
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 0, 22050);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSampleNegative_WithReferenceSampleRateConversion_ResolvesToActualClipSamples()
+        {
+            // Same as above, using a negative sentinel value.
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, -5, 22050);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSampleZero_WithDownsamplingReferenceSampleRateConversion_ResolvesToActualClipSamples()
+        {
+            // referenceSampleRate(88200) > clipFrequency(44100): the sentinel must be resolved
+            // to ClipSamples in native units and must never be run through ConvertSample,
+            // otherwise it would be scaled down to ClipSamples/2.
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, 0, 88200);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
+            Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
+        }
+
+        [Test]
+        public void Setup_EndSampleNegative_WithDownsamplingReferenceSampleRateConversion_ResolvesToActualClipSamples()
+        {
+            // Same as above, using a negative sentinel value.
+            _clock.DspTime = 0.0;
+            _player.Setup(null, _clip, 0, 1f, 1f, false, 0, 0, -5, 88200);
+
+            _player.Play();
+
+            // scheduledEndTime = PlayStartDelay(0.0, non-loop) + ClipSamples(44100)/44100 = 1.0
             Assert.That(_source0.LastScheduledEndTime, Is.EqualTo(1.0).Within(0.001));
         }
 

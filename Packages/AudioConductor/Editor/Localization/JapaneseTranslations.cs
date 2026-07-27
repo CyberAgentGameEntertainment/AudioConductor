@@ -69,6 +69,7 @@ namespace AudioConductor.Editor.Localization
             { "track_inspector.fade_time", "フェード時間 (秒)" },
             { "track_inspector.start_sample", "再生開始サンプル位置" },
             { "track_inspector.end_sample", "再生終了サンプル位置" },
+            { "track_inspector.end_sample_sentinel_help", "再生終了サンプル位置が 0 以下の場合、クリップの終端まで再生されます。" },
             { "track_inspector.loop", "この Track のループ再生を有効化" },
             { "track_inspector.loop_start_sample", "ループ時に戻るサンプル位置" },
             { "track_inspector.analyze", "AudioClip を解析し、wav chunk からループ情報を設定" },

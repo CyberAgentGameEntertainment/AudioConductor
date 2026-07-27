@@ -69,6 +69,7 @@ namespace AudioConductor.Editor.Localization
             { "track_inspector.fade_time", "Fade time in seconds." },
             { "track_inspector.start_sample", "Playback start sample." },
             { "track_inspector.end_sample", "Playback end sample." },
+            { "track_inspector.end_sample_sentinel_help", "End sample is 0 or less: plays to the end of the clip." },
             { "track_inspector.loop", "Enable looping for this track." },
             { "track_inspector.loop_start_sample", "Sample position where looping restarts." },
             { "track_inspector.analyze", "Analyze the AudioClip and set loop metadata from wav chunks." },

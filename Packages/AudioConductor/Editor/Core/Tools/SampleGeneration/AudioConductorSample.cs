@@ -414,7 +414,8 @@ namespace AudioConductor.Editor.Core.Tools.SampleGeneration
             if (clip != null)
             {
                 track.audioClip = clip;
-                track.endSample = clip.samples;
+                track.endSample =
+                    0; // 0 is a sentinel meaning "play to clip end"; keeps track in sync if clip content is replaced later
                 EditorUtility.SetDirty(asset);
                 AssetDatabase.SaveAssets();
             }

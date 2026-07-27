@@ -92,7 +92,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models
             {
                 name = evt.asset.name,
                 audioClip = evt.asset,
-                endSample = evt.asset.samples
+                endSample = 0 // 0 is a sentinel meaning "play to clip end"; keeps track in sync if clip content is replaced later
             });
 
             AddTrack(index, (ItemCue)parent, newItem, actionTypeId);

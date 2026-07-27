@@ -311,7 +311,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
                 {
                     Assert.That(track.audioClip, Is.EqualTo(testValue));
                     Assert.That(track.startSample, Is.EqualTo(0));
-                    Assert.That(track.endSample, Is.EqualTo(samples));
+                    Assert.That(track.endSample, Is.EqualTo(0));
                     Assert.That(track.loopStartSample, Is.InRange(0, loopStartMax));
                 }
 
@@ -941,6 +941,23 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Models.Tests
 
                 Assert.That(model.EndSampleObservable.Value.HasMultipleDifferentValues, Is.EqualTo(mixed));
             }
+        }
+
+        // endSample<=0 is a valid sentinel meaning "play to clip end", so a negative
+        // input must be normalized to 0 by the lower-bound clamp, not left negative.
+        [Test]
+        public void EndSample_SetNegativeValue_IsClampedToZero()
+        {
+            var history = new AutoIncrementHistory();
+            var tracks = CreateTestTargetTracks();
+            var model = new TrackInspectorModel(tracks.Select(track => new ItemTrack(0, track)).ToArray(), history,
+                new AssetSaveService());
+
+            model.EndSample = -5;
+
+            Assert.That(model.EndSample, Is.EqualTo(0));
+            foreach (var track in tracks)
+                Assert.That(track.endSample, Is.EqualTo(0));
         }
 
         [Test]

@@ -27,6 +27,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         private readonly ColorDefinePopupField _colorDefinePopupField;
         private readonly Subject<int> _endSampleChangedSubject = new();
         private readonly SliderAndIntegerField _endSampleField;
+        private readonly HelpBox _endSampleSentinelHelpBox;
         private readonly Subject<float> _fadeTimeChangedSubject = new();
         private readonly FloatField _fadeTimeField;
         private readonly Subject<bool> _isLoopChangedSubject = new();
@@ -80,6 +81,8 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _fadeTimeField = this.Q<FloatField>("FadeTime");
             _startSampleField = this.Q<SliderAndIntegerField>("StartSample");
             _endSampleField = this.Q<SliderAndIntegerField>("EndSample");
+            _endSampleSentinelHelpBox = this.Q<HelpBox>("EndSampleSentinelHelpBox");
+            _endSampleSentinelHelpBox.SetDisplay(false);
             _isLoopField = this.Q<Toggle>("Loop");
             _loopStartSampleField = this.Q<SliderAndIntegerField>("LoopStartSample");
             _analyzeButton = this.Q<Button>("Analyze");
@@ -173,6 +176,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _fadeTimeField.tooltip = Localization.Localization.Tr("track_inspector.fade_time");
             _startSampleField.tooltip = Localization.Localization.Tr("track_inspector.start_sample");
             _endSampleField.tooltip = Localization.Localization.Tr("track_inspector.end_sample");
+            _endSampleSentinelHelpBox.text = Localization.Localization.Tr("track_inspector.end_sample_sentinel_help");
             _isLoopField.tooltip = Localization.Localization.Tr("track_inspector.loop");
             _loopStartSampleField.tooltip = Localization.Localization.Tr("track_inspector.loop_start_sample");
             _analyzeButton.tooltip = Localization.Localization.Tr("track_inspector.analyze");
@@ -339,6 +343,17 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             _endSampleField.showMixedValue = false;
             _endSampleField.SetValueWithoutNotify(value.Value);
             _endSampleField.showMixedValue = value.HasMultipleDifferentValues;
+            _endSampleSentinelHelpBox.SetDisplay(ShouldShowEndSampleSentinelHelp(value));
+        }
+
+        /// <summary>
+        ///     Determines whether the sentinel-value help message for EndSample should be displayed.
+        ///     The help is shown only when a single value is selected and that value is 0 or less,
+        ///     which means the track plays to the end of the clip.
+        /// </summary>
+        internal static bool ShouldShowEndSampleSentinelHelp(MixedValue<int> value)
+        {
+            return !value.HasMultipleDifferentValues && value.Value <= 0;
         }
 
         internal void SetIsLoop(MixedValue<bool> value)

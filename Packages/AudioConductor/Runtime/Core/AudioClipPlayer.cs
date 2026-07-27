@@ -135,7 +135,14 @@ namespace AudioConductor.Core
 
             var convertedStart = ConvertSample(startSample, referenceSampleRate, _frequency);
             var convertedLoopStart = ConvertSample(loopStartSample, referenceSampleRate, _frequency);
-            var convertedEnd = ConvertSample(endSample, referenceSampleRate, _frequency);
+            // The sentinel (<=0) must be judged on the raw endSample before any conversion, and
+            // once resolved it must skip ConvertSample entirely: ClipSamples is already expressed
+            // in the clip's native sample rate, so running it through ConvertSample (which maps
+            // referenceSampleRate-relative values to _frequency-relative ones) would rescale it
+            // into the wrong unit.
+            var convertedEnd = endSample <= 0
+                ? ValueRangeConst.EndSample.Resolve(endSample, ClipSamples)
+                : ConvertSample(endSample, referenceSampleRate, _frequency);
 
             _volumeRuntime = 1f;
             SetPitchInternal(pitch);

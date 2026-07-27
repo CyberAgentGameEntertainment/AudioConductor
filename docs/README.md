@@ -98,6 +98,7 @@ It has the following parameters:
 - Fade-in/fade-out time
 
 When loop is enabled, the track will play from the start sample to the end sample and then loop back from the loop start sample to the end sample. When loop is disabled, the track will stop after playing from the start sample to the end sample.  
+An `End sample` value of 0 or less is a sentinel meaning "play until the end of the clip".  
 
 ### Cue
 
@@ -704,15 +705,14 @@ Clicking a result row opens the CueSheet Editor window and focuses the relevant 
 
 **Errors**:
 - Track: `AudioClip` is not assigned.
-- Track: `End sample` is 0 while `AudioClip` is assigned (the track would end immediately).
-- Track: `Start sample` ≥ `End sample` (when both are non-zero).
-- Track: `Loop start sample` ≥ `End sample` (loop start is outside the playable range).
+- Track: `Start sample` ≥ `End sample` (checked only when `End sample` is greater than 0; a non-positive `End sample` is the "play until the end of the clip" sentinel and skips this check).
+- Track: `Loop start sample` ≥ `End sample` (loop-enabled tracks only, checked only when `End sample` is greater than 0; a non-positive `End sample` skips this check).
 - Track: `Random weight` is negative (valid range: 0 or greater).
 - Track: `Volume` is outside the valid range [0, 1].
 - Track: `Pitch` is outside the valid range [0.01, 3].
 - Track: `Fade time` is negative (valid range: 0 or greater).
 - Track: `Start sample` is negative, or is ≥ the `AudioClip`'s sample count.
-- Track: `End sample` is negative, or exceeds the `AudioClip`'s sample count.
+- Track: `End sample` exceeds the `AudioClip`'s sample count.
 - Track: `Loop start sample` is negative, or is ≥ the `AudioClip`'s sample count (loop-enabled tracks only).
 - Cue: Track list is empty.
 - CueSheet: Contains duplicate or unassigned cue IDs. Re-import the asset to fix.

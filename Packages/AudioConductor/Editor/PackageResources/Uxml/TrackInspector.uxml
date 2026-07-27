@@ -15,6 +15,7 @@
     <uie:FloatField label="Fade Time" value="0" name="FadeTime" is-delayed="true" />
     <AudioConductor.Editor.Core.Tools.Shared.SliderAndIntegerField name="StartSample" label="Start Sample" is-delayed="true" />
     <AudioConductor.Editor.Core.Tools.Shared.SliderAndIntegerField name="EndSample" label="End Sample" is-delayed="true" />
+    <ui:HelpBox name="EndSampleSentinelHelpBox" message-type="Info" text="placeholder" style="display: none;" />
     <ui:GroupBox text="Loop Settings" class="border-top border-left border-right border-bottom background-color" style="padding-left: 10px; padding-right: 10px; padding-top: 10px; margin-bottom: 6px;">
         <ui:VisualElement style="margin-left: 6px; margin-right: 6px; margin-top: 6px; margin-bottom: 6px;">
             <ui:Toggle label="Loop" name="Loop" />

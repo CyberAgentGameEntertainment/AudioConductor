@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using AudioConductor.Core.Shared;
 using AudioConductor.Editor.Core.Tools.Shared;
 using UnityEditor;
 using UnityEngine;
@@ -70,10 +71,11 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
             var startSample = _startSampleField.value;
             var loopStartSample = _loopStartSampleField.value;
             var endSample = _endSampleField.value;
+            var clipSamples = GetClipSamples();
 
-            var sec2px = rect.width / GetClipSamples();
+            var sec2px = rect.width / clipSamples;
             var min = (isLoop ? loopStartSample : startSample) * sec2px;
-            var max = endSample * sec2px;
+            var max = ValueRangeConst.EndSample.Resolve(endSample, clipSamples) * sec2px;
 
             var beforeMinRect = new Rect(rect.x, rect.y, min, rect.height);
             EditorGUI.DrawRect(beforeMinRect, new Color(0.15f, 0.15f, 0.15f, 0.5f));
@@ -98,7 +100,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
             var sec2px = markerRect.width / clipSamples;
             var min = (isLoop ? loopStartSample : startSample) * sec2px;
-            var max = endSample * sec2px;
+            var max = ValueRangeConst.EndSample.Resolve(endSample, clipSamples) * sec2px;
             var minRect = new Rect(markerRect.x + min + 1 - 15, markerRect.y, 15, 15);
             var maxRect = new Rect(markerRect.x + max, markerRect.y, 15, 15);
 
