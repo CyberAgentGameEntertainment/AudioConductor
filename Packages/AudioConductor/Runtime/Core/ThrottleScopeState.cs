@@ -16,6 +16,7 @@ namespace AudioConductor.Core
         internal int Count { get; private set; }
         private int _min;
         internal Playback? Oldest { get; private set; }
+        internal Playback? PendingEviction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Accumulate(in Playback p)
@@ -37,7 +38,7 @@ namespace AudioConductor.Core
             out Playback? eviction)
         {
             eviction = null;
-            if (limit <= 0 || Count < limit)
+            if (limit <= ThrottleSetting.Unlimited || Count < limit)
                 return true;
             if (_min > incomingPriority)
                 return false;

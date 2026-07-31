@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using AudioConductor.Core.Tests.Fakes;
 using NUnit.Framework;
@@ -46,10 +47,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
-            Assert.That(ctx.SheetCount, Is.EqualTo(1));
-            Assert.That(ctx.CueCount, Is.EqualTo(1));
-            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(1));
         }
 
         [Test]
@@ -61,7 +62,7 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(0));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(0));
         }
 
         [Test]
@@ -73,10 +74,10 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
-            Assert.That(ctx.SheetCount, Is.EqualTo(0));
-            Assert.That(ctx.CueCount, Is.EqualTo(1));
-            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(0));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(1));
         }
 
         [Test]
@@ -88,27 +89,34 @@ namespace AudioConductor.Core.Tests
 
             ctx.Accumulate(state.Core);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
-            Assert.That(ctx.SheetCount, Is.EqualTo(1));
-            Assert.That(ctx.CueCount, Is.EqualTo(1));
-            Assert.That(ctx.CategoryCount, Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(1));
         }
 
         [Test]
-        public void AdjustAfterEviction_Null_NoChange()
+        public void Resolve_NoEviction_NoChange()
         {
-            var cue = CreateCue();
+            var cue = CreateCue(10);
             var state = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
             var ctx = new ThrottleContext(100, cue);
             ctx.Accumulate(state.Core);
 
-            ctx.AdjustAfterEviction(null);
+            // Limit above current count: no eviction is produced, counts stay untouched.
+            var result = ctx.Resolve(ThrottleScopeKind.Global,
+                new ThrottleSetting(ThrottleType.FirstComeFirstServed, 5), 0);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(1));
+            Assert.That(result, Is.True);
+            Assert.That(ctx.PendingEviction(ThrottleScopeKind.Global).HasValue, Is.False);
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(1));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(1));
         }
 
         [Test]
-        public void AdjustAfterEviction_MatchingScopes_DecrementsAll()
+        public void Resolve_EvictionAtLimit_DecrementsAllMatchingScopes()
         {
             var cue = CreateCue(10);
             var state1 = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
@@ -119,33 +127,41 @@ namespace AudioConductor.Core.Tests
             ctx.Accumulate(state2.Core);
             ctx.Accumulate(state3.Core);
 
-            ctx.AdjustAfterEviction(state1.Core);
+            // Count == limit with equal priorities: the oldest (lowest Id) is evicted.
+            var result = ctx.Resolve(ThrottleScopeKind.Global,
+                new ThrottleSetting(ThrottleType.PriorityOrder, 3), 0);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(2));
-            Assert.That(ctx.SheetCount, Is.EqualTo(2));
-            Assert.That(ctx.CueCount, Is.EqualTo(2));
-            Assert.That(ctx.CategoryCount, Is.EqualTo(2));
+            Assert.That(result, Is.True);
+            Assert.That(ctx.PendingEviction(ThrottleScopeKind.Global)!.Value.Id, Is.EqualTo(1u));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(2));
         }
 
         [Test]
-        public void AdjustAfterEviction_DifferentSheet_KeepsSheet()
+        public void Resolve_EvictionFromDifferentSheet_KeepsSheetCount()
         {
             var cue = CreateCue(10);
-            var stateA1 = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 0);
-            var stateA2 = new ManagedPlayback(2, 100, cue, CreatePlayingPlayer(), 0);
+            var stateA1 = new ManagedPlayback(1, 100, cue, CreatePlayingPlayer(), 10);
+            var stateA2 = new ManagedPlayback(2, 100, cue, CreatePlayingPlayer(), 10);
             var stateB = new ManagedPlayback(3, 200, cue, CreatePlayingPlayer(), 0);
             var ctx = new ThrottleContext(100, cue);
             ctx.Accumulate(stateA1.Core);
             ctx.Accumulate(stateA2.Core);
             ctx.Accumulate(stateB.Core);
 
-            // evict a playback from a different sheet
-            ctx.AdjustAfterEviction(stateB.Core);
+            // stateB has the lowest priority, so it becomes the eviction candidate
+            // even though it belongs to a different sheet.
+            var result = ctx.Resolve(ThrottleScopeKind.Global,
+                new ThrottleSetting(ThrottleType.PriorityOrder, 3), 0);
 
-            Assert.That(ctx.GlobalCount, Is.EqualTo(2));
-            Assert.That(ctx.SheetCount, Is.EqualTo(2));
-            Assert.That(ctx.CueCount, Is.EqualTo(2));
-            Assert.That(ctx.CategoryCount, Is.EqualTo(2));
+            Assert.That(result, Is.True);
+            Assert.That(ctx.PendingEviction(ThrottleScopeKind.Global)!.Value.Id, Is.EqualTo(3u));
+            Assert.That(ctx.Count(ThrottleScopeKind.Global), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Sheet), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Cue), Is.EqualTo(2));
+            Assert.That(ctx.Count(ThrottleScopeKind.Category), Is.EqualTo(2));
         }
     }
 }
