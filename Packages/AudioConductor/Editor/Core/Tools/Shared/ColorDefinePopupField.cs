@@ -8,7 +8,12 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class ColorDefinePopupField : BindableElement, INotifyValueChanged<string?>
+#else
     internal sealed class ColorDefinePopupField : BindableElement, INotifyValueChanged<string?>
+#endif
     {
         private readonly IMGUIContainer _imguiContainer = new();
         private readonly Label _label = new();
@@ -40,8 +45,13 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             _imguiContainer.style.flexGrow = 1;
 
             _imguiContainer.onGUIHandler = OnGUI;
+
+            label = "Label Name";
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("label")]
+#endif
         public string label
         {
             get => _label.text;
@@ -81,6 +91,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             value = AudioConductorGUI.ColorDefine.Popup(_imguiContainer.contentRect, _value, showMixedValue) ?? _value;
         }
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<ColorDefinePopupField, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -98,5 +109,6 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 container.label = _label.GetValueFromBag(bag, cc);
             }
         }
+#endif
     }
 }

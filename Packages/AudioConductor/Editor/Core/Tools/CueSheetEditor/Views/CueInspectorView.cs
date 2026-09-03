@@ -17,7 +17,12 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class CueInspectorView : VisualElement, IDisposable
+#else
     internal sealed class CueInspectorView : VisualElement, IDisposable
+#endif
     {
         private readonly Subject<int> _categoryChangedSubject = new();
         private readonly PopupIntField _categoryField;
@@ -382,6 +387,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Uxml
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<CueInspectorView, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -390,6 +396,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
         }
+#endif
 
         #endregion
     }

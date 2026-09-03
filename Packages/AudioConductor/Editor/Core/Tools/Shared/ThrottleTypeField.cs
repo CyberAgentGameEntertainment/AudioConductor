@@ -9,8 +9,20 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class ThrottleTypeField : EnumField
+#else
     internal sealed class ThrottleTypeField : EnumField
+#endif
     {
+        public ThrottleTypeField()
+        {
+            Init(ThrottleType.PriorityOrder, false);
+            label = "Throttle Type";
+        }
+
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<ThrottleTypeField, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -25,5 +37,6 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 ((EnumField)ve).label = "Throttle Type";
             }
         }
+#endif
     }
 }

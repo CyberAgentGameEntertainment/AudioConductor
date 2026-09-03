@@ -10,7 +10,12 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class CueTrackInspectorView : VisualElement, IDisposable
+#else
     internal sealed class CueTrackInspectorView : VisualElement, IDisposable
+#endif
     {
         public CueTrackInspectorView()
         {
@@ -34,6 +39,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Uxml
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<CueTrackInspectorView, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -42,6 +48,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
         }
+#endif
 
         #endregion
     }

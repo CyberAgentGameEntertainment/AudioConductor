@@ -9,12 +9,18 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class SliderAndIntegerField : VisualElement, INotifyValueChanged<int>
+#else
     internal sealed class SliderAndIntegerField : VisualElement, INotifyValueChanged<int>
+#endif
     {
         private readonly IntegerField _integer = new();
         private readonly SliderInt _slider = new();
 
         private int _value;
+        private int _fieldWidth;
 
         public SliderAndIntegerField()
         {
@@ -41,20 +47,36 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             _integer.style.marginRight = 0;
             _integer.style.marginTop = 0;
             _integer.style.marginBottom = 0;
+
+            label = "Label Name";
+            lowValue = 0;
+            highValue = 100;
+            value = 0;
+            SetFieldWidth(70);
+            SetIsDelayed(true);
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("label")]
+#endif
         public string label
         {
             get => _slider.label;
             set => _slider.label = value;
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("low-value")]
+#endif
         public int lowValue
         {
             get => _slider.lowValue;
             set => _slider.lowValue = value;
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("high-value")]
+#endif
         public int highValue
         {
             get => _slider.highValue;
@@ -67,6 +89,9 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             set => _slider.showMixedValue = _integer.showMixedValue = value;
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("value")]
+#endif
         public int value
         {
             get => _value;
@@ -90,6 +115,24 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             }
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("field-width")]
+#endif
+        public int fieldWidth
+        {
+            get => _fieldWidth;
+            set => SetFieldWidth(value);
+        }
+
+#if UNITY_2023_2_OR_NEWER
+        [UxmlAttribute("is-delayed")]
+#endif
+        public bool isDelayed
+        {
+            get => _integer.isDelayed;
+            set => SetIsDelayed(value);
+        }
+
         public void SetValueWithoutNotify(int newValue)
         {
             _value = newValue;
@@ -99,6 +142,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
 
         public void SetFieldWidth(int width)
         {
+            _fieldWidth = width;
             _integer.style.width = width;
         }
 
@@ -113,6 +157,7 @@ namespace AudioConductor.Editor.Core.Tools.Shared
             value = evt.newValue;
         }
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<SliderAndIntegerField, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -146,5 +191,6 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 container.SetIsDelayed(_isDelayed.GetValueFromBag(bag, cc));
             }
         }
+#endif
     }
 }
