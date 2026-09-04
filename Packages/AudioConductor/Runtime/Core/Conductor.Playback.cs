@@ -320,30 +320,23 @@ namespace AudioConductor.Core
                 return true;
 
             // Gather throttle settings per scope.
-            var cueThrottleType = cue.throttleType;
-            var cueThrottleLimit = cue.throttleLimit;
+            // This block is the ONLY place that knows where each scope's config lives.
+            Span<ThrottleSetting> settings = stackalloc ThrottleSetting[(int)ThrottleScopeKind.Count];
 
-            ThrottleType sheetThrottleType = default;
-            var sheetThrottleLimit = 0;
-            if (_cueSheets.TryGetValue(cueSheetId, out var reg))
-            {
-                sheetThrottleType = reg.Asset.cueSheet.throttleType;
-                sheetThrottleLimit = reg.Asset.cueSheet.throttleLimit;
-            }
+            settings[(int)ThrottleScopeKind.Cue] = new ThrottleSetting(cue.throttleType, cue.throttleLimit);
+            settings[(int)ThrottleScopeKind.Sheet] = _cueSheets.TryGetValue(cueSheetId, out var reg)
+                ? new ThrottleSetting(reg.Asset.cueSheet.throttleType, reg.Asset.cueSheet.throttleLimit)
+                : default;
+            settings[(int)ThrottleScopeKind.Category] = _categories.TryGetValue(cue.categoryId, out var cat)
+                ? new ThrottleSetting(cat.throttleType, cat.throttleLimit)
+                : default;
+            settings[(int)ThrottleScopeKind.Global] = new ThrottleSetting(_throttleType, _throttleLimit);
 
-            ThrottleType catThrottleType = default;
-            var catThrottleLimit = 0;
-            if (_categories.TryGetValue(cue.categoryId, out var cat))
-            {
-                catThrottleType = cat.throttleType;
-                catThrottleLimit = cat.throttleLimit;
-            }
-
-            var globalThrottleType = _throttleType;
-            var globalThrottleLimit = _throttleLimit;
-
-            if (cueThrottleLimit <= 0 && sheetThrottleLimit <= 0 && catThrottleLimit <= 0 &&
-                globalThrottleLimit <= 0)
+            // Early-out derived from the same data Phase 1 consumes — cannot drift when a scope is added.
+            var anyLimited = false;
+            foreach (var s in settings)
+                anyLimited |= s.IsLimited;
+            if (!anyLimited)
                 return true;
 
             // Single pass: count playing states and track oldest per scope at once.
@@ -358,36 +351,21 @@ namespace AudioConductor.Core
 #if UNITY_EDITOR
             // Invariant: counts must not exceed their respective limits.
             // Violated only if throttle limits are mutated while players are active (unsupported).
-            Debug.Assert(cueThrottleLimit <= 0 || ctx.CueCount <= cueThrottleLimit,
-                "cue count exceeds throttle limit");
-            Debug.Assert(sheetThrottleLimit <= 0 || ctx.SheetCount <= sheetThrottleLimit,
-                "sheet count exceeds throttle limit");
-            Debug.Assert(catThrottleLimit <= 0 || ctx.CategoryCount <= catThrottleLimit,
-                "category count exceeds throttle limit");
-            Debug.Assert(globalThrottleLimit <= 0 || ctx.GlobalCount <= globalThrottleLimit,
-                "global count exceeds throttle limit");
+            for (var i = 0; i < (int)ThrottleScopeKind.Count; i++)
+                Debug.Assert(!settings[i].IsLimited || ctx.Count((ThrottleScopeKind)i) <= settings[i].Limit,
+                    "count exceeds throttle limit");
 #endif
 
             // Phase 1: Resolve eviction candidates per scope without executing.
-            // Resolve* updates counts so subsequent scopes see the effect of prior evictions.
-            // Actual stop is deferred to Phase 2 to ensure no side effects when a later scope rejects.
-            if (!ctx.ResolveCue(cueThrottleType, cueThrottleLimit, track.priority, out var cueEviction))
-                return false;
-
-            if (!ctx.ResolveSheet(sheetThrottleType, sheetThrottleLimit, track.priority, out var sheetEviction))
-                return false;
-
-            if (!ctx.ResolveCategory(catThrottleType, catThrottleLimit, track.priority, out var catEviction))
-                return false;
-
-            if (!ctx.ResolveGlobal(globalThrottleType, globalThrottleLimit, track.priority, out var globalEviction))
-                return false;
+            // Enum order == resolve order. Resolve updates counts so subsequent scopes see
+            // the effect of prior evictions; actual stop is deferred to Phase 2.
+            for (var i = 0; i < (int)ThrottleScopeKind.Count; i++)
+                if (!ctx.Resolve((ThrottleScopeKind)i, settings[i], track.priority))
+                    return false;
 
             // Phase 2: All scopes passed — execute deferred evictions.
-            ExecuteEviction(cueEviction);
-            ExecuteEviction(sheetEviction);
-            ExecuteEviction(catEviction);
-            ExecuteEviction(globalEviction);
+            for (var i = 0; i < (int)ThrottleScopeKind.Count; i++)
+                ExecuteEviction(ctx.PendingEviction((ThrottleScopeKind)i));
 
             return true;
         }

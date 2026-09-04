@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using AudioConductor.Core.Enums;
 using AudioConductor.Core.Models;
 using static AudioConductor.Core.Conductor;
@@ -16,15 +17,12 @@ namespace AudioConductor.Core
         private readonly Cue _targetCue;
         private readonly int _targetCategoryId;
 
+        // Physical storage stays as fields (Playback contains a reference, so it cannot be
+        // stackalloc'd). Only GetState/SetState/AccumulateInto touch these fields directly.
         private ThrottleScopeState _cue;
         private ThrottleScopeState _sheet;
         private ThrottleScopeState _category;
         private ThrottleScopeState _global;
-
-        internal int CueCount => _cue.Count;
-        internal int SheetCount => _sheet.Count;
-        internal int CategoryCount => _category.Count;
-        internal int GlobalCount => _global.Count;
 
         internal ThrottleContext(uint cueSheetId, Cue cue)
         {
@@ -41,68 +39,115 @@ namespace AudioConductor.Core
         {
             if (p.Player.State == PlayerState.Stopped)
                 return;
-            _global.Accumulate(in p);
-            if (BelongsToSheet(in p)) _sheet.Accumulate(in p);
-            if (BelongsToCue(in p)) _cue.Accumulate(in p);
-            if (BelongsToCategory(in p)) _category.Accumulate(in p);
+            for (var i = 0; i < (int)ThrottleScopeKind.Count; i++)
+            {
+                var kind = (ThrottleScopeKind)i;
+                if (Belongs(kind, in p))
+                    AccumulateInto(kind, in p);
+            }
         }
 
-        internal void AdjustAfterEviction(Playback? eviction)
+        internal bool Resolve(ThrottleScopeKind kind, ThrottleSetting setting, int incomingPriority)
+        {
+            var state = GetState(kind);
+            if (!state.Resolve(setting.Type, setting.Limit, incomingPriority, out var eviction))
+                return false;
+            state.PendingEviction = eviction;
+            SetState(kind, state);
+            AdjustAfterEviction(eviction);
+            return true;
+        }
+
+        internal readonly int Count(ThrottleScopeKind kind)
+        {
+            return GetState(kind).Count;
+        }
+
+        internal readonly Playback? PendingEviction(ThrottleScopeKind kind)
+        {
+            return GetState(kind).PendingEviction;
+        }
+
+        private void AdjustAfterEviction(Playback? eviction)
         {
             if (!eviction.HasValue)
                 return;
             var e = eviction.Value;
-            _global.Decrement();
-            if (BelongsToSheet(in e)) _sheet.Decrement();
-            if (BelongsToCue(in e)) _cue.Decrement();
-            if (BelongsToCategory(in e)) _category.Decrement();
+            for (var i = 0; i < (int)ThrottleScopeKind.Count; i++)
+            {
+                var kind = (ThrottleScopeKind)i;
+                if (!Belongs(kind, in e))
+                    continue;
+                var state = GetState(kind);
+                state.Decrement();
+                SetState(kind, state);
+            }
         }
 
-        internal bool ResolveCue(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        private readonly bool Belongs(ThrottleScopeKind kind, in Playback p)
         {
-            if (!_cue.Resolve(type, limit, incomingPriority, out eviction))
-                return false;
-            AdjustAfterEviction(eviction);
-            return true;
+            return kind switch
+            {
+                ThrottleScopeKind.Cue => p.Cue == _targetCue,
+                ThrottleScopeKind.Sheet => p.CueSheetId == _targetCueSheetId,
+                ThrottleScopeKind.Category => p.Cue.categoryId == _targetCategoryId,
+                ThrottleScopeKind.Global => true,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
+            };
         }
 
-        internal bool ResolveSheet(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        private void AccumulateInto(ThrottleScopeKind kind, in Playback p)
         {
-            if (!_sheet.Resolve(type, limit, incomingPriority, out eviction))
-                return false;
-            AdjustAfterEviction(eviction);
-            return true;
+            switch (kind)
+            {
+                case ThrottleScopeKind.Cue:
+                    _cue.Accumulate(in p);
+                    break;
+                case ThrottleScopeKind.Sheet:
+                    _sheet.Accumulate(in p);
+                    break;
+                case ThrottleScopeKind.Category:
+                    _category.Accumulate(in p);
+                    break;
+                case ThrottleScopeKind.Global:
+                    _global.Accumulate(in p);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
+            }
         }
 
-        internal bool ResolveCategory(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        private readonly ThrottleScopeState GetState(ThrottleScopeKind kind)
         {
-            if (!_category.Resolve(type, limit, incomingPriority, out eviction))
-                return false;
-            AdjustAfterEviction(eviction);
-            return true;
+            return kind switch
+            {
+                ThrottleScopeKind.Cue => _cue,
+                ThrottleScopeKind.Sheet => _sheet,
+                ThrottleScopeKind.Category => _category,
+                ThrottleScopeKind.Global => _global,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
+            };
         }
 
-        internal bool ResolveGlobal(ThrottleType type, int limit, int incomingPriority, out Playback? eviction)
+        private void SetState(ThrottleScopeKind kind, in ThrottleScopeState state)
         {
-            if (!_global.Resolve(type, limit, incomingPriority, out eviction))
-                return false;
-            AdjustAfterEviction(eviction);
-            return true;
-        }
-
-        private readonly bool BelongsToSheet(in Playback p)
-        {
-            return p.CueSheetId == _targetCueSheetId;
-        }
-
-        private readonly bool BelongsToCue(in Playback p)
-        {
-            return p.Cue == _targetCue;
-        }
-
-        private readonly bool BelongsToCategory(in Playback p)
-        {
-            return p.Cue.categoryId == _targetCategoryId;
+            switch (kind)
+            {
+                case ThrottleScopeKind.Cue:
+                    _cue = state;
+                    break;
+                case ThrottleScopeKind.Sheet:
+                    _sheet = state;
+                    break;
+                case ThrottleScopeKind.Category:
+                    _category = state;
+                    break;
+                case ThrottleScopeKind.Global:
+                    _global = state;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
+            }
         }
     }
 }

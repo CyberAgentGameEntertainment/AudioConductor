@@ -22,7 +22,12 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class CueListView : VisualElement, IDisposable
+#else
     internal sealed class CueListView : VisualElement, IDisposable
+#endif
     {
         private readonly List<int> _addedItemIds = new();
         private readonly Subject<AssetAddOperationRequestedEvent> _assetAddOperationRequestedSubject = new();
@@ -224,6 +229,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Uxml
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<CueListView, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -232,6 +238,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
         }
+#endif
 
         #endregion
     }

@@ -17,6 +17,9 @@ using Object = UnityEngine.Object;
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+#endif
     internal sealed partial class TrackInspectorView : VisualElement, IDisposable
     {
         private readonly Button _analyzeButton;
@@ -511,6 +514,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Uxml
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<TrackInspectorView, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -519,6 +523,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
         }
+#endif
 
         #endregion
     }

@@ -15,7 +15,12 @@ using TwoPaneSplitView = AudioConductor.Editor.Core.Tools.Shared.TwoPaneSplitVie
 
 namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class CueListEditorPaneView : VisualElement, ICueListEditorPaneView
+#else
     internal sealed class CueListEditorPaneView : VisualElement, ICueListEditorPaneView
+#endif
     {
         private readonly ToolbarToggle _inspectorToggle;
 
@@ -234,6 +239,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
 
         #region Uxml
 
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<CueListEditorPaneView, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -242,6 +248,7 @@ namespace AudioConductor.Editor.Core.Tools.CueSheetEditor.Views
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
         }
+#endif
 
         #endregion
     }

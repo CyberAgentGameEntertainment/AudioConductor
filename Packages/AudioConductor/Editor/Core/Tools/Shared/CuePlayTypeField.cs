@@ -9,8 +9,20 @@ using UnityEngine.UIElements;
 
 namespace AudioConductor.Editor.Core.Tools.Shared
 {
+#if UNITY_2023_2_OR_NEWER
+    [UxmlElement]
+    internal sealed partial class CuePlayTypeField : EnumField
+#else
     internal sealed class CuePlayTypeField : EnumField
+#endif
     {
+        public CuePlayTypeField()
+        {
+            Init(CuePlayType.Sequential, false);
+            label = "Play Type";
+        }
+
+#if !UNITY_2023_2_OR_NEWER
         public new class UxmlFactory : UxmlFactory<CuePlayTypeField, UxmlTraits>
         {
             public override string uxmlNamespace => "Unity.UI.Builder";
@@ -25,5 +37,6 @@ namespace AudioConductor.Editor.Core.Tools.Shared
                 ((EnumField)ve).label = "Play Type";
             }
         }
+#endif
     }
 }

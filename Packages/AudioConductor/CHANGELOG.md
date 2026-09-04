@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.1 - 2026/09/03
+
+- Fix Issues
+  - Add Unity 6000.6 compatibility for UIElements `UxmlFactory`-based custom controls
+
 ## v2.5.0 - 2026/07/27
 
 - New Features
